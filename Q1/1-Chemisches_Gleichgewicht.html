@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gleichgewichts-Simulator · Le Chatelier & Massenwirkungsgesetz</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -30,11 +27,11 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header */
@@ -149,7 +146,7 @@ select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
 .speed-group{display:flex; gap:4px; margin-left:auto;}
 .speed-group button{
   background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
-  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:'JetBrains Mono',monospace;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
 }
 .speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
 .screen-grid{display:grid; grid-template-columns: 250px 1fr; gap:12px;}
@@ -220,6 +217,8 @@ tbody tr:hover{background:var(--panel-alt);}
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
@@ -399,7 +398,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Gasreaktionen im Zylinder mit arretiertem Kolben (konstantes Volumen, ideales Gas); Temperaturabhängigkeit nach Van ’t Hoff mit konstantem ΔH<sub>r</sub>. K<sub>c</sub>- und ΔH<sub>r</sub>-Werte gerundet, bei Eisen-thiocyanat und Cobalt-Komplex Modellwerte. Die Geschwindigkeit der Gleichgewichtseinstellung ist rein illustrativ.</p>
-  <p class="footer-credit">Bastian Baumgart · Gleichgewichts-Simulator V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · Gleichgewichts-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -800,7 +799,7 @@ function drawVessel(){
   const grad=c.createLinearGradient(x0,0,x1,0);
   grad.addColorStop(0,`hsla(${210-190*tf},80%,58%,.9)`); grad.addColorStop(1,`hsla(${200-190*tf},80%,52%,.9)`);
   c.fillStyle=grad; c.fillRect(x0-3,bottom+10,x1-x0+6,7);
-  c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace"; c.textAlign="center";
+  c.fillStyle=C.faint; c.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; c.textAlign="center";
   c.fillText(isGas()?`V = ${fmtNum(S.V,S.V<1?3:2)} L`:"V = 1,00 L", (x0+x1)/2, bottom+30);
   if(rx.id==="cobalt"){ c.textAlign="left"; c.fillText("Cl⁻ nicht dargestellt",6,14); }
 }
@@ -828,7 +827,7 @@ function drawChart(){
   }
   const X=t=>L+(t-tStart)/win*pw;
   const Y=v=>{ if(log){ const lv=Math.log10(Math.max(v,Math.pow(10,yMin))); return T+ph-(lv-yMin)/(yMax-yMin)*ph; } return T+ph-(v-yMin)/(yMax-yMin)*ph; };
-  c.strokeStyle=C.grid; c.lineWidth=1; c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace";
+  c.strokeStyle=C.grid; c.lineWidth=1; c.fillStyle=C.faint; c.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace";
   c.textAlign="right"; c.textBaseline="middle";
   if(log){
     for(let e=yMin;e<=yMax;e++){ const y=Y(Math.pow(10,e)); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText("10"+String(e).split("").map(ch=>SUP[ch]).join(""),L-6,y); }
@@ -838,11 +837,11 @@ function drawChart(){
   }
   c.textAlign="center"; c.textBaseline="top";
   for(let t=Math.ceil(tStart/5)*5;t<=tEnd+1e-9;t+=5){ const x=X(t); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillText(String(Math.round(t)),x,T+ph+6); }
-  c.fillStyle=C.dim; c.font="11px Inter, sans-serif";
+  c.fillStyle=C.dim; c.font="11px system-ui, 'Segoe UI', Roboto, sans-serif";
   c.fillText("Zeit (s)",L+pw/2,T+ph+18);
   c.save(); c.translate(12,T+ph/2); c.rotate(-Math.PI/2); c.textBaseline="middle"; c.fillText("c (mol/L)",0,0); c.restore();
   // Störungen
-  c.setLineDash([2,3]); c.strokeStyle=C.teal; c.textBaseline="bottom"; c.font="10.5px 'JetBrains Mono', monospace";
+  c.setLineDash([2,3]); c.strokeStyle=C.teal; c.textBaseline="bottom"; c.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace";
   S.events.forEach(ev=>{ if(ev.t<tStart) return; const x=X(ev.t); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillStyle=C.teal; c.fillText(ev.label,x,T-4); });
   c.setLineDash([]);
   // Kurven
@@ -856,7 +855,7 @@ function drawChart(){
   });
   c.restore();
   c.strokeStyle=C.grid; c.strokeRect(L,T,pw,ph);
-  if(!S.started){ c.fillStyle=C.faint; c.font="13px Inter, sans-serif"; c.textAlign="left"; c.textBaseline="middle"; c.fillText("Bereit – Startbedingungen einstellen und „Reaktion starten“ klicken.", L+14, T+ph/2); }
+  if(!S.started){ c.fillStyle=C.faint; c.font="13px system-ui, 'Segoe UI', Roboto, sans-serif"; c.textAlign="left"; c.textBaseline="middle"; c.fillText("Bereit – Startbedingungen einstellen und „Reaktion starten“ klicken.", L+14, T+ph/2); }
 }
 
 function drawK(){
@@ -869,12 +868,12 @@ function drawK(){
   if(mx-mn<0.5){ const m=(mx+mn)/2; mn=m-0.25; mx=m+0.25; }
   const pad=(mx-mn)*0.08; mn-=pad; mx+=pad;
   const X=th=>L+(th-a)/(b-a)*pw, Y=v=>T+ph-(v-mn)/(mx-mn)*ph;
-  c.strokeStyle=C.grid; c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace"; c.lineWidth=1;
+  c.strokeStyle=C.grid; c.fillStyle=C.faint; c.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; c.lineWidth=1;
   const st=niceStep((mx-mn)/4); c.textAlign="right"; c.textBaseline="middle";
   for(let v=Math.ceil(mn/st)*st; v<=mx; v+=st){ const y=Y(v); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText(fmtNum(v,st<1?1:0),L-6,y); }
   const sx=niceStep((b-a)/6); c.textAlign="center"; c.textBaseline="top";
   for(let v=Math.ceil(a/sx)*sx; v<=b; v+=sx){ const x=X(v); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillText(String(v),x,T+ph+6); }
-  c.fillStyle=C.dim; c.font="11px Inter, sans-serif";
+  c.fillStyle=C.dim; c.font="11px system-ui, 'Segoe UI', Roboto, sans-serif";
   c.fillText("Temperatur (°C)",L+pw/2,T+ph+19);
   c.save(); c.translate(12,T+ph/2); c.rotate(-Math.PI/2); c.textBaseline="middle"; c.fillText("lg Kc",0,0); c.restore();
   c.strokeStyle=C.amber; c.lineWidth=1.8; c.beginPath();

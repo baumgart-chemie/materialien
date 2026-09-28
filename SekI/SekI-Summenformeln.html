@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Summenformel-Trainer</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; -webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+header{padding:22px 28px 18px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line); border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100; align-items:center; justify-content:center; padding:24px 16px;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--panel); border:1px solid var(--line); border-radius:5px; width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body ol{padding-left:20px; margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+.formula-box sub, .modal-body sub{font-size:.75em;}
+
+.wrap{display:grid; grid-template-columns: 350px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{border-right:1px solid var(--line); padding:20px 20px 60px; max-height:calc(100vh - 70px); overflow-y:auto;}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{font-size:12.5px; color:var(--text-dim); font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 4px; font-size:12.5px; cursor:pointer; font-family:inherit; min-width:0;}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.mode-toggle.big button{padding:10px 2px; font-size:12px; font-weight:500;}
+
+.check-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:12px; cursor:pointer; line-height:1.4;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:1px 0 0; flex:none;}
+
+.btn{border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt); color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn.check-btn{width:100%; padding:10px 14px; font-size:14px; border-color:var(--teal-dim); color:var(--teal);}
+.btn.check-btn:hover:not(:disabled){border-color:var(--teal); background:var(--teal-dim); color:var(--text);}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+/* PSE – Hauptgruppen */
+.pse{display:grid; grid-template-columns:14px repeat(8,minmax(0,1fr)); gap:2px;}
+.pse .hd{font-size:9.5px; color:var(--text-faint); text-align:center; padding:2px 0; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.pse .rh{font-size:9.5px; color:var(--text-faint); display:flex; align-items:center; justify-content:center; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.pse .cell{position:relative; background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:2px; height:38px; padding:0; cursor:pointer; color:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0;}
+.pse .cell:hover{border-color:var(--text-faint);}
+.pse .cell:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.pse .cell .z{position:absolute; left:3px; top:1px; font-size:8.5px; color:var(--text-dim);}
+.pse .cell .sy{font-size:14px; font-weight:600; line-height:1; margin-top:5px;}
+.pse .cell.nm{background:#1a2a29;}
+.pse .cell.nm .sy{color:#bfe9e3;}
+.pse .cell.hm{background:#29251d;}
+.pse .cell.hm .sy{color:#f1d6ae;}
+.pse .cell.eg{background:#22222b;}
+.pse .cell.eg .sy{color:var(--text-dim);}
+.pse .cell.sel{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+.pse .cell.hint{border-color:var(--amber); box-shadow:0 0 0 1px var(--amber-dim); background:#3a2e1c;}
+.pse .legend{grid-column:3 / span 6; font-size:10.5px; color:var(--text-faint); line-height:1.35; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 4px;}
+.pse-key{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:11px; color:var(--text-faint);}
+.pse-key span{display:inline-flex; align-items:center; gap:5px;}
+.pse-key i{display:inline-block; width:11px; height:11px; border-radius:2px; border:1px solid var(--line);}
+.pse-info{margin-top:8px; font-size:12.5px; color:var(--text-dim); min-height:36px; line-height:1.45; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:7px 10px;}
+.pse-info b{color:var(--text); font-weight:600;}
+.pse-info .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+
+.lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim); line-height:1.4;}
+.lib-table td.k{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; width:1%; white-space:nowrap;}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
+.lib-table tr:last-child td{border-bottom:none;}
+.lib-table sub{font-size:.75em;}
+details.rules{margin-bottom:26px;}
+details.rules summary{list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--text-dim); font-weight:600; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); letter-spacing:.2px;}
+details.rules summary::-webkit-details-marker{display:none;}
+details.rules summary:hover{border-color:var(--text-faint); color:var(--text);}
+details.rules summary:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+details.rules .rules-state{font-weight:500; color:var(--teal); font-size:12px;}
+details.rules .rules-state::after{content:"anzeigen +";}
+details.rules[open] .rules-state::after{content:"ausblenden −";}
+details.rules[open] summary{margin-bottom:12px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.task-ctx{font-size:13px; color:var(--text-dim);}
+.task-prompt{font-size:19px; margin:8px 0 2px; color:var(--text);}
+.task-prompt b{color:var(--amber); font-weight:600;}
+.task-elems{font-size:13px; color:var(--text-dim); margin:2px 0 0;}
+.task-elems .s{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
+
+.work-grid{display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:14px; align-items:start; margin:12px 0 4px;}
+@media (max-width:780px){ .work-grid{grid-template-columns:1fr;} }
+.stage{position:relative; border:1px solid var(--line-soft); border-radius:4px;
+  background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px, linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px, var(--screen);
+  min-height:330px; display:flex; align-items:center; justify-content:center; padding:30px 10px 34px; overflow:hidden;}
+.stage::before{content:""; position:absolute; inset:0; background:var(--screen); opacity:.72; pointer-events:none;}
+.stage svg{position:relative; display:block; width:100%; max-width:500px; height:auto; user-select:none; -webkit-user-select:none;}
+.stage .stylelbl{position:absolute; left:10px; top:8px; font-size:10.5px; color:var(--text-faint); z-index:1; letter-spacing:.3px;}
+.stage .formula{position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--text-dim); z-index:1; text-align:right;}
+.stage .formula .ok{color:var(--good);} .stage .formula .no{color:var(--danger);}
+.stage .result{position:absolute; left:10px; bottom:8px; font-size:12px; color:var(--text-faint); z-index:1;}
+.stage .result .rf{font-size:24px; color:var(--text); font-weight:600; margin-left:4px;}
+.stage .result .rf sub{font-size:.7em;}
+svg .sym{fill:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:58px; font-weight:600;}
+svg .sym.done{fill:var(--teal);}
+svg .val{fill:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:24px; font-weight:600;}
+svg .val.q{fill:var(--text-faint);}
+svg .val.bad{fill:var(--danger);}
+svg .idx{fill:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:28px; font-weight:600;}
+svg .idx.one{fill:var(--text-faint); font-weight:400;}
+svg .vlbl{fill:var(--text-faint); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; font-size:10.5px;}
+svg .cross{fill:none; stroke:var(--teal-dim); stroke-width:1.8; stroke-dasharray:5 4;}
+svg .ahead{fill:var(--teal-dim);}
+svg .bracket{fill:none; stroke:var(--line); stroke-width:1.2;}
+
+.inputs{display:flex; flex-direction:column; gap:14px;}
+.stepbox{border:1px solid var(--line-soft); border-radius:4px; padding:10px 10px 12px; background:var(--panel); transition:opacity .15s;}
+.stepbox .sh{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:10px; letter-spacing:.2px;}
+.stepbox .sh .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:0 6px; margin-right:6px; font-size:11px;}
+.stepbox .sh .st{font-weight:500; font-size:11.5px; color:var(--text-faint);}
+.stepbox.passed .sh .st{color:var(--good);}
+.stepbox.passed .sh .n{color:var(--good); border-color:#35573a;}
+.stepbox.locked{opacity:.42;}
+.stepbox.locked .stp .c button{pointer-events:none;}
+.field{margin-bottom:10px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
+.field label .s{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); font-weight:600;}
+input.num-in{width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:var(--radius); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+input.num-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+input.num-in.ok, .stp.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+input.num-in.bad, .stp.bad{border-color:var(--danger); box-shadow:0 0 0 1px var(--danger-dim);}
+input.num-in[readonly]{color:var(--teal);}
+.stp-wrap{display:flex; flex-direction:column; gap:6px;}
+.stp{display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:4px 4px 4px 12px;}
+.stp .l{font-size:13px; color:var(--text-dim);}
+.stp .l b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); font-weight:600; margin-right:4px;}
+.stp .c{display:flex; align-items:center; gap:4px;}
+.stp .c button{width:32px; height:32px; border:1px solid var(--line); background:var(--raise); color:var(--text); border-radius:var(--radius); font-size:17px; line-height:1; cursor:pointer; font-family:inherit;}
+.stp .c button:hover:not(:disabled){border-color:var(--text-faint);}
+.stp .c button:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.stp .c button:disabled{opacity:.35; cursor:default;}
+.stp .c .v{min-width:26px; text-align:center; font-size:16px; color:var(--teal);}
+.stp-note{font-size:11.5px; color:var(--text-faint); line-height:1.45; margin:8px 0 0;}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb .nm{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
+.fb sub{font-size:.75em;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
+.step{display:grid; grid-template-columns:28px 150px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
+.step:last-child{border-bottom:none;}
+.step .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text-faint); font-size:12px;}
+.step .h{color:var(--text-dim);}
+.step .b{color:var(--text);}
+.step .b .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step .b .t{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step.final .b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:17px; color:var(--teal);}
+.step sub{font-size:.75em;}
+@media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+table.hist sub{font-size:.75em;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Aufstellen von Summenformeln</h1>
+  <span class="tag">Über die Wertigkeit zur Summenformel</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Zu einer Verbindung aus zwei Elementen sollst du die <strong>Summenformel</strong> aufstellen. Dazu bestimmst du zuerst die <strong>Wertigkeit</strong> beider Elemente und legst dann fest, wie viele Atome jedes Elements in der Formel stehen. Du trägst beides ein und prüfst am Ende einmal. Die Prüfung meldet, ob die Wertigkeiten, die Formel oder beides noch Fehler enthalten.</p>
+
+      <h3>Schritt 1: Wertigkeit ermitteln</h3>
+      <ol>
+        <li><strong>Element im PSE suchen.</strong> Die römische Zahl über der Spalte ist die Hauptgruppe. Die Farbe zeigt, ob es ein Metall, Halbmetall oder Nichtmetall ist. Ein Klick auf ein Element zeigt seinen Namen.</li>
+        <li><strong>Metalle</strong> der I. bis III. Hauptgruppe: Wertigkeit = Nummer der Hauptgruppe.</li>
+        <li><strong>Nichtmetalle</strong> der V. bis VII. Hauptgruppe, die im Namen hinten stehen (Endung -id): Wertigkeit = 8 − Nummer der Hauptgruppe. Kohlenstoff und Silicium sind vierwertig.</li>
+        <li><strong>Wasserstoff</strong> ist immer einwertig, <strong>Sauerstoff</strong> fast immer zweiwertig.</li>
+        <li>Steht eine <strong>römische Zahl im Namen</strong>, z. B. Eisen(III)-oxid, ist das die Wertigkeit dieses Elements.</li>
+      </ol>
+      <p>Du kannst die Wertigkeit als Zahl (3) oder als römische Zahl (III) eingeben.</p>
+
+      <h3>Schritt 2: Summenformel aufstellen</h3>
+      <ol>
+        <li>Bilde das <strong>kleinste gemeinsame Vielfache</strong> (kgV) der beiden Wertigkeiten.</li>
+        <li>Teile das kgV durch die Wertigkeit des Elements. Das Ergebnis ist die tiefgestellte Zahl (der <strong>Index</strong>) hinter dem Symbol.</li>
+        <li>Kurzform (<strong>Kreuzregel</strong>): Die Wertigkeit des einen Elements wird zum Index des anderen. Danach kürzen, falls möglich.</li>
+        <li>Ein Index 1 wird nicht geschrieben.</li>
+      </ol>
+      <div class="formula-box">Aluminiumoxid: Al III · O II<br>kgV(3, 2) = 6 → Al: 6 : 3 = 2 · O: 6 : 2 = 3 → Al<sub>2</sub>O<sub>3</sub><br>Kontrolle: 2 · 3 = 6 = 3 · 2</div>
+      <p>Die Anzahl der Atome stellst du mit <strong>+</strong> und <strong>−</strong> ein. Mit <strong>Enter</strong> in einem Eingabefeld prüfst du.</p>
+
+      <h3>Einstellungen</h3>
+      <p><strong>Salze</strong> sind Verbindungen aus Metall und Nichtmetall, <strong>Wasserstoffverbindungen</strong> enthalten Wasserstoff, bei <strong>Röm. Zahl</strong> steht die Wertigkeit im Namen (z. B. Schwefel(VI)-oxid). Mit dem Häkchen bei den Nebengruppenmetallen kommen auch Eisen und Kupfer vor. Sie stehen nicht im PSE-Ausschnitt, ihre Wertigkeit ist immer im Namen angegeben.</p>
+      <p>Die <strong>Kreuzregel-Pfeile</strong> zeigen im Formel-Feld, welche Wertigkeit zu welchem Index wird. Die <strong>Wertigkeitssumme</strong> unten rechts dient als Kontrolle: Anzahl × Wertigkeit muss bei beiden Elementen gleich sein.</p>
+
+      <h3>Tipp, Lösung, Auswertung</h3>
+      <p>„Tipp“ hilft in vier Stufen: Elemente im PSE finden, Elemente markieren, Wertigkeiten begründen, kgV und Indizes. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+      <p>Die Prüfung erkennt typische Fehler, zum Beispiel die Gruppennummer statt 8 − Gruppennummer bei Nichtmetallen, vertauschte Indizes oder eine Formel, die noch gekürzt werden muss.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Art der Verbindung</p>
+      <div class="mode-toggle big" id="modeToggle">
+        <button data-mode="salz">Salze</button>
+        <button data-mode="h">Wasserstoff</button>
+        <button data-mode="rom">Röm. Zahl</button>
+        <button data-mode="mix" class="active">Gemischt</button>
+      </div>
+      <label class="check-row" for="chkNG"><input type="checkbox" id="chkNG"><span>Nebengruppenmetalle einbeziehen (Eisen, Kupfer, z. B. Eisen(III)-chlorid)</span></label>
+      <label class="check-row" for="chkCross"><input type="checkbox" id="chkCross"><span>Kreuzregel-Pfeile anzeigen</span></label>
+      <label class="check-row" for="chkSum"><input type="checkbox" id="chkSum" checked><span>Wertigkeitssumme zur Kontrolle anzeigen</span></label>
+    </section>
+
+    <section class="block">
+      <h2>Periodensystem (Hauptgruppen)</h2>
+      <div class="pse" id="pse"></div>
+      <div class="pse-key">
+        <span><i style="background:var(--panel-alt)"></i>Metall</span>
+        <span><i style="background:#29251d"></i>Halbmetall</span>
+        <span><i style="background:#1a2a29"></i>Nichtmetall</span>
+        <span><i style="background:#22222b"></i>Edelgas</span>
+      </div>
+      <div class="pse-info" id="pseInfo">Klicke auf ein Element, um Namen, Hauptgruppe und Metallcharakter zu sehen.</div>
+    </section>
+
+    <details class="block rules" id="rulesBox">
+      <summary><span>Regeln zur Wertigkeit</span><span class="rules-state" aria-hidden="true"></span></summary>
+      <div class="lib-wrap">
+        <table class="lib-table">
+          <tbody>
+            <tr class="grp"><td colspan="2">Wertigkeit</td></tr>
+            <tr><td class="k">H</td><td>Wasserstoff ist immer einwertig (I)</td></tr>
+            <tr><td class="k">O</td><td>Sauerstoff ist fast immer zweiwertig (II)</td></tr>
+            <tr><td class="k">I–III</td><td>Metalle: Wertigkeit = Nummer der Hauptgruppe</td></tr>
+            <tr><td class="k">IV</td><td>Kohlenstoff, Silicium: vierwertig (IV)</td></tr>
+            <tr><td class="k">V–VII</td><td>Nichtmetall hinten im Namen (-id): 8 − Nummer der Hauptgruppe</td></tr>
+            <tr><td class="k">(III)</td><td>Römische Zahl im Namen = Wertigkeit dieses Elements</td></tr>
+            <tr class="grp"><td colspan="2">Summenformel</td></tr>
+            <tr><td class="k">kgV</td><td>kleinstes gemeinsames Vielfaches der Wertigkeiten</td></tr>
+            <tr><td class="k">Index</td><td>kgV : Wertigkeit = Anzahl der Atome</td></tr>
+            <tr><td class="k">✕</td><td>Kreuzregel: Wertigkeit des einen = Index des anderen, danach kürzen</td></tr>
+            <tr><td class="k">1</td><td>Der Index 1 wird nicht geschrieben</td></tr>
+            <tr><td class="k">Probe</td><td>Anzahl × Wertigkeit ist bei beiden Elementen gleich</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Die Wertigkeit gibt an, wie viele Wasserstoffatome ein Atom binden oder ersetzen kann. Metall steht in der Formel vorn, das Nichtmetall mit der Endung -id hinten.</p>
+    </details>
+  </div>
+
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskLevel">Salz</span>
+        <span class="task-ctx" id="taskCtx">Ermittle die Wertigkeiten und stelle die Summenformel auf.</span>
+      </div>
+      <div class="task-prompt" id="taskPrompt"></div>
+      <div class="task-elems" id="taskElems"></div>
+
+      <div class="work-grid">
+        <div class="stage" id="stage">
+          <span class="stylelbl">Formel-Baukasten</span>
+          <div id="formBox" style="width:100%;display:flex;justify-content:center;position:relative"></div>
+          <span class="result mono" id="resLbl"></span>
+          <span class="formula mono" id="sumLbl"></span>
+        </div>
+        <div class="inputs">
+          <div class="stepbox" id="box1">
+            <div class="sh"><span><span class="n">1</span>Wertigkeiten ermitteln</span><span class="st" id="st1">offen</span></div>
+            <div class="field">
+              <label for="vA" id="lblA">Wertigkeit</label>
+              <input type="text" id="vA" class="num-in" autocomplete="off" placeholder="z. B. III oder 3">
+            </div>
+            <div class="field">
+              <label for="vB" id="lblB">Wertigkeit</label>
+              <input type="text" id="vB" class="num-in" autocomplete="off" placeholder="z. B. II oder 2">
+            </div>
+          </div>
+          <div class="stepbox" id="box2">
+            <div class="sh"><span><span class="n">2</span>Summenformel aufstellen</span><span class="st" id="st2">offen</span></div>
+            <div class="stp-wrap" id="stpWrap"></div>
+            <p class="stp-note" id="note2">Stelle die Anzahl der Atome ein. Der Index 1 wird in der Formel nicht geschrieben.</p>
+          </div>
+          <button class="btn check-btn" id="btnCheck">Prüfen</button>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Verbindung</th><th>Wertigkeiten</th><th>Formel</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="5" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Summenformeln binärer Verbindungen über die stöchiometrische Wertigkeit (Kreuzregel). Vereinfachtes Schulmodell: Die Formel gibt das kleinste ganzzahlige Atomzahlverhältnis an.</p>
+  <p class="footer-credit">Bastian Baumgart · Summenformel-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  // ---------- Elementdaten (Hauptgruppen) ----------
+  // c: m = Metall, h = Halbmetall, n = Nichtmetall, e = Edelgas
+  const ROWS = [
+    [["H",1,"Wasserstoff","n"], null,null,null,null,null,null, ["He",2,"Helium","e"]],
+    [["Li",3,"Lithium","m"],["Be",4,"Beryllium","m"],["B",5,"Bor","h"],["C",6,"Kohlenstoff","n"],["N",7,"Stickstoff","n"],["O",8,"Sauerstoff","n"],["F",9,"Fluor","n"],["Ne",10,"Neon","e"]],
+    [["Na",11,"Natrium","m"],["Mg",12,"Magnesium","m"],["Al",13,"Aluminium","m"],["Si",14,"Silicium","h"],["P",15,"Phosphor","n"],["S",16,"Schwefel","n"],["Cl",17,"Chlor","n"],["Ar",18,"Argon","e"]],
+    [["K",19,"Kalium","m"],["Ca",20,"Calcium","m"],["Ga",31,"Gallium","m"],["Ge",32,"Germanium","h"],["As",33,"Arsen","h"],["Se",34,"Selen","n"],["Br",35,"Brom","n"],["Kr",36,"Krypton","e"]],
+    [["Rb",37,"Rubidium","m"],["Sr",38,"Strontium","m"],["In",49,"Indium","m"],["Sn",50,"Zinn","m"],["Sb",51,"Antimon","h"],["Te",52,"Tellur","h"],["I",53,"Iod","n"],["Xe",54,"Xenon","e"]],
+    [["Cs",55,"Caesium","m"],["Ba",56,"Barium","m"],["Tl",81,"Thallium","m"],["Pb",82,"Blei","m"],["Bi",83,"Bismut","m"],["Po",84,"Polonium","m"],["At",85,"Astat","h"],["Rn",86,"Radon","e"]]
+  ];
+  const EL = {};
+  ROWS.forEach((row,pi)=>row.forEach((d,gi)=>{ if(d) EL[d[0]] = {s:d[0], z:d[1], n:d[2], c:d[3], g:gi+1, p:pi+1}; }));
+  // Nebengruppenmetalle (nicht im PSE-Ausschnitt)
+  EL.Fe = {s:"Fe", z:26, n:"Eisen", c:"m", g:null, p:4, ng:true};
+  EL.Cu = {s:"Cu", z:29, n:"Kupfer", c:"m", g:null, p:4, ng:true};
+
+  const CLS = {m:"Metall", h:"Halbmetall", n:"Nichtmetall", e:"Edelgas"};
+  const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII"];
+  const RVAL = {I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8};
+  const SUFFIX = {F:"fluorid", Cl:"chlorid", Br:"bromid", I:"iodid", O:"oxid", S:"sulfid", N:"nitrid", P:"phosphid", H:"hydrid"};
+  const gcd = (a,b) => b ? gcd(b, a%b) : a;
+  const lcm = (a,b) => a*b/gcd(a,b);
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // Standardwertigkeit nach Hauptgruppe
+  function stdVal(s){
+    const e = EL[s];
+    if(s==="H") return 1;
+    if(s==="O") return 2;
+    if(e.c==="m") return e.g;
+    return e.g<=4 ? e.g : 8 - e.g;
+  }
+
+  // ---------- Aufgabenpool ----------
+  function comp(a, b, kind, name, given){
+    // given: Wertigkeit von a laut Name (römische Zahl)
+    const va = given || stdVal(a), vb = stdVal(b);
+    const L = lcm(va, vb);
+    return {a, b, va, vb, ia:L/va, ib:L/vb, kind, name, given:!!given};
+  }
+  const POOL = {salz:[], h:[], rom:[], ng:[]};
+  ["Li","Na","K","Mg","Ca","Ba","Al"].forEach(m=>{
+    ["F","Cl","Br","I","O","S","N","P"].forEach(x=>{
+      if(m==="K" && x==="N") return;
+      POOL.salz.push(comp(m, x, "salz", EL[m].n + SUFFIX[x]));
+    });
+  });
+  [["H","F","Fluorwasserstoff"],["H","Cl","Chlorwasserstoff"],["H","Br","Bromwasserstoff"],["H","I","Iodwasserstoff"],
+   ["H","O","Wasser"],["H","S","Schwefelwasserstoff"],["N","H","Ammoniak"],["P","H","Phosphan (Phosphorwasserstoff)"],
+   ["C","H","Methan"],["Si","H","Silan (Siliciumwasserstoff)"],
+   ["Li","H","Lithiumhydrid"],["Na","H","Natriumhydrid"],["Mg","H","Magnesiumhydrid"],["Ca","H","Calciumhydrid"]
+  ].forEach(d=>POOL.h.push(comp(d[0], d[1], "h", d[2])));
+  [["C",2,"O"],["C",4,"O"],["S",4,"O"],["S",6,"O"],["N",1,"O"],["N",2,"O"],["N",3,"O"],["N",4,"O"],["N",5,"O"],
+   ["Cl",1,"O"],["Cl",4,"O"],["Cl",7,"O"],["Si",4,"O"],["P",3,"Cl"],["P",5,"Cl"],["S",6,"F"],["S",2,"Cl"],["C",4,"Cl"],
+   ["Sn",2,"O"],["Sn",4,"O"],["Sn",2,"Cl"],["Sn",4,"Cl"],["Pb",2,"O"],["Pb",4,"O"],["Pb",2,"Cl"],["Pb",2,"S"]
+  ].forEach(d=>POOL.rom.push(comp(d[0], d[2], "rom", `${EL[d[0]].n}(${ROMAN[d[1]]})-${SUFFIX[d[2]]}`, d[1])));
+  [["Fe",2,"O"],["Fe",3,"O"],["Fe",2,"Cl"],["Fe",3,"Cl"],["Fe",2,"S"],["Fe",3,"Br"],
+   ["Cu",1,"O"],["Cu",2,"O"],["Cu",1,"Cl"],["Cu",2,"Cl"],["Cu",1,"S"],["Cu",2,"S"]
+  ].forEach(d=>POOL.ng.push(comp(d[0], d[2], "ng", `${EL[d[0]].n}(${ROMAN[d[1]]})-${SUFFIX[d[2]]}`, d[1])));
+
+  const KIND = {salz:["Salz","l1"], h:["Wasserstoffverbindung","l1"], rom:["Wertigkeit im Namen","l2"], ng:["Nebengruppenmetall","l3"]};
+
+  // ---------- Formel-Hilfen ----------
+  const sub = n => n>1 ? `<sub>${n}</sub>` : "";
+  const fHTML = (c, ia, ib) => `${c.a}${sub(ia)}${c.b}${sub(ib)}`;
+  const solHTML = c => fHTML(c, c.ia, c.ib);
+
+  // ---------- PSE ----------
+  function buildPSE(){
+    let h = `<div></div>`;
+    for(let g=1; g<=8; g++) h += `<div class="hd">${ROMAN[g]}</div>`;
+    ROWS.forEach((row,pi)=>{
+      h += `<div class="rh">${pi+1}</div>`;
+      if(pi===0){
+        h += cellHTML(EL.H) + `<div class="legend">Hauptgruppe oben,<br>Periode links</div>` + cellHTML(EL.He);
+      } else row.forEach(d=> h += cellHTML(EL[d[0]]));
+    });
+    $("pse").innerHTML = h;
+  }
+  function cellHTML(e){
+    const k = {m:"", h:" hm", n:" nm", e:" eg"}[e.c];
+    return `<button class="cell${k}" data-s="${e.s}" title="${e.n}" aria-label="${e.n}, ${ROMAN[e.g]}. Hauptgruppe"><span class="z">${e.z}</span><span class="sy">${e.s}</span></button>`;
+  }
+  function showInfo(s){
+    const e = EL[s];
+    document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("sel", c.dataset.s===s));
+    if(e.ng){ $("pseInfo").innerHTML = `<b>${e.n}</b> (${e.s}) ist ein Nebengruppenmetall und steht nicht in diesem PSE-Ausschnitt. Seine Wertigkeit ist im Namen angegeben.`; return; }
+    $("pseInfo").innerHTML = `<b>${e.n}</b> (${e.s}) · Ordnungszahl <span class="a">${e.z}</span><br><span class="a">${ROMAN[e.g]}</span>. Hauptgruppe · ${e.p}. Periode · ${CLS[e.c]}`;
+  }
+  function markHint(list){
+    document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("hint", !!list && list.includes(c.dataset.s)));
+  }
+
+  // ---------- Zustand ----------
+  let mode = "mix", useNG = false, showCross = false, showSum = true;
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+
+  function newTask(){
+    if(task && !task.done && task.touched) logHistory(task, "open");
+    let kinds = mode==="mix" ? ["salz","h","rom"] : [mode];
+    if(useNG && (mode==="mix" || mode==="rom")) kinds = kinds.concat("ng");
+    let c;
+    for(let i=0;i<20;i++){ c = pick(POOL[pick(kinds)]); if(!task || c.name!==task.c.name) break; }
+    task = {num:++taskCounter, c, okV:false, okF:false, hint:0, wrong:false, done:false, shown:false, touched:false, ia:1, ib:1, badIdx:null};
+    ["vA","vB"].forEach(id=>{ $(id).value=""; $(id).readOnly=false; $(id).classList.remove("ok","bad"); });
+    $("feedback").innerHTML = "";
+    markHint(null);
+    renderTask();
+    renderWay();
+    setTimeout(()=>$("vA").focus({preventScroll:true}), 0);
+  }
+
+  function renderTask(){
+    const t = task, c = t.c, A = EL[c.a], B = EL[c.b];
+    $("taskNum").textContent = "Aufgabe " + t.num;
+    $("taskLevel").textContent = KIND[c.kind][0];
+    $("taskLevel").className = "chip " + KIND[c.kind][1];
+    $("taskCtx").textContent = t.done ? "Aufgabe abgeschlossen." : "Ermittle die Wertigkeiten und stelle die Summenformel auf.";
+    $("taskPrompt").innerHTML = `Verbindung: <b>${c.name}</b>`;
+    $("taskElems").innerHTML = `Elemente: ${A.n} (<span class="s">${A.s}</span>) und ${B.n} (<span class="s">${B.s}</span>)`;
+    $("lblA").innerHTML = `Wertigkeit von <span class="s">${A.s}</span> (${A.n})`;
+    $("lblB").innerHTML = `Wertigkeit von <span class="s">${B.s}</span> (${B.n})`;
+    const st = ok => t.shown ? "Lösung" : ok ? "✓ richtig" : "offen";
+    $("box1").classList.toggle("passed", t.okV && !t.shown);
+    $("st1").textContent = st(t.okV);
+    $("box2").classList.toggle("passed", t.okF && !t.shown);
+    $("st2").textContent = st(t.okF);
+    renderSteppers();
+    drawFormula();
+    $("btnCheck").disabled = t.done;
+    $("btnHint").disabled = t.done;
+    $("btnSolve").disabled = t.done;
+    setStatus();
+  }
+  function setStatus(){
+    const b = $("statusBadge");
+    b.classList.remove("running","done");
+    if(!task.done){ b.classList.add("running"); $("statusText").textContent = "Aufgabe offen"; }
+    else if(task.shown){ $("statusText").textContent = "Lösung angezeigt"; }
+    else { b.classList.add("done"); $("statusText").textContent = "gelöst"; }
+  }
+
+  // ---------- Index-Steuerung ----------
+  function renderSteppers(){
+    const t = task, c = t.c, lock = t.done;
+    let h = "";
+    [["a","ia"],["b","ib"]].forEach(([k,ik])=>{
+      const s = c[k], v = t[ik];
+      h += `<div class="stp${t.badIdx && t.badIdx.includes(k) ? " bad" : ""}${t.done && !t.shown ? " ok" : ""}"><span class="l">Anzahl <b>${s}</b></span><span class="c">`+
+           `<button data-k="${ik}" data-d="-1" aria-label="Weniger ${s}-Atome" ${lock||v<=1?"disabled":""}>−</button>`+
+           `<span class="v mono">${v}</span>`+
+           `<button data-k="${ik}" data-d="1" aria-label="Mehr ${s}-Atome" ${lock||v>=9?"disabled":""}>+</button></span></div>`;
+    });
+    $("stpWrap").innerHTML = h;
+  }
+  function changeIdx(k, d){
+    const t = task; if(t.done) return;
+    const v = t[k] + d; if(v<1 || v>9) return;
+    t[k] = v; t.touched = true; t.badIdx = null; t.okF = false;
+    $("box2").classList.remove("passed"); $("st2").textContent = "offen";
+    renderSteppers(); drawFormula();
+  }
+
+  // ---------- Formel-Baukasten zeichnen ----------
+  function parseVal(str){
+    const s = String(str).trim().toUpperCase();
+    if(s==="") return null;
+    if(/^\d+$/.test(s)) return +s;
+    if(RVAL[s]) return RVAL[s];
+    return NaN;
+  }
+  function drawFormula(){
+    const t = task, c = t.c;
+    const va = parseVal($("vA").value), vb = parseVal($("vB").value);
+    const W = 440, cw = 58*0.6;                 // Zeichenbreite der Monospace-Schrift
+    const wA = c.a.length*cw, wB = c.b.length*cw, idxW = 24, gap = 84;
+    const total = wA + idxW + gap + wB + idxW;
+    const x0 = (W - total)/2;
+    const xA = x0 + wA/2, xAi = x0 + wA + 3;
+    const xB = x0 + wA + idxW + gap + wB/2, xBi = x0 + wA + idxW + gap + wB + 3;
+    const yS = 150, yV = 72, yI = 168;
+    const vTxt = v => v===null ? "?" : (Number.isInteger(v) && v>=1 && v<=8 ? ROMAN[v] : "?");
+    const vCls = (v, el) => "val" + (v===null || !(v>=1 && v<=8) ? " q" : "") + ($(el).classList.contains("bad") ? " bad" : "");
+    let s = `<defs><marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0,0 L10,5 L0,10 z"/></marker></defs>`;
+    s += `<text class="vlbl" x="${xA}" y="${yV-30}" text-anchor="middle">Wertigkeit</text>`;
+    s += `<text class="vlbl" x="${xB}" y="${yV-30}" text-anchor="middle">Wertigkeit</text>`;
+    s += `<text class="${vCls(va,"vA")}" x="${xA}" y="${yV}" text-anchor="middle">${vTxt(va)}</text>`;
+    s += `<text class="${vCls(vb,"vB")}" x="${xB}" y="${yV}" text-anchor="middle">${vTxt(vb)}</text>`;
+    if(showCross){
+      const mx = (xAi + idxW + xB - wB/2)/2;
+      s += `<path class="cross" marker-end="url(#ah)" d="M${xA+8},${yV+8} C${mx},${yV+30} ${mx-6},${yI+22} ${xBi+8},${yI+14}"/>`;
+      s += `<path class="cross" marker-end="url(#ah)" d="M${xB-8},${yV+8} C${mx},${yV+30} ${mx+6},${yI+22} ${xAi+8},${yI+14}"/>`;
+    }
+    const symCls = "sym" + (t.done && !t.shown ? " done" : "");
+    s += `<text class="${symCls}" x="${xA}" y="${yS}" text-anchor="middle">${c.a}</text>`;
+    s += `<text class="${symCls}" x="${xB}" y="${yS}" text-anchor="middle">${c.b}</text>`;
+    s += `<text class="idx${t.ia===1?" one":""}" x="${xAi}" y="${yI}">${t.ia}</text>`;
+    s += `<text class="idx${t.ib===1?" one":""}" x="${xBi}" y="${yI}">${t.ib}</text>`;
+    $("formBox").innerHTML = `<svg viewBox="0 0 ${W} 200" role="img" aria-label="Formel-Baukasten mit Wertigkeiten und Indizes">${s}</svg>`;
+
+    // Kontrolle: Anzahl × Wertigkeit
+    if(showSum && va>=1 && va<=8 && vb>=1 && vb<=8){
+      const la = t.ia*va, lb = t.ib*vb;
+      $("sumLbl").innerHTML = `${c.a}: ${t.ia} · ${va} = ${la}&nbsp;&nbsp;${c.b}: ${t.ib} · ${vb} = ${lb}&nbsp;&nbsp;<span class="${la===lb?"ok":"no"}">${la===lb?"=":"≠"}</span>`;
+    } else if(showSum){
+      $("sumLbl").textContent = "Σ Wertigkeit: Wertigkeiten eintragen";
+    } else $("sumLbl").textContent = "";
+    $("resLbl").innerHTML = `Formel: <span class="rf">${fHTML(c, t.ia, t.ib)}</span>`;
+  }
+
+  // ---------- Begründungen ----------
+  function valReason(s, t, html=true){
+    const c = t.c, e = EL[s];
+    const A = x => html ? `<span class="a">${x}</span>` : x;
+    const T = x => html ? `<span class="t">${x}</span>` : x;
+    if(s===c.a && c.given) return `römische Zahl im Namen: ${A("("+ROMAN[c.va]+")")} → ${T(ROMAN[c.va])}`;
+    if(s==="H") return `Wasserstoff ist immer einwertig → ${T("I")}`;
+    if(s==="O") return `Sauerstoff (${A("VI")}. HG) ist zweiwertig: 8 − 6 = ${T("II")}`;
+    if(e.c==="m") return `Metall der ${A(ROMAN[e.g])}. Hauptgruppe → Wertigkeit = Gruppennummer = ${T(ROMAN[e.g])}`;
+    if(e.g===4) return `${ROMAN[4]}. Hauptgruppe → vierwertig: ${T("IV")}`;
+    return `Nichtmetall der ${A(ROMAN[e.g])}. Hauptgruppe → 8 − ${e.g} = ${T(ROMAN[8-e.g])}`;
+  }
+
+  // ---------- Prüfen ----------
+  function fb(cls, html){ return `<div class="fb ${cls}">${html}</div>`; }
+
+  function valMsg(s, v, t){
+    const c = t.c, e = EL[s], sol = s===c.a ? c.va : c.vb;
+    if(v===sol) return null;
+    if(isNaN(v) || v<1 || v>8) return `Gib die Wertigkeit von ${e.n} als Zahl (1–8) oder römische Zahl (I–VIII) an.`;
+    if(s===c.a && c.given) return `Bei ${e.n} steht die Wertigkeit als römische Zahl im Namen: ${c.name}.`;
+    if(s==="H") return "Wasserstoff ist immer einwertig.";
+    if(s==="O"){
+      if(v===6) return "Sauerstoff steht zwar in der VI. Hauptgruppe, ist als Nichtmetall aber zweiwertig: 8 − 6 = 2.";
+      return "Sauerstoff ist (fast) immer zweiwertig.";
+    }
+    if(e.c==="m") return `${e.n} ist ein Metall der ${ROMAN[e.g]}. Hauptgruppe. Bei Metallen entspricht die Wertigkeit der Gruppennummer.`;
+    if(e.g===4) return `${e.n} steht in der IV. Hauptgruppe und ist vierwertig.`;
+    if(v===e.g) return `${e.n} ist ein Nichtmetall der ${ROMAN[e.g]}. Hauptgruppe. Hier gilt nicht die Gruppennummer, sondern 8 − Gruppennummer.`;
+    return `Die Wertigkeit von ${e.n} stimmt nicht. Schau nach, in welcher Hauptgruppe es steht und ob es ein Metall oder Nichtmetall ist.`;
+  }
+
+  function check(){
+    const t = task; if(t.done) return;
+    t.touched = true;
+    const c = t.c, ia = t.ia, ib = t.ib;
+    const va = parseVal($("vA").value), vb = parseVal($("vB").value);
+    const msgs = [];
+
+    // --- Teil 1: Wertigkeiten ---
+    if(va===null) msgs.push(["info", `Trage die Wertigkeit von ${EL[c.a].n} ein.`]);
+    else { const m = valMsg(c.a, va, t); if(m) msgs.push(["bad", m]); }
+    if(vb===null) msgs.push(["info", `Trage die Wertigkeit von ${EL[c.b].n} ein.`]);
+    else { const m = valMsg(c.b, vb, t); if(m) msgs.push(["bad", m]); }
+    const okA = va===c.va, okB = vb===c.vb;
+    t.okV = okA && okB;
+    $("vA").classList.toggle("ok", okA); $("vA").classList.toggle("bad", !okA && va!==null);
+    $("vB").classList.toggle("ok", okB); $("vB").classList.toggle("bad", !okB && vb!==null);
+    if(t.okV){ $("vA").value = ROMAN[c.va]; $("vB").value = ROMAN[c.vb]; }
+
+    // --- Teil 2: Summenformel ---
+    t.okF = ia===c.ia && ib===c.ib;
+    const bad = [];
+    if(!t.okF){
+      const uva = okA ? c.va : va, uvb = okB ? c.vb : vb;
+      const validU = uva>=1 && uva<=8 && uvb>=1 && uvb<=8;
+      const uL = validU ? lcm(uva, uvb) : 0;
+      if(!t.okV && validU && ia===uL/uva && ib===uL/uvb){
+        msgs.push(["bad", `Die Formel <span class="nm">${fHTML(c, ia, ib)}</span> passt zu deinen Wertigkeiten, das ist ein Folgefehler. Korrigiere zuerst die Wertigkeit, dann ändert sich auch die Formel.`]);
+      } else if(ia*c.va === ib*c.vb){
+        const k = gcd(ia, ib);
+        msgs.push(["bad", `Das Verhältnis stimmt, aber die Formel ist noch nicht gekürzt. <span class="nm">${fHTML(c, ia, ib)}</span> lässt sich durch ${k} teilen. Die Summenformel gibt das kleinste ganzzahlige Verhältnis an.`]);
+      } else if(ia===c.va && ib===c.vb && c.va!==c.vb){
+        msgs.push(["bad", `Die Indizes sind vertauscht. Kreuzregel: Die Wertigkeit von ${c.a} (${ROMAN[c.va]}) wird zum Index von ${c.b}, die Wertigkeit von ${c.b} (${ROMAN[c.vb]}) zum Index von ${c.a}.`]);
+      } else if(t.okV){
+        msgs.push(["bad", `Die Summenformel stimmt noch nicht. Wertigkeitssummen: ${c.a}: ${ia} · ${c.va} = ${ia*c.va}, ${c.b}: ${ib} · ${c.vb} = ${ib*c.vb}. Beide müssen gleich sein.`]);
+        if(ia===1 && ib===1) msgs.push(["hint", `Tipp: Das kgV von ${c.va} und ${c.vb} ist ${lcm(c.va, c.vb)}.`]);
+      } else {
+        msgs.push(["bad", "Die Summenformel stimmt noch nicht. Bestimme die Anzahl der Atome mit Hilfe der Wertigkeiten (kgV bzw. Kreuzregel)."]);
+      }
+      if(ia!==c.ia) bad.push("a"); if(ib!==c.ib) bad.push("b");
+    }
+    t.badIdx = bad;
+
+    if(t.okV && t.okF){
+      t.done = true;
+      $("vA").readOnly = true; $("vB").readOnly = true;
+      const firstTry = !t.wrong && t.hint===0;
+      stats.solved++; if(firstTry) stats.first++; stats.streak++;
+      $("feedback").innerHTML = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! ${c.name}: <span class="nm">${solHTML(c)}</span> · Wertigkeiten ${c.a} ${ROMAN[c.va]}, ${c.b} ${ROMAN[c.vb]}`) +
+                                fb("info", `Kontrolle: ${c.a} ${c.ia} · ${c.va} = ${c.ia*c.va} und ${c.b} ${c.ib} · ${c.vb} = ${c.ib*c.vb}. Beide Seiten sind gleich.`);
+      logHistory(t, firstTry ? "first" : "ok");
+      renderTask(); renderWay(); updateStats();
+      return;
+    }
+    if(msgs.some(m=>m[0]==="bad")){ t.wrong = true; stats.streak = 0; }
+    const good = [];
+    if(t.okV) good.push("Die Wertigkeiten stimmen.");
+    if(t.okF && !t.okV) good.push("Die Summenformel stimmt, aber bei den Wertigkeiten ist noch ein Fehler.");
+    $("feedback").innerHTML = good.map(m=>fb("good", m)).join("") + msgs.map(m=>fb(m[0], m[1])).join("");
+    renderTask(); updateStats();
+  }
+
+  // ---------- Tipps ----------
+  function hint(){
+    const t = task; if(t.done) return;
+    t.hint = Math.min(t.hint+1, 4); t.touched = true;
+    const c = t.c, A = EL[c.a], B = EL[c.b], out = [];
+    const ngNote = [A,B].filter(e=>e.ng).map(e=>`${e.n} ist ein Nebengruppenmetall und fehlt im PSE-Ausschnitt; seine Wertigkeit steht im Namen.`).join(" ");
+    if(t.hint>=1) out.push("Tipp 1: Suche beide Elemente im PSE. Die römische Zahl über der Spalte ist die Hauptgruppe, die Farbe zeigt Metall oder Nichtmetall." + (ngNote ? " " + ngNote : ""));
+    if(t.hint>=2){
+      const d = e => e.ng ? `${e.n}: Nebengruppenmetall` : `${e.n}: ${ROMAN[e.g]}. Hauptgruppe, ${CLS[e.c]}`;
+      out.push(`Tipp 2: Die Elemente sind markiert. ${d(A)} · ${d(B)}.`);
+      markHint([c.a, c.b]); showInfo(A.ng ? c.b : c.a);
+    }
+    if(t.hint>=3) out.push(`Tipp 3: ${c.a}: ${valReason(c.a, t, false)}. ${c.b}: ${valReason(c.b, t, false)}.`);
+    if(t.hint>=4){
+      const L = lcm(c.va, c.vb);
+      out.push(`Tipp 4: kgV(${c.va}, ${c.vb}) = ${L}. Anzahl ${c.a} = ${L} : ${c.va} = ${c.ia}, Anzahl ${c.b} = ${L} : ${c.vb} = ${c.ib}.`);
+    }
+    $("feedback").innerHTML = out.map(m=>fb("hint", m)).join("");
+  }
+
+  function solve(){
+    const t = task; if(t.done) return;
+    const c = t.c;
+    t.done = true; t.shown = true; t.okV = true; t.okF = true;
+    stats.shown++; stats.streak = 0;
+    t.ia = c.ia; t.ib = c.ib; t.badIdx = null;
+    $("vA").value = ROMAN[c.va]; $("vB").value = ROMAN[c.vb];
+    ["vA","vB"].forEach(id=>{ $(id).readOnly = true; $(id).classList.remove("ok","bad"); });
+    $("feedback").innerHTML = fb("info", `Lösung: ${c.name} · Wertigkeiten ${c.a} ${ROMAN[c.va]}, ${c.b} ${ROMAN[c.vb]} · Formel <span class="nm">${solHTML(c)}</span>. Der Lösungsweg steht unten.`);
+    markHint([c.a, c.b]);
+    logHistory(t, "shown");
+    renderTask(); renderWay(); updateStats();
+  }
+
+  // ---------- Lösungsweg ----------
+  function renderWay(){
+    const t = task;
+    if(!t.done){ $("wayBox").innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
+    const c = t.c, A = EL[c.a], B = EL[c.b], L = lcm(c.va, c.vb);
+    const d = e => e.ng ? `<b>${e.n}</b> (${e.s}), Nebengruppenmetall` : `<b>${e.n}</b> (${e.s}), ${ROMAN[e.g]}. Hauptgruppe, ${CLS[e.c]}`;
+    const k = gcd(c.vb, c.va);
+    const crossTxt = k>1 ? `über Kreuz: ${c.a}<sub>${c.vb}</sub>${c.b}<sub>${c.va}</sub> → durch ${k} kürzen → <span class="t">${solHTML(c)}</span>`
+                         : `über Kreuz: <span class="t">${solHTML(c)}</span> (nicht kürzbar)`;
+    const rows = [
+      ["Elemente im PSE", `${d(A)}<br>${d(B)}`],
+      [`Wertigkeit ${c.a}`, valReason(c.a, t)],
+      [`Wertigkeit ${c.b}`, valReason(c.b, t)],
+      ["kgV", `kgV(<span class="a">${c.va}</span>, <span class="a">${c.vb}</span>) = <span class="t">${L}</span>`],
+      ["Anzahl der Atome", `${c.a}: ${L} : ${c.va} = <span class="t">${c.ia}</span> · ${c.b}: ${L} : ${c.vb} = <span class="t">${c.ib}</span>`],
+      ["Kreuzregel", crossTxt],
+      ["Kontrolle", `${c.a}: ${c.ia} · ${c.va} = ${c.ia*c.va} &nbsp;und&nbsp; ${c.b}: ${c.ib} · ${c.vb} = ${c.ib*c.vb} ✓`]
+    ];
+    let h = `<div class="steps">`;
+    rows.forEach((r,i)=>{ h += `<div class="step"><span class="n">${i+1}</span><span class="h">${r[0]}</span><span class="b">${r[1]}</span></div>`; });
+    h += `<div class="step final"><span class="n">=</span><span class="h">Summenformel</span><span class="b">${solHTML(c)}</span></div></div>`;
+    $("wayBox").innerHTML = h;
+  }
+
+  // ---------- Verlauf & Statistik ----------
+  function logHistory(t, status){
+    if(t.logged) return; t.logged = true;
+    const c = t.c;
+    history.unshift({num:t.num, name:c.name, val:`${c.a} ${ROMAN[c.va]} · ${c.b} ${ROMAN[c.vb]}`, f:solHTML(c), status});
+    const lbl = {first:["im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    $("histBody").innerHTML = history.map(r=>`<tr><td class="mono">${r.num}</td><td>${r.name}</td><td class="mono">${r.val}</td><td class="mono">${r.f}</td><td class="${lbl[r.status][1]}">${lbl[r.status][0]}</td></tr>`).join("");
+  }
+  function updateStats(){
+    $("roSolved").textContent = stats.solved;
+    $("roFirst").textContent = stats.first;
+    $("roStreak").textContent = stats.streak;
+    $("roShown").textContent = stats.shown;
+  }
+
+  // ---------- Ereignisse ----------
+  $("modeToggle").addEventListener("click", ev=>{
+    const b = ev.target.closest("button"); if(!b) return;
+    $("modeToggle").querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+    mode = b.dataset.mode; newTask();
+  });
+  $("chkNG").addEventListener("change", ev=>{ useNG = ev.target.checked; newTask(); });
+  $("chkCross").addEventListener("change", ev=>{ showCross = ev.target.checked; drawFormula(); });
+  $("chkSum").addEventListener("change", ev=>{ showSum = ev.target.checked; drawFormula(); });
+
+  $("pse").addEventListener("click", ev=>{ const c = ev.target.closest(".cell"); if(c) showInfo(c.dataset.s); });
+  $("stpWrap").addEventListener("click", ev=>{ const b = ev.target.closest("button[data-k]"); if(b) changeIdx(b.dataset.k, +b.dataset.d); });
+  ["vA","vB"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{ $(id).classList.remove("ok","bad"); task.touched = true; task.okV = false; $("box1").classList.remove("passed"); $("st1").textContent = "offen"; drawFormula(); });
+    $(id).addEventListener("keydown", ev=>{ if(ev.key==="Enter") check(); });
+  });
+  $("btnNew").addEventListener("click", newTask);
+  $("btnCheck").addEventListener("click", check);
+  $("btnHint").addEventListener("click", hint);
+  $("btnSolve").addEventListener("click", solve);
+
+  document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+  }));
+  $("btnGuide").addEventListener("click", ev=>{ ev.preventDefault(); $("guideBackdrop").classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
+  $("guideBackdrop").addEventListener("click", ev=>{ if(ev.target===$("guideBackdrop")) $("guideBackdrop").classList.remove("open"); });
+  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") $("guideBackdrop").classList.remove("open"); });
+
+  buildPSE();
+  newTask();
+  updateStats();
+})();
+</script>
+
+</body>
+</html>

@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Galvanische Zelle · Simulation</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -24,11 +21,11 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header */
@@ -142,7 +139,7 @@ input[type=range]:disabled{opacity:.35; cursor:not-allowed;}
 .speed-group{display:flex; gap:4px; margin-left:auto;}
 .speed-group button{
   background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
-  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:'JetBrains Mono',monospace;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
 }
 .speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
 canvas#cv{width:100%; height:auto; display:block; border-radius:2px;}
@@ -183,6 +180,8 @@ ul.obs{margin:6px 0 0; padding-left:18px; font-size:13.5px; color:var(--text-dim
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
@@ -340,7 +339,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · 25 °C, Aktivitäten durch Konzentrationen ersetzt, Nernst-Faktor 0,059 V. Standardpotentiale sind Tabellenwerte und können je nach Schulbuch um wenige Hundertstel Volt abweichen.</p>
-  <p class="footer-credit">Bastian Baumgart · Galvanische-Zelle-Simulator V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · Galvanische-Zelle-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -619,7 +618,7 @@ function drawDiaphragm(){
   }
   ctx.strokeStyle = 'rgba(201,168,120,0.9)'; ctx.lineWidth = 1;
   ctx.strokeRect(DIA_X0, DIA_TOP, w, bot - DIA_TOP);
-  ctx.fillStyle = C.dim; ctx.font = "12px Inter, system-ui"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.dim; ctx.font = "12px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('Diaphragma', 450, DIA_TOP - 12);
 }
 function drawTroughGlass(){
@@ -659,13 +658,13 @@ function drawElectrode(i, R){
       ctx.beginPath(); ctx.arc(h.ex + hw + dep, y + 3 - (y % 3), r, 0, 7); ctx.fill();
     }
   }
-  ctx.fillStyle = '#1c2230'; ctx.font = "600 13px Inter, system-ui"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#1c2230'; ctx.font = "600 13px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(cell.m, h.ex, EL_TOP + 70);
   if (R.anode >= 0){
     const isA = R.anode === i, px = h.ex + (i === 0 ? -34 : 34), py = EL_TOP + 16;
     ctx.fillStyle = isA ? C.anode : C.cathode;
     ctx.beginPath(); ctx.arc(px, py, 12, 0, 7); ctx.fill();
-    ctx.fillStyle = '#0e1113'; ctx.font = "700 18px Inter, system-ui";
+    ctx.fillStyle = '#0e1113'; ctx.font = "700 18px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText(isA ? '−' : '+', px, py + 1);
   }
 }
@@ -673,7 +672,7 @@ function ionCircle(x, y, r, fill, text, fs, tcol){
   ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
   if (S.labels && text){
-    ctx.fillStyle = tcol || '#fff'; ctx.font = `600 ${fs}px Inter, system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = tcol || '#fff'; ctx.font = `600 ${fs}px system-ui, 'Segoe UI', Roboto, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, x, y + 0.5);
   }
 }
@@ -711,7 +710,7 @@ function drawCircuit(R){
   ctx.lineWidth = 3;
   line(S.closed ? [[548, WIRE_Y], [588, WIRE_Y]] : [[548, WIRE_Y], [582, WIRE_Y - 20]]);
   dot(548, WIRE_Y); dot(588, WIRE_Y);
-  ctx.fillStyle = C.faint; ctx.font = "11px Inter, system-ui"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.faint; ctx.font = "11px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('Schalter', 568, WIRE_Y + 16);
   ctx.lineWidth = 2;
   line([[280, WIRE_Y], [280, VM_Y], [405, VM_Y]]);
@@ -719,11 +718,11 @@ function drawCircuit(R){
   dot(280, WIRE_Y); dot(625, WIRE_Y);
   ctx.fillStyle = '#080a0b'; ctx.strokeStyle = C.glass; ctx.lineWidth = 1.5;
   roundRect(405, VM_Y - 22, 90, 44, 4); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = C.amber; ctx.font = "600 19px 'JetBrains Mono', ui-monospace, monospace";
+  ctx.fillStyle = C.amber; ctx.font = "600 19px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace, ui-monospace, monospace";
   ctx.shadowColor = C.amber; ctx.shadowBlur = 6;
   ctx.fillText(fmt(R.U, 2) + ' V', 450, VM_Y + 1);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = C.faint; ctx.font = "11px Inter, system-ui";
+  ctx.fillStyle = C.faint; ctx.font = "11px system-ui, 'Segoe UI', Roboto, sans-serif";
   ctx.fillText('Voltmeter', 450, VM_Y - 30);
 }
 function drawElectrons(){
@@ -732,7 +731,7 @@ function drawElectrons(){
     const [x, y] = pointAt(e.P, e.s);
     ctx.fillStyle = '#4ade80'; ctx.strokeStyle = '#14532d'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.stroke();
-    if (S.labels){ ctx.fillStyle = '#052e16'; ctx.font = "700 8px Inter, system-ui"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('e⁻', x, y + 0.5); }
+    if (S.labels){ ctx.fillStyle = '#052e16'; ctx.font = "700 8px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('e⁻', x, y + 0.5); }
   }
 }
 function drawLamp(R){
@@ -747,7 +746,7 @@ function drawLamp(R){
   ctx.strokeStyle = C.wire; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(x, y, 13, 0, 7); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(x - 9, y - 9); ctx.lineTo(x + 9, y + 9); ctx.moveTo(x + 9, y - 9); ctx.lineTo(x - 9, y + 9); ctx.stroke();
-  ctx.fillStyle = C.faint; ctx.font = "11px Inter, system-ui"; ctx.textAlign = 'center'; ctx.fillText('Lampe', x, y + 24);
+  ctx.fillStyle = C.faint; ctx.font = "11px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.textAlign = 'center'; ctx.fillText('Lampe', x, y + 24);
 }
 function arrow(x0, y0, x1, y1, col){
   ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 2;
@@ -764,18 +763,18 @@ function drawLabels(R){
     let t1 = 'Halbzelle ' + (i ? 'rechts' : 'links'), col = C.text, t2 = '';
     if (R.anode === i){ t1 = 'Anode · Minuspol (−)'; col = C.anode; t2 = 'Oxidation: ' + cell.m + ' → ' + M.ion + ' + ' + M.z + ' e⁻'; }
     if (R.cathode === i){ t1 = 'Kathode · Pluspol (+)'; col = C.cathode; t2 = 'Reduktion: ' + M.ion + ' + ' + M.z + ' e⁻ → ' + cell.m; }
-    ctx.fillStyle = col; ctx.font = "600 13px Inter, system-ui"; ctx.fillText(t1, cx, 448);
-    ctx.fillStyle = C.text; ctx.font = "12px Inter, system-ui";
+    ctx.fillStyle = col; ctx.font = "600 13px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.fillText(t1, cx, 448);
+    ctx.fillStyle = C.text; ctx.font = "12px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText(M.salt + '-Lösung, c(' + M.ion + ') = ' + fmtC(cell.c) + ' mol/L', cx, 466);
     if (t2){ ctx.fillStyle = C.dim; ctx.fillText(t2, cx, 483); }
   }
   if (S.closed && R.anode >= 0){
     const toR = R.anode === 0;
-    ctx.fillStyle = C.dim; ctx.font = "12px Inter, system-ui";
+    ctx.fillStyle = C.dim; ctx.font = "12px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText('Elektronenfluss', 320, WIRE_Y + 16);
     arrow(toR ? 282 : 358, WIRE_Y + 30, toR ? 358 : 282, WIRE_Y + 30, '#4ade80');
   } else if (R.anode < 0){
-    ctx.fillStyle = C.dim; ctx.font = "12px Inter, system-ui";
+    ctx.fillStyle = C.dim; ctx.font = "12px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText('ΔE = 0 V – kein Stromfluss', 320, WIRE_Y + 18);
   }
 }
@@ -889,15 +888,15 @@ function renderLadder(R){
   const lys = [mk[0].y, Math.max(mk[1].y, mk[0].y + 16)];
   mk.forEach((m, k) => {
     s += `<line x1="${AX}" y1="${m.y}" x2="${AX+70}" y2="${m.y}" stroke="${colOf(m.i)}" stroke-width="3"/>`;
-    s += `<text x="${AX+76}" y="${lys[k] + 4}" font-size="12" font-weight="600" fill="${colOf(m.i)}" font-family="JetBrains Mono, monospace">${m.i ? 'rechts' : 'links'} ${fmtS(m.E, 3)} V</text>`;
+    s += `<text x="${AX+76}" y="${lys[k] + 4}" font-size="12" font-weight="600" fill="${colOf(m.i)}" font-family="ui-monospace, Cascadia Mono, Consolas, Menlo, monospace">${m.i ? 'rechts' : 'links'} ${fmtS(m.E, 3)} V</text>`;
   });
   if (R.anode >= 0 && Math.abs(mk[1].y - mk[0].y) > 14){
     const x = AX + 40;
     s += `<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#ffb454"/></marker></defs>`;
     s += `<line x1="${x}" y1="${mk[0].y + 3}" x2="${x}" y2="${mk[1].y - 3}" stroke="#ffb454" stroke-width="1.5" marker-start="url(#ah)" marker-end="url(#ah)"/>`;
-    s += `<text x="${x + 8}" y="${(mk[0].y + mk[1].y) / 2 + 4}" font-size="12" fill="#ffb454" font-family="JetBrains Mono, monospace">ΔE = ${fmt(R.U, 3)} V</text>`;
+    s += `<text x="${x + 8}" y="${(mk[0].y + mk[1].y) / 2 + 4}" font-size="12" fill="#ffb454" font-family="ui-monospace, Cascadia Mono, Consolas, Menlo, monospace">ΔE = ${fmt(R.U, 3)} V</text>`;
   }
-  $('ladder').innerHTML = `<svg viewBox="0 0 ${Wd} ${Ht}" width="100%" role="img" aria-label="Spannungsreihe" style="font-family:Inter,system-ui,sans-serif">${s}</svg>`;
+  $('ladder').innerHTML = `<svg viewBox="0 0 ${Wd} ${Ht}" width="100%" role="img" aria-label="Spannungsreihe" style="font-family:system-ui, 'Segoe UI', Roboto, sans-serif">${s}</svg>`;
 }
 
 // ---------- Steuerung ----------

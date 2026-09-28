@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nomenklatur-Trainer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -25,10 +22,10 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 header{
@@ -62,7 +59,7 @@ header .status.done{color:var(--teal); border-color:var(--teal-dim);}
 .modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
 .modal-body ol{padding-left:20px; margin:0 0 6px;}
 .modal-body strong{color:var(--text); font-weight:600;}
-.formula-box{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+.formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
 
 .wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
 @media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
@@ -98,9 +95,9 @@ section.block{margin-bottom:26px;}
 .lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
 .lib-table thead th{background:var(--panel-alt); text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line);}
 .lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim);}
-.lib-table td.k{color:var(--amber); font-family:'JetBrains Mono',monospace; width:1%; white-space:nowrap; text-align:right;}
+.lib-table td.k{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; width:1%; white-space:nowrap; text-align:right;}
 .lib-table sub{font-size:.75em;}
-.lib-table td.v{color:var(--text); font-family:'JetBrains Mono',monospace;}
+.lib-table td.v{color:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 .lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
 .lib-table tr:last-child td{border-bottom:none;}
 .note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
@@ -132,16 +129,16 @@ section.block{margin-bottom:26px;}
 .stage .stylelbl{position:absolute; left:10px; top:8px; font-size:10.5px; color:var(--text-faint); z-index:1; letter-spacing:.3px;}
 svg .bond{stroke:var(--text); stroke-width:2.2; stroke-linecap:round; fill:none;}
 svg .hl{stroke:var(--teal); stroke-width:16; stroke-linecap:round; stroke-linejoin:round; fill:none; opacity:.22;}
-svg .lbl{fill:var(--text); font-family:'JetBrains Mono',monospace; font-size:15px;}
+svg .lbl{fill:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px;}
 svg .lbl.o{fill:var(--oxy);}
 svg .lbl.h{fill:var(--text-dim);}
-svg .num{fill:var(--teal); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; paint-order:stroke; stroke:var(--screen); stroke-width:4px;}
+svg .num{fill:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:12px; font-weight:700; paint-order:stroke; stroke:var(--screen); stroke-width:4px;}
 
 .answer-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;}
 .answer-row label{flex-basis:100%; font-size:12px; color:var(--text-dim);}
 input.name-in{
   flex:1; min-width:0; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
-  padding:10px 12px; border-radius:var(--radius); font-size:17px; font-family:'JetBrains Mono',monospace;
+  padding:10px 12px; border-radius:var(--radius); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
 }
 input.name-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
 input.name-in.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
@@ -152,7 +149,7 @@ input.name-in[readonly]{color:var(--teal);}
 @media (max-width:600px){ .mc-grid{grid-template-columns:1fr;} }
 .mc-opt{
   text-align:left; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); border-radius:var(--radius);
-  padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:14.5px; cursor:pointer; overflow-wrap:anywhere;
+  padding:10px 12px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:14.5px; cursor:pointer; overflow-wrap:anywhere;
 }
 .mc-opt:hover:not(:disabled){border-color:var(--text-faint);}
 .mc-opt:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
@@ -166,7 +163,7 @@ input.name-in[readonly]{color:var(--teal);}
 .fb.bad{color:var(--danger); border-color:var(--danger-dim);}
 .fb.hint{color:var(--amber); border-color:var(--amber-dim);}
 .fb.info{color:var(--text-dim);}
-.fb .nm{font-family:'JetBrains Mono',monospace; color:var(--text);}
+.fb .nm{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
 
 .readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
 .readout{display:flex; flex-direction:column; gap:2px;}
@@ -183,12 +180,12 @@ input.name-in[readonly]{color:var(--teal);}
 .steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
 .step{display:grid; grid-template-columns:28px 130px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
 .step:last-child{border-bottom:none;}
-.step .n{font-family:'JetBrains Mono',monospace; color:var(--text-faint); font-size:12px;}
+.step .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text-faint); font-size:12px;}
 .step .h{color:var(--text-dim);}
 .step .b{color:var(--text);}
-.step .b .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
-.step .b .t{color:var(--teal); font-family:'JetBrains Mono',monospace;}
-.step.final .b{font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--teal);}
+.step .b .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step .b .t{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step.final .b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px; color:var(--teal);}
 @media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
 
 .table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
@@ -199,6 +196,8 @@ table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-s
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 @media (max-width:600px){ footer{padding:16px 16px 30px;} }
 ::-webkit-scrollbar{width:9px; height:9px;}
@@ -370,7 +369,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Benennung nach den IUPAC-Regeln für acyclische Kohlenwasserstoffe und Alkohole. Die Strukturen werden zufällig erzeugt und automatisch benannt.</p>
-  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -1081,7 +1080,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <div class="step"><span class="n">2</span><span class="h">Nummerierung</span><span class="b">${numReason(t.res)}${locs.length?"<br>"+locs.join(" · "):""}</span></div>
       <div class="step"><span class="n">3</span><span class="h">Seitenketten</span><span class="b">${subStr}</span></div>
       <div class="step"><span class="n">4</span><span class="h">Endung</span><span class="b">${endung}</span></div>
-      <div class="step final"><span class="n">=</span><span class="h" style="font-family:Inter,sans-serif;font-size:13.5px">Name</span><span class="b">${t.canon}</span></div>
+      <div class="step final"><span class="n">=</span><span class="h" style="font-family:system-ui, 'Segoe UI', Roboto, sans-serif;font-size:13.5px">Name</span><span class="b">${t.canon}</span></div>
       ${alts.length?`<div class="step"><span class="n"></span><span class="h">auch akzeptiert</span><span class="b" style="color:var(--text-dim)">${alts.join(" · ")}</span></div>`:""}
     </div>`;
   }

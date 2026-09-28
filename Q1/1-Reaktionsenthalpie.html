@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Berechnung der Reaktionsenthalpie</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -24,10 +21,10 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header */
@@ -71,7 +68,7 @@ header .status.done{color:var(--teal); border-color:var(--teal-dim);}
 .modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
 .modal-body strong{color:var(--text); font-weight:600;}
 .formula-box{
-  font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text);
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text);
   background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px;
   overflow-x:auto; white-space:nowrap;
 }
@@ -157,7 +154,7 @@ select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;
 .chip.l3{color:var(--danger); border-color:var(--danger-dim);}
 .task-ctx{font-size:13px; color:var(--text-dim);}
 .equation{
-  font-family:'JetBrains Mono',monospace; font-size:21px; color:var(--text); padding:14px 2px 18px;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:21px; color:var(--text); padding:14px 2px 18px;
   line-height:1.5; overflow-x:auto; white-space:nowrap;
 }
 .equation sub{font-size:.66em;}
@@ -165,7 +162,7 @@ select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;
 .equation .co{color:var(--amber); margin-right:3px;}
 .equation input.coef{
   width:42px; background:var(--panel-alt); border:1px solid var(--line); color:var(--amber);
-  padding:3px 4px; margin-right:5px; border-radius:var(--radius); font-size:.8em; font-family:'JetBrains Mono',monospace;
+  padding:3px 4px; margin-right:5px; border-radius:var(--radius); font-size:.8em; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
   text-align:center; vertical-align:middle;
 }
 .equation input.coef:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
@@ -182,13 +179,13 @@ table.calc thead th{
 }
 table.calc td{padding:6px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap; vertical-align:middle;}
 table.calc tr.side td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; padding-bottom:5px; background:var(--panel);}
-table.calc td.sp{font-family:'JetBrains Mono',monospace;}
+table.calc td.sp{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 table.calc td.sp sub{font-size:.72em;}
 table.calc td.sp .st{color:var(--text-dim); font-size:.85em;}
-table.calc td.nu{color:var(--amber); font-family:'JetBrains Mono',monospace; text-align:center; width:48px;}
+table.calc td.nu{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; text-align:center; width:48px;}
 table.calc input{
   width:128px; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
-  padding:6px 8px; border-radius:var(--radius); font-size:13px; font-family:'JetBrains Mono',monospace;
+  padding:6px 8px; border-radius:var(--radius); font-size:13px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
   text-align:right; font-variant-numeric:tabular-nums;
 }
 table.calc input[readonly]{background:transparent; border-color:transparent; color:var(--amber);}
@@ -202,7 +199,7 @@ input.bad{border-color:var(--danger) !important; box-shadow:0 0 0 1px var(--dang
 .sum-box .unit-in{display:flex; align-items:center; gap:8px;}
 .sum-box input{
   width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
-  padding:7px 9px; border-radius:var(--radius); font-size:14px; font-family:'JetBrains Mono',monospace; text-align:right;
+  padding:7px 9px; border-radius:var(--radius); font-size:14px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; text-align:right;
 }
 .sum-box .unit{font-size:12px; color:var(--text-faint); white-space:nowrap;}
 .result-box{border-color:var(--amber-dim);}
@@ -233,7 +230,7 @@ input.bad{border-color:var(--danger) !important; box-shadow:0 0 0 1px var(--dang
 .tabpanel.active{display:block;}
 .empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
 
-.way{font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:2; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:12px 16px; overflow-x:auto; white-space:nowrap;}
+.way{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13.5px; line-height:2; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:12px 16px; overflow-x:auto; white-space:nowrap;}
 .way sub{font-size:.72em;}
 .way .c{color:var(--text-faint);}
 .way .a{color:var(--amber);}
@@ -249,6 +246,8 @@ table.hist td sub{font-size:.72em;}
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 @media (max-width:600px){ footer{padding:16px 16px 30px;} }
 ::-webkit-scrollbar{width:9px; height:9px;}
@@ -434,7 +433,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Tabellenwerte für 25 °C und 1 bar nach gängigen Tabellenwerken (NIST, CRC Handbook), auf eine Nachkommastelle gerundet. Einzelne Schulbücher geben teilweise leicht abweichende Werte an.</p>
-  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -1048,7 +1047,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const amber = css("--amber"), teal = css("--teal"), grid = css("--grid");
 
     if(!task || !task.done){
-      ctx.fillStyle = faint; ctx.font = "13px Inter, system-ui, sans-serif";
+      ctx.fillStyle = faint; ctx.font = "13px system-ui, 'Segoe UI', Roboto, sans-serif";
       ctx.fillText("Das Diagramm erscheint, sobald die Aufgabe gelöst ist.", 20, H/2);
       return;
     }
@@ -1064,7 +1063,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     // Achse mit Ticks
     const rawStep = (hi-lo)/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const step = [1,2,2.5,5,10].map(m=>m*mag).find(st=>st>=rawStep) || 10*mag;
-    ctx.font = "10.5px 'JetBrains Mono', monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.font = "10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     for(let v = Math.ceil(lo/step)*step; v <= hi; v += step){
       const yy = y(v);
       ctx.strokeStyle = grid; ctx.lineWidth = 1;
@@ -1072,7 +1071,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       ctx.fillStyle = faint; ctx.fillText(fmt(v).replace(",0",""), padL-8, yy);
     }
     ctx.save(); ctx.translate(14, padT+plotH/2); ctx.rotate(-Math.PI/2);
-    ctx.textAlign = "center"; ctx.fillStyle = dim; ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "center"; ctx.fillStyle = dim; ctx.font = "11px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText("H in kJ/mol", 0, 0); ctx.restore();
 
     // Niveaus
@@ -1082,7 +1081,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     // Elemente (0)
     ctx.strokeStyle = dim; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
     ctx.beginPath(); ctx.moveTo(x0, y(0)); ctx.lineTo(x1, y(0)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = dim; ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = dim; ctx.font = "11px system-ui, 'Segoe UI', Roboto, sans-serif";
     ctx.fillText("Elemente (0 kJ/mol)", x1 - 2, y(0) - 4);
 
     ctx.lineWidth = 3;
@@ -1096,11 +1095,11 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     // Beschriftung Niveaus
     const lab = (txt, val, xc, v, color) => {
       const above = v >= 0 ? (y(v) - y(0) < -18 || v === 0 ? true : false) : false;
-      ctx.textAlign = "center"; ctx.fillStyle = color; ctx.font = "600 12px Inter, sans-serif";
+      ctx.textAlign = "center"; ctx.fillStyle = color; ctx.font = "600 12px system-ui, 'Segoe UI', Roboto, sans-serif";
       const ty = (v > 0 || (v === 0)) ? y(v) - 8 : y(v) + 16;
       ctx.textBaseline = "alphabetic";
       ctx.fillText(txt, xc, ty);
-      ctx.font = "11px 'JetBrains Mono', monospace"; ctx.fillStyle = dim;
+      ctx.font = "11px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillStyle = dim;
       ctx.fillText(fmt(val)+" kJ/mol", xc, ty + (v > 0 || v===0 ? -14 : 14));
     };
     lab("Edukte", s.se, (eL+eR)/2, s.se, teal);
@@ -1114,7 +1113,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     ctx.setLineDash([]);
     if(Math.abs(s.dr) > 0.05) arrow(xm, y(s.se), y(s.sp), text, false, 2);
     ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    ctx.font = "600 12px 'JetBrains Mono', monospace"; ctx.fillStyle = text;
+    ctx.font = "600 12px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillStyle = text;
     const my = (y(s.se)+y(s.sp))/2;
     ctx.fillText("ΔrH° = " + fmt(s.dr), xm + 8, my);
   }

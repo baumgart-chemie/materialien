@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GC-Simulator · Gaschromatographie & Auswertung</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -29,11 +26,11 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header */
@@ -152,7 +149,7 @@ select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;
 .speed-group{display:flex; gap:4px; margin-left:auto;}
 .speed-group button{
   background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
-  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:'JetBrains Mono',monospace;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
 }
 .speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
 canvas#chrom{width:100%; height:340px; display:block; border-radius:2px;}
@@ -200,6 +197,8 @@ tbody tr:hover{background:var(--panel-alt);}
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
@@ -420,7 +419,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Retentionszeiten, Peakformen und Rauschen werden aus vereinfachten physikalischen Modellen berechnet und bilden kein reales Säulen-/Detektorverhalten exakt ab.</p>
-  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -759,7 +758,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     if(!simData){
       ctx.strokeStyle="#233029"; ctx.lineWidth=1;
       for(let i=0;i<=8;i++){ const x=padL+plotW*i/8; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
-      ctx.fillStyle="#5f6870"; ctx.font="13px Inter"; ctx.fillText("Bereit — Methode einstellen und Injektion starten klicken.", padL, padT+plotH/2);
+      ctx.fillStyle="#5f6870"; ctx.font="13px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.fillText("Bereit — Methode einstellen und Injektion starten klicken.", padL, padT+plotH/2);
       return;
     }
     const rt = activeRuntime;
@@ -770,7 +769,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const nVisible = Math.max(2, Math.round(totalSamples*visibleT/rt));
 
     // Gitter
-    ctx.strokeStyle="#233029"; ctx.lineWidth=1; ctx.font="10.5px 'JetBrains Mono'"; ctx.fillStyle="#5f6870";
+    ctx.strokeStyle="#233029"; ctx.lineWidth=1; ctx.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillStyle="#5f6870";
     for(let i=0;i<=10;i++){
       const x=padL+plotW*i/10;
       ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
@@ -780,7 +779,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       const y=padT+plotH*j/4;
       ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
     }
-    ctx.fillStyle="#9aa2a9"; ctx.font="11px Inter"; ctx.fillText("Zeit (min)", padL+plotW/2-24, h-3);
+    ctx.fillStyle="#9aa2a9"; ctx.font="11px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.fillText("Zeit (min)", padL+plotW/2-24, h-3);
     ctx.save(); ctx.translate(12,padT+plotH/2+18); ctx.rotate(-Math.PI/2); ctx.fillText("Signal (pA)",0,0); ctx.restore();
 
     // Trace
@@ -802,7 +801,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         if(x <= padL+plotW*(nVisible/totalSamples)+2){
           ctx.strokeStyle="#4fd1c5"; ctx.lineWidth=1;
           ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-          ctx.fillStyle="#4fd1c5"; ctx.font="11px 'JetBrains Mono'"; ctx.fillText(String(p.num), x-3, Math.max(y,padT+10));
+          ctx.fillStyle="#4fd1c5"; ctx.font="11px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillText(String(p.num), x-3, Math.max(y,padT+10));
         }
       });
     }

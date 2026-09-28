@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reaktionsgleichungen</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; -webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+header{padding:22px 28px 18px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line); border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100; align-items:center; justify-content:center; padding:24px 16px;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--panel); border:1px solid var(--line); border-radius:5px; width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body ol{padding-left:20px; margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+.formula-box sub, .modal-body sub{font-size:.75em;}
+
+.wrap{display:grid; grid-template-columns: 350px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{border-right:1px solid var(--line); padding:20px 20px 60px; max-height:calc(100vh - 70px); overflow-y:auto;}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{font-size:12.5px; color:var(--text-dim); font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 4px; font-size:12.5px; cursor:pointer; font-family:inherit; min-width:0;}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.mode-toggle.big button{padding:10px 2px; font-size:12px; font-weight:500;}
+
+.check-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:12px; cursor:pointer; line-height:1.4;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:1px 0 0; flex:none;}
+
+.btn{border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt); color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+.lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim); line-height:1.4;}
+.lib-table td.k{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; width:1%; white-space:nowrap;}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
+.lib-table tr:last-child td{border-bottom:none;}
+.lib-table sub{font-size:.75em;}
+details.rules{margin-bottom:26px;}
+details.rules summary{list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--text-dim); font-weight:600; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); letter-spacing:.2px;}
+details.rules summary::-webkit-details-marker{display:none;}
+details.rules summary:hover{border-color:var(--text-faint); color:var(--text);}
+details.rules summary:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+details.rules .rules-state{font-weight:500; color:var(--teal); font-size:12px;}
+details.rules .rules-state::after{content:"anzeigen +";}
+details.rules[open] .rules-state::after{content:"ausblenden −";}
+details.rules[open] summary{margin-bottom:12px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.task-ctx{font-size:13px; color:var(--text-dim);}
+.task-prompt{font-size:19px; margin:8px 0 2px; color:var(--text);}
+.task-prompt b{color:var(--amber); font-weight:600;}
+.task-elems{font-size:13px; color:var(--text-dim); margin:2px 0 0;}
+.task-elems .s{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
+
+.work-grid{display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:14px; align-items:start; margin:12px 0 4px;}
+@media (max-width:780px){ .work-grid{grid-template-columns:1fr;} }
+.stage{position:relative; border:1px solid var(--line-soft); border-radius:4px;
+  background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px, linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px, var(--screen);
+  min-height:330px; display:flex; align-items:center; justify-content:center; padding:30px 10px 34px; overflow:hidden;}
+.stage::before{content:""; position:absolute; inset:0; background:var(--screen); opacity:.72; pointer-events:none;}
+.stage svg{position:relative; display:block; width:100%; max-width:500px; height:auto; user-select:none; -webkit-user-select:none;}
+.stage .stylelbl{position:absolute; left:10px; top:8px; font-size:10.5px; color:var(--text-faint); z-index:1; letter-spacing:.3px;}
+.stage .formula{position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--text-dim); z-index:1; text-align:right;}
+.stage .formula .ok{color:var(--good);} .stage .formula .no{color:var(--danger);}
+.stage .result{position:absolute; left:10px; bottom:8px; font-size:12px; color:var(--text-faint); z-index:1;}
+.stage .result .rf{font-size:24px; color:var(--text); font-weight:600; margin-left:4px;}
+.stage .result .rf sub{font-size:.7em;}
+.inputs{display:flex; flex-direction:column; gap:14px;}
+.stepbox{border:1px solid var(--line-soft); border-radius:4px; padding:10px 10px 12px; background:var(--panel); transition:opacity .15s;}
+.stepbox .sh{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:10px; letter-spacing:.2px;}
+.stepbox .sh .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:0 6px; margin-right:6px; font-size:11px;}
+.stepbox .sh .st{font-weight:500; font-size:11.5px; color:var(--text-faint);}
+.stepbox.passed .sh .st{color:var(--good);}
+.stepbox.passed .sh .n{color:var(--good); border-color:#35573a;}
+.stepbox.locked{opacity:.42;}
+.stepbox.locked .stp .c button{pointer-events:none;}
+.field{margin-bottom:10px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
+.field label .s{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); font-weight:600;}
+input.num-in{width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:var(--radius); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+input.num-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+input.num-in.ok, .stp.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+input.num-in.bad, .stp.bad{border-color:var(--danger); box-shadow:0 0 0 1px var(--danger-dim);}
+input.num-in[readonly]{color:var(--teal);}
+.stp-wrap{display:flex; flex-direction:column; gap:6px;}
+.stp{display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:4px 4px 4px 12px;}
+.stp .l{font-size:13px; color:var(--text-dim);}
+.stp .l b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); font-weight:600; margin-right:4px;}
+.stp .c{display:flex; align-items:center; gap:4px;}
+.stp .c button{width:32px; height:32px; border:1px solid var(--line); background:var(--raise); color:var(--text); border-radius:var(--radius); font-size:17px; line-height:1; cursor:pointer; font-family:inherit;}
+.stp .c button:hover:not(:disabled){border-color:var(--text-faint);}
+.stp .c button:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.stp .c button:disabled{opacity:.35; cursor:default;}
+.stp .c .v{min-width:26px; text-align:center; font-size:16px; color:var(--teal);}
+.stp-note{font-size:11.5px; color:var(--text-faint); line-height:1.45; margin:8px 0 0;}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb .nm{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
+.fb sub{font-size:.75em;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
+.step{display:grid; grid-template-columns:28px 150px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
+.step:last-child{border-bottom:none;}
+.step .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text-faint); font-size:12px;}
+.step .h{color:var(--text-dim);}
+.step .b{color:var(--text);}
+.step .b .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step .b .t{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step.final .b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:17px; color:var(--teal);}
+.step sub{font-size:.75em;}
+@media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+table.hist sub{font-size:.75em;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+/* Reaktionsgleichung */
+.stage{flex-direction:column; min-height:280px; padding:36px 12px 16px;}
+.stage-inner{position:relative; width:100%; display:flex; flex-direction:column; align-items:center; gap:22px;}
+.eq{display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:12px 14px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; max-width:100%;}
+.eq .sp{display:flex; flex-direction:column; align-items:center; min-width:0;}
+.eq .f{font-size:30px; font-weight:600; color:var(--text); white-space:nowrap; line-height:1.2;}
+.eq .f sub{font-size:.62em; color:var(--teal);}
+.eq .f .k{color:var(--amber); margin-right:5px;}
+.eq .f .k.one{color:var(--text-faint); font-weight:400;}
+.eq .f.q{color:var(--text-faint);}
+.eq .f.bad{color:var(--danger);}
+.eq .f.bad sub{color:var(--danger);}
+.eq .nm{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; font-size:11px; color:var(--text-faint); margin-top:5px; max-width:140px; text-align:center; line-height:1.3;}
+.eq .op{font-size:26px; color:var(--text-dim); line-height:1.35;}
+.eq.done .f, .eq.done .f sub{color:var(--teal);}
+.eq.done .f .k{color:var(--teal);}
+@media (max-width:600px){ .eq .f{font-size:22px;} .eq .op{font-size:20px;} }
+
+.bil{border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); font-size:12.5px; border-collapse:collapse; min-width:240px;}
+.bil th{font-weight:500; color:var(--text-faint); font-size:10.5px; padding:5px 12px; border-bottom:1px solid var(--line-soft); text-align:center; letter-spacing:.3px;}
+.bil td{padding:4px 12px; text-align:center; border-bottom:1px solid var(--line-soft); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.bil tr:last-child td{border-bottom:none;}
+.bil td.el{color:var(--text); font-weight:600; text-align:left;}
+.bil td.n{color:var(--amber);}
+.bil tr.ok td.s{color:var(--good);}
+.bil tr.no td.s{color:var(--danger);}
+.bil tr.no td.n{color:var(--danger);}
+.bil-empty{font-size:12px; color:var(--text-faint);}
+
+.stepbox.hidden{display:none;}
+.btn.step-check{width:100%; margin-top:12px;}
+input.num-in.fin{font-size:16px;}
+.field label sub, .stp .l sub{font-size:.75em;}
+.stp .l{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.stp .c .v{min-width:28px;}
+.side-sep{display:inline-block; width:100%; font-size:10.5px; color:var(--text-faint); letter-spacing:.4px; text-transform:uppercase; margin:2px 0 -2px;}
+.stp-wrap .side-sep:first-child{margin-top:0;}
+.task-prompt .arr{color:var(--text-dim); margin:0 6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Reaktionsgleichungen</h1>
+  <span class="tag">Aufstellen und Ausgleichen</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Eine Reaktionsgleichung beschreibt eine chemische Reaktion mit Formeln. Links stehen die <strong>Ausgangsstoffe</strong>, rechts die <strong>Reaktionsprodukte</strong>. Weil bei einer Reaktion keine Atome verloren gehen oder entstehen, muss von jedem Element links und rechts die <strong>gleiche Anzahl an Atomen</strong> stehen.</p>
+
+      <h3>Zwei Übungsarten</h3>
+      <ol>
+        <li><strong>Nur ausgleichen:</strong> Die Formeln sind vorgegeben. Du stellst nur die Koeffizienten (Zahlen vor den Formeln) ein.</li>
+        <li><strong>Komplett aufstellen:</strong> Du bekommst die Wortgleichung. In Schritt 1 schreibst du die Formeln aller Stoffe, in Schritt 2 gleichst du aus. Schritt 2 wird freigeschaltet, sobald alle Formeln stimmen.</li>
+      </ol>
+
+      <h3>Schritt 1: Formeln aufstellen</h3>
+      <ol>
+        <li><strong>Metalle</strong> sowie <strong>C, S, P und Si</strong> schreibt man als Element mit einem einzelnen Symbol, z. B. Fe, Mg, C.</li>
+        <li><strong>H, N, O, F, Cl, Br und I</strong> kommen als zweiatomige Moleküle vor: H<sub>2</sub>, N<sub>2</sub>, O<sub>2</sub>, F<sub>2</sub>, Cl<sub>2</sub>, Br<sub>2</sub>, I<sub>2</sub>.</li>
+        <li><strong>Verbindungen</strong> stellst du über die Wertigkeit auf (kgV bzw. Kreuzregel), wie im Summenformel-Trainer. Zahlwörter im Namen geben die Anzahl direkt an: mono = 1, di = 2, tri = 3.</li>
+      </ol>
+      <p>Tippe Zahlen einfach hinter das Symbol, z. B. <strong>Al2O3</strong>. Sie werden automatisch tiefgestellt. Achte auf Groß- und Kleinschreibung.</p>
+
+      <h3>Schritt 2: Ausgleichen</h3>
+      <ol>
+        <li>Zähle für jedes Element die Atome links und rechts (<strong>Atombilanz</strong>).</li>
+        <li>Ändere nur die <strong>Koeffizienten</strong> vor den Formeln, niemals die tiefgestellten Zahlen in den Formeln.</li>
+        <li>Beginne mit einem Element, das links und rechts nur in je einer Formel vorkommt. Elemente, die als Element-Formel auftreten (O<sub>2</sub>, H<sub>2</sub>, Fe …), gleichst du zuletzt aus.</li>
+        <li>Die Koeffizienten müssen die <strong>kleinstmöglichen ganzen Zahlen</strong> sein. Der Koeffizient 1 wird nicht geschrieben.</li>
+      </ol>
+      <div class="formula-box">Al + O<sub>2</sub> → Al<sub>2</sub>O<sub>3</sub><br>O: 2 links, 3 rechts → kgV 6 → 3 O<sub>2</sub> und 2 Al<sub>2</sub>O<sub>3</sub><br>Al: rechts jetzt 4 → 4 Al<br>4 Al + 3 O<sub>2</sub> → 2 Al<sub>2</sub>O<sub>3</sub></div>
+      <p>Die Koeffizienten stellst du mit <strong>+</strong> und <strong>−</strong> ein. Geprüft wird mit den Buttons <strong>„Formeln prüfen“</strong> und <strong>„Gleichung prüfen“</strong> im jeweiligen Kasten, in einem Formelfeld auch mit <strong>Enter</strong>.</p>
+
+      <h3>Einstellungen</h3>
+      <p>Die <strong>Stufe</strong> bestimmt die Reaktionen: <strong>leicht</strong> sind Synthesen und Zerlegungen mit wenigen Stoffen, <strong>mittel</strong> Verbrennungen und Redoxreaktionen, <strong>schwer</strong> Reaktionen mit großen Koeffizienten, organischen Stoffen oder Klammern in der Formel. Die <strong>Atombilanz</strong> zeigt dir laufend, ob die Atomzahlen links und rechts übereinstimmen. Schalte sie aus, wenn du ohne Kontrolle üben möchtest.</p>
+
+      <h3>Tipp, Lösung, Auswertung</h3>
+      <p>„Tipp“ hilft in Stufen, passend zum Schritt, in dem du gerade bist. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jede Formel und das Ausgleichen, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+      <p>Die Prüfung erkennt typische Fehler, zum Beispiel ein vergessenes zweiatomiges Molekül (O statt O<sub>2</sub>), falsche Groß- und Kleinschreibung, ein falsches Atomzahlverhältnis oder Koeffizienten, die sich noch kürzen lassen.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Übungsart</p>
+      <div class="mode-toggle big" id="modeToggle">
+        <button data-mode="aus" class="active">Nur ausgleichen</button>
+        <button data-mode="auf">Komplett aufstellen</button>
+      </div>
+      <p class="sub-label">Stufe</p>
+      <div class="mode-toggle" id="levelToggle">
+        <button data-lvl="1">Leicht</button>
+        <button data-lvl="2">Mittel</button>
+        <button data-lvl="3">Schwer</button>
+        <button data-lvl="mix" class="active">Gemischt</button>
+      </div>
+      <label class="check-row" for="chkBil"><input type="checkbox" id="chkBil" checked><span>Atombilanz zur Kontrolle anzeigen</span></label>
+      <label class="check-row" for="chkNames"><input type="checkbox" id="chkNames" checked><span>Stoffnamen unter den Formeln anzeigen</span></label>
+    </section>
+
+    <details class="block rules" id="rulesBox">
+      <summary><span>Regeln</span><span class="rules-state" aria-hidden="true"></span></summary>
+      <div class="lib-wrap">
+        <table class="lib-table">
+          <tbody>
+            <tr class="grp"><td colspan="2">Formeln der Elemente</td></tr>
+            <tr><td class="k">Fe, Mg …</td><td>Metalle: einzelnes Symbol</td></tr>
+            <tr><td class="k">C, S, P, Si</td><td>einzelnes Symbol</td></tr>
+            <tr><td class="k">X<sub>2</sub></td><td>zweiatomig: H<sub>2</sub>, N<sub>2</sub>, O<sub>2</sub>, F<sub>2</sub>, Cl<sub>2</sub>, Br<sub>2</sub>, I<sub>2</sub></td></tr>
+            <tr class="grp"><td colspan="2">Formeln der Verbindungen</td></tr>
+            <tr><td class="k">kgV</td><td>über die Wertigkeiten (Kreuzregel)</td></tr>
+            <tr><td class="k">(III)</td><td>römische Zahl = Wertigkeit des Metalls</td></tr>
+            <tr><td class="k">di, tri</td><td>Zahlwort = Anzahl der Atome: mono 1, di 2, tri 3</td></tr>
+            <tr><td class="k">Ag, Zn</td><td>Silber I, Zink II · Eisen, Kupfer: siehe Name</td></tr>
+            <tr class="grp"><td colspan="2">Ausgleichen</td></tr>
+            <tr><td class="k">2 H<sub>2</sub>O</td><td>nur Koeffizienten ändern, nie die Indizes</td></tr>
+            <tr><td class="k">Start</td><td>Element, das links und rechts nur einmal vorkommt</td></tr>
+            <tr><td class="k">zuletzt</td><td>Elemente als Element-Formel (O<sub>2</sub>, H<sub>2</sub>, Metall)</td></tr>
+            <tr><td class="k">½</td><td>halbe Zahl bei O<sub>2</sub> o. Ä.? Alle Koeffizienten verdoppeln</td></tr>
+            <tr><td class="k">kürzen</td><td>kleinstmögliche ganze Zahlen, 1 wird nicht geschrieben</td></tr>
+            <tr><td class="k">Probe</td><td>jedes Element: Atome links = Atome rechts</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Bei einer chemischen Reaktion bleiben alle Atome erhalten, sie werden nur neu verknüpft (Gesetz von der Erhaltung der Masse).</p>
+    </details>
+  </div>
+
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskLevel">leicht</span>
+        <span class="task-ctx" id="taskCtx"></span>
+      </div>
+      <div class="task-prompt" id="taskPrompt"></div>
+      <div class="task-elems" id="taskElems"></div>
+
+      <div class="work-grid">
+        <div class="stage" id="stage">
+          <span class="stylelbl">Reaktionsgleichung</span>
+          <div class="stage-inner">
+            <div class="eq" id="eqBox"></div>
+            <div id="bilBox"></div>
+          </div>
+        </div>
+        <div class="inputs">
+          <div class="stepbox" id="box1">
+            <div class="sh"><span><span class="n">1</span>Formeln aufstellen</span><span class="st" id="st1">offen</span></div>
+            <div id="fWrap"></div>
+            <button class="btn step-check" id="btnCheckF">Formeln prüfen</button>
+          </div>
+          <div class="stepbox" id="box2">
+            <div class="sh"><span><span class="n" id="n2">2</span>Gleichung ausgleichen</span><span class="st" id="st2">offen</span></div>
+            <div class="stp-wrap" id="stpWrap"></div>
+            <button class="btn step-check" id="btnCheckK">Gleichung prüfen</button>
+            <p class="stp-note" id="note2">Stelle die Koeffizienten ein. Der Koeffizient 1 wird in der Gleichung nicht geschrieben.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Reaktion</th><th>Übungsart</th><th>Gleichung</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="5" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Reaktionsgleichungen ohne Zustandsangaben, Koeffizienten als kleinstmögliche ganze Zahlen. Vereinfachtes Schulmodell: Phosphor wird als P, Schwefel als S geschrieben, Phosphor(V)-oxid als P<sub>2</sub>O<sub>5</sub>.</p>
+  <p class="footer-credit">Bastian Baumgart · Reaktionsgleichungs-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  // ---------- Hilfsfunktionen ----------
+  const gcd = (a,b) => b ? gcd(b, a%b) : a;
+  const lcm = (a,b) => a*b/gcd(a,b);
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII"];
+  const SYMS = new Set(("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr " +
+    "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pt Au Hg Tl Pb Bi Po At Rn Ra U").split(" "));
+  const DIATOMIC = new Set(["H","N","O","F","Cl","Br","I"]);
+  const NONMET_SINGLE = new Set(["C","S","P","Si"]);
+  const EL_NAME = {H:"Wasserstoff",N:"Stickstoff",O:"Sauerstoff",F:"Fluor",Cl:"Chlor",Br:"Brom",I:"Iod",C:"Kohlenstoff",S:"Schwefel",P:"Phosphor",Si:"Silicium",
+    Li:"Lithium",Na:"Natrium",K:"Kalium",Mg:"Magnesium",Ca:"Calcium",Al:"Aluminium",Fe:"Eisen",Cu:"Kupfer",Ag:"Silber",Zn:"Zink"};
+  // Wertigkeit des hinten stehenden Elements in binären Verbindungen
+  const VAL_B = {O:2, S:2, Cl:1, F:1, Br:1, I:1, N:3, H:1, P:3};
+
+  // Formel-Parser: "Al2(SO4)3" -> {Al:2, S:3, O:12}; null bei ungültiger Eingabe
+  function parseF(str){
+    let i = 0;
+    function num(){ let s = ""; while(i<str.length && /\d/.test(str[i])) s += str[i++]; return s ? +s : 1; }
+    function group(){
+      const out = {};
+      while(i<str.length && str[i]!==")"){
+        let part;
+        if(str[i]==="("){ i++; part = group(); if(str[i]!==")") return null; i++; if(!part) return null; }
+        else {
+          const m = /^[A-Z][a-z]?/.exec(str.slice(i));
+          if(!m || !SYMS.has(m[0])) return null;
+          i += m[0].length; part = {[m[0]]:1};
+        }
+        if(str[i]==="0") return null;
+        const n = num();
+        for(const k in part) out[k] = (out[k]||0) + part[k]*n;
+      }
+      return out;
+    }
+    if(!str) return null;
+    const r = group();
+    if(!r || i!==str.length || !Object.keys(r).length) return null;
+    return r;
+  }
+  const sameMap = (a,b) => { const ka = Object.keys(a), kb = Object.keys(b); return ka.length===kb.length && ka.every(k=>a[k]===b[k]); };
+  const sameKeys = (a,b) => { const ka = Object.keys(a).sort().join(), kb = Object.keys(b).sort().join(); return ka===kb; };
+  const fH = f => String(f).replace(/(\d+)/g, "<sub>$1</sub>");
+  function norm(s){
+    return String(s).replace(/[₀-₉]/g, d=>String(d.charCodeAt(0)-0x2080)).replace(/\s+/g, "");
+  }
+
+  // ---------- Reaktionen ----------
+  // R(Stufe, für "Aufstellen" geeignet, Edukte, Produkte, Koeffizienten, Kontext)
+  const POOL = [];
+  function R(lvl, auf, ed, pr, k, ctx){
+    const sp = [];
+    const add = (s, side) => s.split("|").forEach(x=>{ const [name, f] = x.split(":"); sp.push({name, f, side, comp:parseF(f)}); });
+    add(ed, 0); add(pr, 1);
+    sp.forEach((s,i)=>s.c = k[i]);
+    POOL.push({lvl, auf, sp, ctx:ctx||""});
+  }
+  // Stufe 1: Synthesen und Zerlegungen
+  R(1,true,"Wasserstoff:H2|Sauerstoff:O2","Wasser:H2O",[2,1,2],"Knallgasreaktion");
+  R(1,true,"Natrium:Na|Chlor:Cl2","Natriumchlorid:NaCl",[2,1,2],"Synthese von Kochsalz");
+  R(1,true,"Magnesium:Mg|Sauerstoff:O2","Magnesiumoxid:MgO",[2,1,2],"Verbrennung von Magnesium");
+  R(1,true,"Kohlenstoff:C|Sauerstoff:O2","Kohlenstoffdioxid:CO2",[1,1,1],"Vollständige Verbrennung von Kohlenstoff");
+  R(1,true,"Schwefel:S|Sauerstoff:O2","Schwefeldioxid:SO2",[1,1,1],"Verbrennung von Schwefel");
+  R(1,true,"Eisen:Fe|Schwefel:S","Eisen(II)-sulfid:FeS",[1,1,1],"Reaktion von Eisen mit Schwefel");
+  R(1,true,"Wasserstoff:H2|Chlor:Cl2","Chlorwasserstoff:HCl",[1,1,2],"Chlorknallgasreaktion");
+  R(1,true,"Kalium:K|Brom:Br2","Kaliumbromid:KBr",[2,1,2],"Salzbildung");
+  R(1,true,"Calcium:Ca|Sauerstoff:O2","Calciumoxid:CaO",[2,1,2],"Verbrennung von Calcium");
+  R(1,true,"Kupfer:Cu|Sauerstoff:O2","Kupfer(II)-oxid:CuO",[2,1,2],"Oxidation von Kupfer");
+  R(1,true,"Wasser:H2O","Wasserstoff:H2|Sauerstoff:O2",[2,2,1],"Elektrolyse von Wasser");
+  R(1,true,"Lithium:Li|Fluor:F2","Lithiumfluorid:LiF",[2,1,2],"Salzbildung");
+  R(1,true,"Magnesium:Mg|Schwefel:S","Magnesiumsulfid:MgS",[1,1,1],"Salzbildung");
+  R(1,true,"Kupfer:Cu|Schwefel:S","Kupfer(I)-sulfid:Cu2S",[2,1,1],"Reaktion von Kupfer mit Schwefel");
+  R(1,true,"Silberoxid:Ag2O","Silber:Ag|Sauerstoff:O2",[2,4,1],"Zerlegung von Silberoxid");
+  R(1,true,"Chlorwasserstoff:HCl","Wasserstoff:H2|Chlor:Cl2",[2,1,1],"Zerlegung von Chlorwasserstoff");
+  R(1,true,"Calcium:Ca|Chlor:Cl2","Calciumchlorid:CaCl2",[1,1,1],"Salzbildung");
+  R(1,true,"Natrium:Na|Iod:I2","Natriumiodid:NaI",[2,1,2],"Salzbildung");
+  R(1,true,"Zink:Zn|Sauerstoff:O2","Zinkoxid:ZnO",[2,1,2],"Verbrennung von Zink");
+  // Stufe 2: Verbrennungen, Redoxreaktionen
+  R(2,true,"Aluminium:Al|Sauerstoff:O2","Aluminiumoxid:Al2O3",[4,3,2],"Verbrennung von Aluminium");
+  R(2,true,"Eisen:Fe|Sauerstoff:O2","Eisen(III)-oxid:Fe2O3",[4,3,2],"Verbrennung von Eisenwolle");
+  R(2,true,"Aluminium:Al|Chlor:Cl2","Aluminiumchlorid:AlCl3",[2,3,2],"Salzbildung");
+  R(2,true,"Stickstoff:N2|Wasserstoff:H2","Ammoniak:NH3",[1,3,2],"Ammoniaksynthese (Haber-Bosch-Verfahren)");
+  R(2,true,"Natrium:Na|Sauerstoff:O2","Natriumoxid:Na2O",[4,1,2],"Oxidation von Natrium");
+  R(2,true,"Kohlenstoff:C|Sauerstoff:O2","Kohlenstoffmonooxid:CO",[2,1,2],"Unvollständige Verbrennung von Kohlenstoff");
+  R(2,true,"Magnesium:Mg|Stickstoff:N2","Magnesiumnitrid:Mg3N2",[3,1,1],"Magnesium verbrennt an der Luft");
+  R(2,true,"Phosphor:P|Sauerstoff:O2","Phosphor(V)-oxid:P2O5",[4,5,2],"Verbrennung von Phosphor");
+  R(2,true,"Eisen:Fe|Chlor:Cl2","Eisen(III)-chlorid:FeCl3",[2,3,2],"Salzbildung");
+  R(2,true,"Kupfer(II)-oxid:CuO|Wasserstoff:H2","Kupfer:Cu|Wasser:H2O",[1,1,1,1],"Reduktion von Kupferoxid mit Wasserstoff");
+  R(2,true,"Kupfer(II)-oxid:CuO|Kohlenstoff:C","Kupfer:Cu|Kohlenstoffdioxid:CO2",[2,1,2,1],"Reduktion von Kupferoxid mit Kohlenstoff");
+  R(2,true,"Kupfer(I)-oxid:Cu2O|Kohlenstoff:C","Kupfer:Cu|Kohlenstoffdioxid:CO2",[2,1,4,1],"Reduktion von Kupferoxid mit Kohlenstoff");
+  R(2,true,"Eisen(III)-oxid:Fe2O3|Aluminium:Al","Eisen:Fe|Aluminiumoxid:Al2O3",[1,2,2,1],"Thermitverfahren");
+  R(2,true,"Kupfer(II)-oxid:CuO|Aluminium:Al","Kupfer:Cu|Aluminiumoxid:Al2O3",[3,2,3,1],"Redoxreaktion mit Aluminium");
+  R(2,true,"Schwefeldioxid:SO2|Sauerstoff:O2","Schwefeltrioxid:SO3",[2,1,2],"Kontaktverfahren");
+  R(2,true,"Magnesium:Mg|Wasser:H2O","Magnesiumoxid:MgO|Wasserstoff:H2",[1,1,1,1],"Magnesium reagiert mit Wasserdampf");
+  R(2,true,"Methan:CH4|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[1,2,1,2],"Verbrennung von Erdgas");
+  R(2,true,"Kohlenstoffmonooxid:CO|Sauerstoff:O2","Kohlenstoffdioxid:CO2",[2,1,2],"Verbrennung von Kohlenstoffmonooxid");
+  R(2,true,"Stickstoff:N2|Sauerstoff:O2","Stickstoffmonooxid:NO",[1,1,2],"Stickoxide im Motor");
+  R(2,true,"Stickstoffmonooxid:NO|Sauerstoff:O2","Stickstoffdioxid:NO2",[2,1,2],"Stickoxide an der Luft");
+  R(2,true,"Magnesium:Mg|Chlorwasserstoff:HCl","Magnesiumchlorid:MgCl2|Wasserstoff:H2",[1,2,1,1],"Metall und Salzsäure");
+  R(2,true,"Natrium:Na|Chlorwasserstoff:HCl","Natriumchlorid:NaCl|Wasserstoff:H2",[2,2,2,1],"Metall und Salzsäure");
+  R(2,true,"Aluminium:Al|Brom:Br2","Aluminiumbromid:AlBr3",[2,3,2],"Salzbildung");
+  R(2,true,"Kalium:K|Sauerstoff:O2","Kaliumoxid:K2O",[4,1,2],"Oxidation von Kalium");
+  R(2,true,"Calcium:Ca|Stickstoff:N2","Calciumnitrid:Ca3N2",[3,1,1],"Nitridbildung");
+  R(2,false,"Natrium:Na|Wasser:H2O","Natriumhydroxid:NaOH|Wasserstoff:H2",[2,2,2,1],"Natrium reagiert mit Wasser");
+  R(2,false,"Wasserstoffperoxid:H2O2","Wasser:H2O|Sauerstoff:O2",[2,2,1],"Zerfall von Wasserstoffperoxid");
+  // Stufe 3: große Koeffizienten, organische Stoffe, Klammern
+  R(3,true,"Aluminium:Al|Chlorwasserstoff:HCl","Aluminiumchlorid:AlCl3|Wasserstoff:H2",[2,6,2,3],"Aluminium und Salzsäure");
+  R(3,true,"Eisen(III)-oxid:Fe2O3|Kohlenstoffmonooxid:CO","Eisen:Fe|Kohlenstoffdioxid:CO2",[1,3,2,3],"Hochofenprozess");
+  R(3,true,"Eisen(III)-oxid:Fe2O3|Kohlenstoff:C","Eisen:Fe|Kohlenstoffdioxid:CO2",[2,3,4,3],"Reduktion von Eisenoxid");
+  R(3,true,"Eisen(III)-oxid:Fe2O3|Wasserstoff:H2","Eisen:Fe|Wasser:H2O",[1,3,2,3],"Direktreduktion mit Wasserstoff");
+  R(3,true,"Schwefelwasserstoff:H2S|Sauerstoff:O2","Schwefeldioxid:SO2|Wasser:H2O",[2,3,2,2],"Verbrennung von Schwefelwasserstoff");
+  R(3,true,"Ammoniak:NH3|Sauerstoff:O2","Stickstoffmonooxid:NO|Wasser:H2O",[4,5,4,6],"Ostwald-Verfahren");
+  R(3,true,"Ammoniak:NH3|Sauerstoff:O2","Stickstoff:N2|Wasser:H2O",[4,3,2,6],"Verbrennung von Ammoniak");
+  R(3,true,"Silan:SiH4|Sauerstoff:O2","Siliciumdioxid:SiO2|Wasser:H2O",[1,2,1,2],"Verbrennung von Silan");
+  R(3,true,"Phosphan:PH3|Sauerstoff:O2","Phosphor(V)-oxid:P2O5|Wasser:H2O",[2,4,1,3],"Verbrennung von Phosphan");
+  R(3,true,"Eisen(II)-sulfid:FeS|Sauerstoff:O2","Eisen(III)-oxid:Fe2O3|Schwefeldioxid:SO2",[4,7,2,4],"Rösten von Eisensulfid");
+  R(3,true,"Aluminium:Al|Wasser:H2O","Aluminiumoxid:Al2O3|Wasserstoff:H2",[2,3,1,3],"Aluminium reagiert mit Wasserdampf");
+  R(3,false,"Ethan:C2H6|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[2,7,4,6],"Verbrennung von Ethan");
+  R(3,false,"Propan:C3H8|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[1,5,3,4],"Verbrennung von Propan (Flüssiggas)");
+  R(3,false,"Butan:C4H10|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[2,13,8,10],"Verbrennung von Butan (Feuerzeuggas)");
+  R(3,false,"Ethin:C2H2|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[2,5,4,2],"Schweißbrenner");
+  R(3,false,"Ethanol:C2H5OH|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[1,3,2,3],"Verbrennung von Ethanol");
+  R(3,false,"Methanol:CH3OH|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[2,3,2,4],"Verbrennung von Methanol");
+  R(3,false,"Glucose:C6H12O6|Sauerstoff:O2","Kohlenstoffdioxid:CO2|Wasser:H2O",[1,6,6,6],"Zellatmung");
+  R(3,false,"Aluminium:Al|Eisen(II,III)-oxid:Fe3O4","Aluminiumoxid:Al2O3|Eisen:Fe",[8,3,4,9],"Thermitverfahren mit Magnetit");
+  R(3,false,"Eisen:Fe|Wasser:H2O","Eisen(II,III)-oxid:Fe3O4|Wasserstoff:H2",[3,4,1,4],"Eisen reagiert mit Wasserdampf");
+  R(3,false,"Pyrit:FeS2|Sauerstoff:O2","Eisen(III)-oxid:Fe2O3|Schwefeldioxid:SO2",[4,11,2,8],"Rösten von Pyrit");
+  R(3,false,"Aluminium:Al|Schwefelsäure:H2SO4","Aluminiumsulfat:Al2(SO4)3|Wasserstoff:H2",[2,3,1,3],"Aluminium und Schwefelsäure");
+  R(3,false,"Calciumhydroxid:Ca(OH)2|Chlorwasserstoff:HCl","Calciumchlorid:CaCl2|Wasser:H2O",[1,2,1,2],"Neutralisation");
+  R(3,false,"Calciumhydroxid:Ca(OH)2|Kohlenstoffdioxid:CO2","Calciumcarbonat:CaCO3|Wasser:H2O",[1,1,1,1],"Kalkwasserprobe");
+
+  const LVL = {1:["leicht","l1"], 2:["mittel","l2"], 3:["schwer","l3"]};
+
+  // ---------- Atombilanz ----------
+  function elemOrder(sp){
+    const seen = [];
+    sp.forEach(s=>Object.keys(s.comp).forEach(e=>{ if(!seen.includes(e)) seen.push(e); }));
+    return seen;
+  }
+  function balance(sp, k){
+    return elemOrder(sp).map(e=>{
+      let L = 0, Rr = 0;
+      sp.forEach((s,i)=>{ const n = (s.comp[e]||0)*k[i]; if(s.side===0) L += n; else Rr += n; });
+      return {e, L, R:Rr};
+    });
+  }
+  function eqHTML(sp, k, opts={}){
+    let h = "", prevSide = 0, first = true;
+    sp.forEach((s,i)=>{
+      if(!first) h += s.side!==prevSide ? " → " : " + ";
+      first = false; prevSide = s.side;
+      h += (k[i]>1 ? k[i] + " " : "") + fH(s.f);
+    });
+    return h;
+  }
+  const wordEq = sp => sp.filter(s=>s.side===0).map(s=>s.name).join(" + ") + " → " + sp.filter(s=>s.side===1).map(s=>s.name).join(" + ");
+
+  // ---------- Erklärungen zu Formeln ----------
+  const isElem = s => Object.keys(s.comp).length===1 && sp1(s);
+  function sp1(s){ const e = Object.keys(s.comp)[0]; return s.f===e || s.f===e+"2"; }
+  function binVal(s){
+    const els = Object.keys(s.comp);
+    if(els.length!==2) return null;
+    const A = els[0], B = els[1];
+    const vb = VAL_B[B]; if(!vb) return null;
+    const va = s.comp[B]*vb/s.comp[A];
+    if(!Number.isInteger(va)) return null;
+    return {A, B, va, vb};
+  }
+  const PREFIX = /(mono|di|tri)oxid$/;
+  function formulaReason(s, html=true){
+    const T = x => html ? `<span class="t">${x}</span>` : x;
+    const A = x => html ? `<span class="a">${x}</span>` : x;
+    const F = f => html ? fH(f) : f;
+    if(isElem(s)){
+      const e = Object.keys(s.comp)[0];
+      if(DIATOMIC.has(e)) return `${s.name} kommt als zweiatomiges Molekül vor → ${T(F(s.f))}`;
+      if(NONMET_SINGLE.has(e)) return `${s.name} wird als einzelnes Symbol geschrieben → ${T(F(s.f))}`;
+      return `Metall, einzelnes Symbol → ${T(F(s.f))}`;
+    }
+    const m = PREFIX.exec(s.name);
+    if(m){
+      const els = Object.keys(s.comp);
+      return `Zahlwort im Namen: ${A(m[1])} = ${s.comp[els[1]]} ${els[1]}-Atom${s.comp[els[1]]>1?"e":""} je ${els[0]}-Atom → ${T(F(s.f))}`;
+    }
+    const v = binVal(s);
+    if(v){
+      const rom = /\((I|II|III|IV|V|VI|VII)\)/.test(s.name) ? " (römische Zahl im Namen)" : "";
+      const L = lcm(v.va, v.vb);
+      return `Wertigkeiten ${v.A} ${A(ROMAN[v.va])}${rom}, ${v.B} ${A(ROMAN[v.vb])} → kgV ${L} → ${T(F(s.f))}`;
+    }
+    return `Formel: ${T(F(s.f))}`;
+  }
+
+  // ---------- Zustand ----------
+  let mode = "aus", level = "mix", showBil = true, showNames = true;
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+
+  function newTask(){
+    if(task && !task.done && task.touched) logHistory(task, "open");
+    let pool = POOL.filter(r=>(level==="mix" || r.lvl===+level) && (mode==="aus" || r.auf));
+    let r;
+    for(let i=0;i<30;i++){ r = pick(pool); if(!task || wordEq(r.sp)!==wordEq(task.r.sp)) break; }
+    task = {num:++taskCounter, r, mode, okF: mode==="aus", okK:false,
+            fin: r.sp.map(()=>""), fBad: r.sp.map(()=>false), k: r.sp.map(()=>1),
+            h1:0, h2:0, hintUsed:false, wrong:false, done:false, shown:false, touched:false};
+    $("feedback").innerHTML = "";
+    renderInputs();
+    renderTask();
+    renderWay();
+    if(mode==="auf") setTimeout(()=>{ const f = document.querySelector("#fWrap input"); if(f) f.focus({preventScroll:true}); }, 0);
+  }
+
+  function renderTask(){
+    const t = task, r = t.r;
+    $("taskNum").textContent = "Aufgabe " + t.num;
+    $("taskLevel").textContent = LVL[r.lvl][0];
+    $("taskLevel").className = "chip " + LVL[r.lvl][1];
+    $("taskCtx").textContent = t.done ? "Aufgabe abgeschlossen." :
+      t.mode==="aus" ? "Gleiche die Reaktionsgleichung aus." : "Stelle die Formeln auf und gleiche die Reaktionsgleichung aus.";
+    const ed = r.sp.filter(s=>s.side===0).map(s=>`<b>${s.name}</b>`).join(" + ");
+    const pr = r.sp.filter(s=>s.side===1).map(s=>`<b>${s.name}</b>`).join(" + ");
+    $("taskPrompt").innerHTML = `${ed}<span class="arr">→</span>${pr}`;
+    $("taskElems").textContent = r.ctx;
+    const st = ok => t.shown ? "Lösung" : ok ? "✓ richtig" : "offen";
+    $("box1").classList.toggle("hidden", t.mode==="aus");
+    $("box1").classList.toggle("passed", t.okF && !t.shown);
+    $("st1").textContent = st(t.okF);
+    $("n2").textContent = t.mode==="aus" ? "1" : "2";
+    const locked = !t.okF;
+    $("box2").classList.toggle("locked", locked);
+    $("box2").classList.toggle("passed", t.okK && !t.shown);
+    $("st2").textContent = locked ? "gesperrt" : st(t.okK);
+    renderSteppers();
+    drawEq();
+    $("btnCheckF").disabled = t.done || t.okF;
+    $("btnCheckK").disabled = t.done || !t.okF;
+    $("btnHint").disabled = t.done;
+    $("btnSolve").disabled = t.done;
+    setStatus();
+  }
+  function setStatus(){
+    const b = $("statusBadge");
+    b.classList.remove("running","done");
+    if(!task.done){ b.classList.add("running"); $("statusText").textContent = "Aufgabe offen"; }
+    else if(task.shown){ $("statusText").textContent = "Lösung angezeigt"; }
+    else { b.classList.add("done"); $("statusText").textContent = "gelöst"; }
+  }
+
+  // ---------- Formelfelder (Schritt 1) ----------
+  function renderInputs(){
+    const t = task;
+    let h = "", side = -1;
+    t.r.sp.forEach((s,i)=>{
+      if(s.side!==side){ side = s.side; h += `<span class="side-sep">${side===0?"Ausgangsstoffe":"Reaktionsprodukte"}</span>`; }
+      h += `<div class="field"><label for="fin${i}">Formel von <span class="s">${s.name}</span></label>` +
+           `<input type="text" id="fin${i}" data-i="${i}" class="num-in fin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Formel eingeben"></div>`;
+    });
+    $("fWrap").innerHTML = h;
+  }
+  function syncInputs(){
+    const t = task;
+    t.r.sp.forEach((s,i)=>{
+      const el = $("fin"+i); if(!el) return;
+      el.value = t.fin[i];
+      el.readOnly = t.okF;
+      el.classList.toggle("ok", t.okF && !t.shown);
+      el.classList.toggle("bad", !t.okF && t.fBad[i]);
+    });
+  }
+
+  // ---------- Koeffizienten (Schritt 2) ----------
+  function renderSteppers(){
+    const t = task, lock = t.done || !t.okF;
+    let h = "", side = -1;
+    t.r.sp.forEach((s,i)=>{
+      if(s.side!==side){ side = s.side; h += `<span class="side-sep">${side===0?"Ausgangsstoffe":"Reaktionsprodukte"}</span>`; }
+      const lbl = t.okF ? `<b>${fH(s.f)}</b>` : `<b>?</b>`;
+      const v = t.k[i];
+      h += `<div class="stp${t.done && !t.shown ? " ok" : ""}"><span class="l">${lbl} ${s.name}</span><span class="c">`+
+           `<button data-i="${i}" data-d="-1" aria-label="Koeffizient von ${s.name} verringern" ${lock||v<=1?"disabled":""}>−</button>`+
+           `<span class="v mono">${v}</span>`+
+           `<button data-i="${i}" data-d="1" aria-label="Koeffizient von ${s.name} erhöhen" ${lock||v>=20?"disabled":""}>+</button></span></div>`;
+    });
+    $("stpWrap").innerHTML = h;
+    syncInputs();
+  }
+  function changeK(i, d){
+    const t = task; if(t.done || !t.okF) return;
+    const v = t.k[i] + d; if(v<1 || v>20) return;
+    t.k[i] = v; t.touched = true; t.okK = false;
+    renderSteppers(); drawEq();
+    $("st2").textContent = "offen"; $("box2").classList.remove("passed");
+  }
+
+  // ---------- Anzeige der Gleichung ----------
+  function drawEq(){
+    const t = task, sp = t.r.sp;
+    let h = "", prevSide = 0;
+    sp.forEach((s,i)=>{
+      if(i>0) h += `<span class="op">${s.side!==prevSide ? "→" : "+"}</span>`;
+      prevSide = s.side;
+      let fTxt, cls = "f";
+      if(t.okF) fTxt = fH(s.f);
+      else {
+        const raw = norm(t.fin[i]).replace(/^\d+/, "");
+        if(raw===""){ fTxt = "?"; cls += " q"; }
+        else { fTxt = fH(raw.replace(/[<>&"]/g, "")); if(t.fBad[i]) cls += " bad"; }
+      }
+      const k = t.k[i];
+      const kTxt = t.okF ? `<span class="k${k===1?" one":""}">${k}</span>` : "";
+      const nm = (showNames || t.mode==="auf") ? `<span class="nm">${s.name}</span>` : "";
+      h += `<span class="sp"><span class="${cls}">${kTxt}${fTxt}</span>${nm}</span>`;
+    });
+    $("eqBox").innerHTML = h;
+    $("eqBox").classList.toggle("done", t.done && !t.shown);
+
+    if(!showBil){ $("bilBox").innerHTML = ""; return; }
+    if(!t.okF){ $("bilBox").innerHTML = `<span class="bil-empty">Atombilanz: erst alle Formeln aufstellen</span>`; return; }
+    const B = balance(sp, t.k);
+    let b = `<table class="bil" aria-label="Atombilanz"><thead><tr><th>Element</th><th>links</th><th>rechts</th><th></th></tr></thead><tbody>`;
+    B.forEach(x=>{ const ok = x.L===x.R; b += `<tr class="${ok?"ok":"no"}"><td class="el">${x.e}</td><td class="n">${x.L}</td><td class="n">${x.R}</td><td class="s">${ok?"✓":"≠"}</td></tr>`; });
+    $("bilBox").innerHTML = b + `</tbody></table>`;
+  }
+
+  // ---------- Prüfen ----------
+  function fb(cls, html){ return `<div class="fb ${cls}">${html}</div>`; }
+
+  function formulaMsg(s, raw){
+    let v = norm(raw);
+    if(v==="") return {st:"empty", m:`Trage die Formel von ${s.name} ein.`};
+    let coef = false;
+    const mm = /^(\d+)(.*)$/.exec(v);
+    if(mm){ coef = true; v = mm[2]; }
+    const coefNote = coef ? " Die Zahl vor der Formel ist ein Koeffizient, den stellst du erst beim Ausgleichen ein." : "";
+    if(v===s.f) return coef ? {st:"bad", m:`${s.name}: Schreibe nur die Formel ohne Zahl davor.${coefNote}`} : {st:"ok"};
+    if(v.toLowerCase()===s.f.toLowerCase()) return {st:"bad", m:`${s.name}: Achte auf die Groß- und Kleinschreibung. Ein Elementsymbol beginnt mit einem Großbuchstaben, ein zweiter Buchstabe ist klein.`};
+    const P = parseF(v);
+    if(!P) return {st:"bad", m:`${s.name}: „${v.replace(/[<>&"]/g,"")}“ ist keine gültige Formel. Schreibe z. B. H2O, Cl2 oder Al2O3.` + (/[a-z]{2}/.test(v) || /^[a-z]/.test(v) ? " Prüfe die Groß- und Kleinschreibung." : "")};
+    const S = s.comp;
+    if(sameMap(P, S)) return {st:"bad", m:`${s.name}: Die Anzahl der Atome stimmt, aber schreibe die Formel in der üblichen Reihenfolge (Metall bzw. das Element mit der Endung -id zuletzt).`};
+    if(isElem(s)){
+      const e = Object.keys(S)[0];
+      if(sameKeys(P, S)){
+        if(DIATOMIC.has(e)) return {st:"bad", m:`${s.name} kommt als Element nicht in einzelnen Atomen vor, sondern als zweiatomiges Molekül.`};
+        return {st:"bad", m:`${s.name} wird als Element mit einem einzelnen Symbol ohne Index geschrieben.`};
+      }
+      if(Object.keys(P).length>1) return {st:"bad", m:`${s.name} ist ein Element. Seine Formel besteht nur aus einem Elementsymbol (ggf. mit Index 2).`};
+      return {st:"bad", m:`Prüfe das Elementsymbol von ${s.name}.`};
+    }
+    if(sameKeys(P, S)){
+      const m = PREFIX.exec(s.name);
+      if(m) return {st:"bad", m:`${s.name}: Die Elemente stimmen. Achte auf das Zahlwort im Namen: mono = 1, di = 2, tri = 3.`};
+      if(/\((I|II|III|IV|V|VI|VII)\)/.test(s.name)) return {st:"bad", m:`${s.name}: Die Elemente stimmen, aber das Atomzahlverhältnis nicht. Die römische Zahl im Namen ist die Wertigkeit des Metalls.`};
+      const els = Object.keys(S);
+      if(els.some(e=>DIATOMIC.has(e) && P[e]===2 && S[e]===1 && els.every(x=>x===e || P[x]===S[x]))) return {st:"bad", m:`${s.name}: In einer Verbindung gilt die Zweiatomigkeit nicht. Das Atomzahlverhältnis ergibt sich aus den Wertigkeiten.`};
+      return {st:"bad", m:`${s.name}: Die Elemente stimmen, aber das Atomzahlverhältnis nicht. Bestimme die Wertigkeiten und das kgV.`};
+    }
+    return {st:"bad", m:`${s.name}: Die Formel enthält nicht die richtigen Elemente. Überlege, aus welchen Elementen der Stoff besteht.`};
+  }
+
+  function check(){
+    const t = task; if(t.done) return;
+    t.touched = true;
+    if(!t.okF){ checkFormulas(); return; }
+    checkCoeffs();
+  }
+
+  function checkFormulas(){
+    const t = task, sp = t.r.sp, msgs = [];
+    let allOk = true;
+    sp.forEach((s,i)=>{
+      const r = formulaMsg(s, t.fin[i]);
+      t.fBad[i] = r.st==="bad";
+      if(r.st!=="ok") allOk = false;
+      if(r.st==="bad") msgs.push(["bad", r.m]);
+      if(r.st==="empty") msgs.push(["info", r.m]);
+    });
+    if(allOk){
+      t.okF = true;
+      sp.forEach((s,i)=>t.fin[i] = s.f);
+      $("feedback").innerHTML = fb("good", "Alle Formeln stimmen. Gleiche die Gleichung jetzt in Schritt 2 mit den Koeffizienten aus.");
+      renderTask();
+      return;
+    }
+    if(msgs.some(m=>m[0]==="bad")){ t.wrong = true; stats.streak = 0; }
+    const nOk = sp.filter((s,i)=>formulaMsg(s, t.fin[i]).st==="ok").length;
+    const good = nOk ? [fb("good", `${nOk} von ${sp.length} Formeln stimmen.`)] : [];
+    $("feedback").innerHTML = good.join("") + msgs.map(m=>fb(m[0], m[1])).join("");
+    renderTask(); updateStats();
+  }
+
+  function checkCoeffs(){
+    const t = task, sp = t.r.sp, B = balance(sp, t.k);
+    const off = B.filter(x=>x.L!==x.R);
+    if(!off.length){
+      const g = t.k.reduce((a,b)=>gcd(a,b));
+      if(g>1){
+        t.wrong = true; stats.streak = 0;
+        $("feedback").innerHTML = fb("bad", `Die Gleichung ist ausgeglichen, aber nicht mit den kleinstmöglichen Koeffizienten. Alle Koeffizienten lassen sich durch ${g} teilen.`);
+        renderTask(); updateStats(); return;
+      }
+      t.okK = true; t.done = true;
+      const firstTry = !t.wrong && !t.hintUsed;
+      stats.solved++; if(firstTry) stats.first++; stats.streak++;
+      $("feedback").innerHTML = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${eqHTML(sp, t.k)}</span>`) +
+        fb("info", "Kontrolle: " + B.map(x=>`${x.e} ${x.L} = ${x.R}`).join(" · ") + ". Für jedes Element stehen links und rechts gleich viele Atome.");
+      logHistory(t, firstTry ? "first" : "ok");
+      renderTask(); renderWay(); updateStats();
+      return;
+    }
+    t.wrong = true; stats.streak = 0;
+    const msgs = [fb("bad", "Die Gleichung ist noch nicht ausgeglichen: " + off.map(x=>`<span class="nm">${x.e}</span> links ${x.L}, rechts ${x.R}`).join(" · ") + ".")];
+    const ok = B.filter(x=>x.L===x.R).map(x=>x.e);
+    if(ok.length && ok.length<B.length) msgs.unshift(fb("good", `Ausgeglichen: ${ok.join(", ")}.`));
+    if(t.k.every(v=>v===1)) msgs.push(fb("hint", "Ändere die Koeffizienten mit + und −. Die Indizes in den Formeln bleiben unverändert."));
+    $("feedback").innerHTML = msgs.join("");
+    renderTask(); updateStats();
+  }
+
+  // ---------- Tipps ----------
+  function startElement(sp){
+    const els = elemOrder(sp);
+    const occ = e => [0,1].map(side=>sp.filter(s=>s.side===side && s.comp[e]));
+    const elemSp = e => sp.some(s=>isElem(s) && s.comp[e]);
+    let cand = els.filter(e=>{ const o = occ(e); return o[0].length===1 && o[1].length===1 && !elemSp(e); });
+    if(!cand.length) cand = els.filter(e=>{ const o = occ(e); return o[0].length===1 && o[1].length===1; });
+    if(!cand.length) cand = els.filter(e=>!elemSp(e));
+    if(!cand.length) cand = els;
+    // bevorzugt: Element mit ungleicher Atomzahl in den Formeln
+    const diff = cand.find(e=>{ const o = occ(e); return o[0][0] && o[1][0] && o[0][0].comp[e]!==o[1][0].comp[e]; });
+    const e = diff || cand[0], o = occ(e);
+    return {e, l:o[0], r:o[1]};
+  }
+  function hintsFormulas(n){
+    const sp = task.r.sp, out = [];
+    out.push("Tipp 1: Metalle sowie C, S, P und Si schreibt man als Element mit einem einzelnen Symbol (z. B. Fe). H, N, O, F, Cl, Br und I kommen als zweiatomige Moleküle vor (z. B. O<sub>2</sub>).");
+    if(n>=2){
+      const comp = sp.filter(s=>!isElem(s)).map(s=>{
+        const m = PREFIX.exec(s.name);
+        if(m) return `${s.name}: Zahlwort „${m[1]}“`;
+        const v = binVal(s);
+        return v ? `${s.name}: ${v.A} ${ROMAN[v.va]}, ${v.B} ${ROMAN[v.vb]}` : `${s.name}: Formel merken`;
+      });
+      out.push(`Tipp 2: Wertigkeiten bzw. Zahlwörter der Verbindungen: ${comp.join(" · ")}.`);
+    }
+    if(n>=3){
+      const el = sp.filter(s=>isElem(s)).map(s=>`${s.name} = ${fH(s.f)}`);
+      const cp = sp.filter(s=>!isElem(s)).map(s=>`${s.name}: ${formulaReason(s)}`);
+      out.push(`Tipp 3: ${el.length ? "Elemente: " + el.join(", ") + ". " : ""}${cp.join(" · ")}`);
+    }
+    return out;
+  }
+  function hintsCoeffs(n){
+    const sp = task.r.sp, out = [];
+    out.push("Tipp 1: Zähle für jedes Element die Atome links und rechts (Atombilanz). Ändere nur die Koeffizienten vor den Formeln, niemals die Indizes.");
+    if(n>=2){
+      const st = startElement(sp);
+      out.push(`Tipp 2: Beginne mit <span class="nm">${st.e}</span>: Es steht links in ${st.l.map(s=>fH(s.f)).join(", ")} und rechts in ${st.r.map(s=>fH(s.f)).join(", ")}. Gleiche es über das kgV der Atomzahlen aus. Elemente, die als Element-Formel vorkommen (z. B. O<sub>2</sub>, H<sub>2</sub> oder ein Metall), gleichst du zuletzt aus. Kommt dort eine halbe Zahl heraus, verdopple alle Koeffizienten.`);
+    }
+    if(n>=3){
+      let bi = 0; sp.forEach((s,i)=>{ if(s.c>sp[bi].c) bi = i; });
+      out.push(`Tipp 3: Vor <span class="nm">${fH(sp[bi].f)}</span> steht der Koeffizient ${sp[bi].c}.`);
+    }
+    return out;
+  }
+  function hint(){
+    const t = task; if(t.done) return;
+    t.hintUsed = true; t.touched = true;
+    let out;
+    if(!t.okF){ t.h1 = Math.min(t.h1+1, 3); out = hintsFormulas(t.h1); }
+    else {
+      t.h2 = Math.min(t.h2+1, 3); out = hintsCoeffs(t.h2);
+      if(!showBil){ showBil = true; $("chkBil").checked = true; drawEq(); }
+    }
+    $("feedback").innerHTML = out.map(m=>fb("hint", m)).join("");
+  }
+
+  function solve(){
+    const t = task; if(t.done) return;
+    const sp = t.r.sp;
+    t.done = true; t.shown = true; t.okF = true; t.okK = true;
+    stats.shown++; stats.streak = 0;
+    sp.forEach((s,i)=>{ t.fin[i] = s.f; t.fBad[i] = false; t.k[i] = s.c; });
+    $("feedback").innerHTML = fb("info", `Lösung: <span class="nm">${eqHTML(sp, t.k)}</span>. Der Lösungsweg steht unten.`);
+    logHistory(t, "shown");
+    renderTask(); renderWay(); updateStats();
+  }
+
+  // ---------- Lösungsweg ----------
+  function renderWay(){
+    const t = task;
+    if(!t.done){ $("wayBox").innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
+    const sp = t.r.sp, sol = sp.map(s=>s.c), one = sp.map(()=>1);
+    const rows = [["Wortgleichung", wordEq(sp)]];
+    if(t.mode==="auf") rows.push(["Formeln", sp.map(s=>`<b>${s.name}</b>: ${formulaReason(s)}`).join("<br>")]);
+    const B0 = balance(sp, one);
+    rows.push(["Unausgeglichen", `${eqHTML(sp, one)}<br>` + B0.map(x=>`${x.e}: ${x.L} | ${x.R}${x.L===x.R?" ✓":` <span class="a">≠</span>`}`).join(" &nbsp;·&nbsp; ")]);
+    const st = startElement(sp);
+    rows.push(["Vorgehen", `Beginne mit <span class="a">${st.e}</span> (links nur in ${st.l.map(s=>fH(s.f)).join(", ")}, rechts nur in ${st.r.map(s=>fH(s.f)).join(", ")}). Danach die übrigen Elemente, Element-Formeln wie O<sub>2</sub> oder H<sub>2</sub> zuletzt.`]);
+    rows.push(["Koeffizienten", sp.map(s=>`${fH(s.f)}: <span class="t">${s.c}</span>`).join(" &nbsp;·&nbsp; ")]);
+    const B = balance(sp, sol);
+    rows.push(["Kontrolle", B.map(x=>{
+      const l = sp.filter(s=>s.side===0 && s.comp[x.e]).map(s=>`${s.c}·${s.comp[x.e]}`).join(" + ");
+      const r = sp.filter(s=>s.side===1 && s.comp[x.e]).map(s=>`${s.c}·${s.comp[x.e]}`).join(" + ");
+      return `${x.e}: ${l} = ${x.L} &nbsp;und&nbsp; ${r} = ${x.R} ✓`;
+    }).join("<br>")]);
+    let h = `<div class="steps">`;
+    rows.forEach((r,i)=>{ h += `<div class="step"><span class="n">${i+1}</span><span class="h">${r[0]}</span><span class="b">${r[1]}</span></div>`; });
+    h += `<div class="step final"><span class="n">=</span><span class="h">Reaktionsgleichung</span><span class="b">${eqHTML(sp, sol)}</span></div></div>`;
+    $("wayBox").innerHTML = h;
+  }
+
+  // ---------- Verlauf & Statistik ----------
+  function logHistory(t, status){
+    if(t.logged) return; t.logged = true;
+    const sp = t.r.sp;
+    history.unshift({num:t.num, name:t.r.ctx || wordEq(sp), mode:t.mode==="aus"?"ausgleichen":"aufstellen", eq:eqHTML(sp, sp.map(s=>s.c)), status});
+    const lbl = {first:["im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    $("histBody").innerHTML = history.map(r=>`<tr><td class="mono">${r.num}</td><td>${r.name}</td><td>${r.mode}</td><td class="mono">${r.eq}</td><td class="${lbl[r.status][1]}">${lbl[r.status][0]}</td></tr>`).join("");
+  }
+  function updateStats(){
+    $("roSolved").textContent = stats.solved;
+    $("roFirst").textContent = stats.first;
+    $("roStreak").textContent = stats.streak;
+    $("roShown").textContent = stats.shown;
+  }
+
+  // ---------- Ereignisse ----------
+  $("modeToggle").addEventListener("click", ev=>{
+    const b = ev.target.closest("button"); if(!b) return;
+    $("modeToggle").querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+    mode = b.dataset.mode; newTask();
+  });
+  $("levelToggle").addEventListener("click", ev=>{
+    const b = ev.target.closest("button"); if(!b) return;
+    $("levelToggle").querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+    level = b.dataset.lvl; newTask();
+  });
+  $("chkBil").addEventListener("change", ev=>{ showBil = ev.target.checked; drawEq(); });
+  $("chkNames").addEventListener("change", ev=>{ showNames = ev.target.checked; drawEq(); });
+
+  $("stpWrap").addEventListener("click", ev=>{ const b = ev.target.closest("button[data-i]"); if(b) changeK(+b.dataset.i, +b.dataset.d); });
+  $("fWrap").addEventListener("input", ev=>{
+    const el = ev.target.closest("input[data-i]"); if(!el || task.okF) return;
+    const i = +el.dataset.i;
+    task.fin[i] = el.value; task.fBad[i] = false; task.touched = true;
+    el.classList.remove("ok","bad");
+    drawEq();
+  });
+  $("fWrap").addEventListener("keydown", ev=>{ if(ev.key==="Enter" && ev.target.matches("input")) check(); });
+  $("btnNew").addEventListener("click", newTask);
+  $("btnCheckK").addEventListener("click", ()=>{ if(!task.done && task.okF){ task.touched = true; checkCoeffs(); } });
+  $("btnCheckF").addEventListener("click", ()=>{ if(!task.done && !task.okF){ task.touched = true; checkFormulas(); } });
+  $("btnHint").addEventListener("click", hint);
+  $("btnSolve").addEventListener("click", solve);
+
+  document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+  }));
+  $("btnGuide").addEventListener("click", ev=>{ ev.preventDefault(); $("guideBackdrop").classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
+  $("guideBackdrop").addEventListener("click", ev=>{ if(ev.target===$("guideBackdrop")) $("guideBackdrop").classList.remove("open"); });
+  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") $("guideBackdrop").classList.remove("open"); });
+
+  newTask();
+  updateStats();
+})();
+</script>
+
+</body>
+</html>

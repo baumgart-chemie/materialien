@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chemie Oberstufe · Simulationen</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Chemie · Simulationen und Übungen</title>
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -20,10 +17,10 @@
 *{box-sizing:border-box;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   line-height:1.5; -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header – wie GC-Simulator */
@@ -56,7 +53,7 @@ section.block{margin-bottom:30px; scroll-margin-top:56px;}
   display:flex; align-items:center; gap:10px;
 }
 .block h2 .kurz{
-  font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--amber);
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; color:var(--amber);
   border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;
 }
 
@@ -69,7 +66,7 @@ section.block{margin-bottom:30px; scroll-margin-top:56px;}
 .tile:hover{border-color:var(--teal); background:var(--panel-alt);}
 .tile h3{font-size:14.5px; color:var(--text); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
 .tile h3 .nr{
-  font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--teal);
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; font-weight:600; color:var(--teal);
   border:1px solid var(--teal-dim); border-radius:var(--radius); min-width:22px; padding:1px 5px;
   text-align:center; flex:none;
 }
@@ -83,6 +80,8 @@ section.block{margin-bottom:30px; scroll-margin-top:56px;}
 }
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft);}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 ::-webkit-scrollbar{width:10px;height:10px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 @media (max-width:600px){
@@ -95,7 +94,7 @@ footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border
 <body>
 
 <header>
-  <h1>Chemie Oberstufe</h1>
+  <h1>Chemie</h1>
   <span class="tag">Interaktive Simulationen &amp; Materialien</span>
 </header>
 
@@ -103,7 +102,7 @@ footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border
 
 <main id="inhalt"></main>
 
-<footer>Bastian Baumgart – Materialien und Simulationen für die Oberstufe</footer>
+<footer>Bastian Baumgart – Materialien und Simulationen für die Oberstufe · <a href="impressum.html#impressum">Impressum</a> · <a href="impressum.html#datenschutz">Datenschutz</a></footer>
 
 <script>
 /* ============================================================
@@ -119,6 +118,21 @@ const rubriken = [
         titel: "Schalenmodell nach Bohr",
         beschreibung: "Atombau der Hauptgruppenelemente der 1.–3. Periode – Protonen & Neutronen aus dem PSE bestimmen, Elektronen auf die Schalen verteilen.",
         link: "SekI/SekI-Schalenmodell.html"
+      },
+      {
+        titel: "Summenformeln aufstellen",
+        beschreibung: "Wertigkeit der Elemente mit dem PSE ermitteln, dann die Summenformel über kgV und Kreuzregel aufstellen – Salze, Wasserstoffverbindungen & römische Zahlen.",
+        link: "SekI/SekI-Summenformeln.html"
+      },
+      {
+        titel: "Reaktionsgleichungen",
+        beschreibung: "Reaktionsgleichungen aufstellen und ausgleichen.",
+        link: "SekI/SekI-Reaktionsgleichungen.html"
+      },
+      {
+        titel: "Bindungsarten bestimmen",
+        beschreibung: "Elektronegativität im PSE ablesen, ΔEN berechnen und die Bindungsart bestimmen – unpolare & polare Atombindung oder Ionenbindung (Grenzen 0,5 und 1,7).",
+        link: "SekI/SekI-Bindungsarten.html"
       }
   ]},
   { id: "ef", kurz: "EF", titel: "Einführungsphase", eintraege: [

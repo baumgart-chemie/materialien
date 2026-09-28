@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Schalenmodell-Trainer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
@@ -22,8 +19,8 @@
 }
 *{box-sizing:border-box;}
 html,body{height:100%;}
-body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased;}
-.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; -webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 header{padding:22px 28px 18px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
@@ -51,7 +48,7 @@ header .status.done{color:var(--teal); border-color:var(--teal-dim);}
 .modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
 .modal-body ol{padding-left:20px; margin:0 0 6px;}
 .modal-body strong{color:var(--text); font-weight:600;}
-.formula-box{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+.formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
 
 .wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
 @media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
@@ -85,9 +82,9 @@ section.block{margin-bottom:26px;}
 
 /* PSE-Ausschnitt */
 .pse{display:grid; grid-template-columns:14px repeat(8,minmax(0,1fr)); gap:2px;}
-.pse .hd{font-size:9.5px; color:var(--text-faint); text-align:center; padding:2px 0; font-family:'JetBrains Mono',monospace;}
-.pse .rh{font-size:9.5px; color:var(--text-faint); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace;}
-.pse .cell{position:relative; background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:2px; height:44px; padding:0; cursor:pointer; color:var(--text); font-family:'JetBrains Mono',monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0;}
+.pse .hd{font-size:9.5px; color:var(--text-faint); text-align:center; padding:2px 0; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.pse .rh{font-size:9.5px; color:var(--text-faint); display:flex; align-items:center; justify-content:center; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.pse .cell{position:relative; background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:2px; height:44px; padding:0; cursor:pointer; color:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0;}
 .pse .cell:hover{border-color:var(--text-faint);}
 .pse .cell:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
 .pse .cell .z{position:absolute; left:3px; top:1px; font-size:9px; color:var(--text-dim);}
@@ -99,12 +96,12 @@ section.block{margin-bottom:26px;}
 .pse .legend{grid-column:3 / span 6; font-size:10.5px; color:var(--text-faint); line-height:1.35; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 4px;}
 .pse-info{margin-top:8px; font-size:12.5px; color:var(--text-dim); min-height:36px; line-height:1.45; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:7px 10px;}
 .pse-info b{color:var(--text); font-weight:600;}
-.pse-info .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
+.pse-info .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 
 .lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
 .lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
 .lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim); line-height:1.4;}
-.lib-table td.k{color:var(--amber); font-family:'JetBrains Mono',monospace; width:1%; white-space:nowrap;}
+.lib-table td.k{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; width:1%; white-space:nowrap;}
 .lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
 .lib-table tr:last-child td{border-bottom:none;}
 details.rules{margin-bottom:26px;}
@@ -129,7 +126,7 @@ details.rules[open] summary{margin-bottom:12px;}
 .chip.l3{color:var(--danger); border-color:var(--danger-dim);}
 .task-ctx{font-size:13px; color:var(--text-dim);}
 .task-prompt{font-size:19px; margin:8px 0 2px; color:var(--text);}
-.task-prompt b{color:var(--amber); font-family:'JetBrains Mono',monospace; font-weight:600;}
+.task-prompt b{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-weight:600;}
 .task-prompt sup{font-size:.62em;}
 
 .atom-grid{display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:14px; align-items:start; margin:10px 0 4px;}
@@ -146,16 +143,16 @@ svg .shell.empty{stroke-dasharray:4 5;}
 svg .shell.bad{stroke:var(--danger);}
 svg .hit{fill:none; stroke:transparent; stroke-width:30; cursor:pointer; pointer-events:stroke;}
 svg .hit:hover + .shell, svg g.sg:hover .shell{stroke:var(--teal-dim);}
-svg .slbl{fill:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:12px;}
+svg .slbl{fill:var(--text-faint); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:12px;}
 svg .el{fill:var(--teal); stroke:var(--screen); stroke-width:2;}
 svg .nuc{fill:var(--raise); stroke:var(--amber-dim); stroke-width:1.6;}
 svg .nuc.ok{stroke:var(--teal);}
-svg .nt1{fill:var(--amber); font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600;}
-svg .nt2{fill:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:13px;}
+svg .nt1{fill:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px; font-weight:600;}
+svg .nt2{fill:var(--text-dim); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px;}
 
 .inputs{display:flex; flex-direction:column; gap:12px;}
 .field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
-input.num-in{width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:var(--radius); font-size:17px; font-family:'JetBrains Mono',monospace;}
+input.num-in{width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:var(--radius); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 input.num-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
 input.num-in.ok, .stp.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
 input.num-in.bad, .stp.bad{border-color:var(--danger); box-shadow:0 0 0 1px var(--danger-dim);}
@@ -163,13 +160,15 @@ input.num-in[readonly]{color:var(--teal);}
 .stp-wrap{display:flex; flex-direction:column; gap:6px;}
 .stp{display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:4px 4px 4px 12px;}
 .stp .l{font-size:13px; color:var(--text-dim);}
-.stp .l b{font-family:'JetBrains Mono',monospace; color:var(--text); font-weight:600; margin-right:4px;}
+.stp .l b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); font-weight:600; margin-right:4px;}
 .stp .c{display:flex; align-items:center; gap:4px;}
 .stp .c button{width:32px; height:32px; border:1px solid var(--line); background:var(--raise); color:var(--text); border-radius:var(--radius); font-size:17px; line-height:1; cursor:pointer; font-family:inherit;}
 .stp .c button:hover:not(:disabled){border-color:var(--text-faint);}
 .stp .c button:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
 .stp .c button:disabled{opacity:.35; cursor:default;}
 .stp .c .v{min-width:26px; text-align:center; font-size:16px; color:var(--teal);}
+.check-btn{width:100%; padding:10px 14px; font-size:13.5px; border-color:var(--teal-dim); color:var(--teal);}
+.check-btn:hover:not(:disabled){border-color:var(--teal);}
 .stp-note{font-size:11.5px; color:var(--text-faint); line-height:1.45;}
 
 .feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
@@ -178,7 +177,7 @@ input.num-in[readonly]{color:var(--teal);}
 .fb.bad{color:var(--danger); border-color:var(--danger-dim);}
 .fb.hint{color:var(--amber); border-color:var(--amber-dim);}
 .fb.info{color:var(--text-dim);}
-.fb .nm{font-family:'JetBrains Mono',monospace; color:var(--text);}
+.fb .nm{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
 
 .readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
 .readout{display:flex; flex-direction:column; gap:2px;}
@@ -195,12 +194,12 @@ input.num-in[readonly]{color:var(--teal);}
 .steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
 .step{display:grid; grid-template-columns:28px 150px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
 .step:last-child{border-bottom:none;}
-.step .n{font-family:'JetBrains Mono',monospace; color:var(--text-faint); font-size:12px;}
+.step .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text-faint); font-size:12px;}
 .step .h{color:var(--text-dim);}
 .step .b{color:var(--text);}
-.step .b .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
-.step .b .t{color:var(--teal); font-family:'JetBrains Mono',monospace;}
-.step.final .b{font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--teal);}
+.step .b .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step .b .t{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step.final .b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px; color:var(--teal);}
 .step sup{font-size:.7em;}
 @media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
 
@@ -213,6 +212,8 @@ table.hist sup{font-size:.7em;}
 
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 @media (max-width:600px){ footer{padding:16px 16px 30px;} }
 ::-webkit-scrollbar{width:9px; height:9px;}
@@ -312,7 +313,6 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     <div class="screen-card">
       <div class="screen-top">
         <button class="btn primary" id="btnNew">Neue Aufgabe</button>
-        <button class="btn" id="btnCheck">Prüfen</button>
         <button class="btn ghost" id="btnHint">Tipp</button>
         <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
       </div>
@@ -343,6 +343,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
             <label>Elektronen auf den Schalen</label>
             <div class="stp-wrap" id="stpWrap"></div>
           </div>
+          <button class="btn check-btn" id="btnCheck">Prüfen</button>
           <p class="stp-note">Klick auf eine Schale im Modell setzt ein Elektron, Rechtsklick entfernt eins.</p>
         </div>
       </div>
@@ -377,7 +378,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Vereinfachtes Atommodell nach Niels Bohr (1913) für die Hauptgruppenelemente der ersten drei Perioden. Atommassen gerundet nach IUPAC-Standardwerten.</p>
-  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.0 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
