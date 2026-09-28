@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chemie Oberstufe · Simulationen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header – wie GC-Simulator */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+
+/* Rubrik-Navigation als Tabs */
+nav{
+  position:sticky; top:0; z-index:10; background:var(--bg);
+  display:flex; gap:2px; flex-wrap:wrap; padding:0 28px;
+  border-bottom:1px solid var(--line);
+}
+nav a{
+  color:var(--text-dim); font-size:13px; padding:10px 4px; margin-right:22px;
+  text-decoration:none; border-bottom:2px solid transparent; font-weight:500;
+}
+nav a:hover{color:var(--text);}
+nav a.active{color:var(--text); border-bottom-color:var(--amber);}
+
+main{max-width:1100px; padding:24px 28px 60px;}
+
+section.block{margin-bottom:30px; scroll-margin-top:56px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600; letter-spacing:.2px;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px;
+  display:flex; align-items:center; gap:10px;
+}
+.block h2 .kurz{
+  font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--amber);
+  border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;
+}
+
+.grid{display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
+.tile{
+  display:block; text-decoration:none; color:inherit;
+  background:var(--panel); border:1px solid var(--line); border-radius:4px;
+  padding:14px 16px; transition:border-color .15s, background .15s;
+}
+.tile:hover{border-color:var(--teal); background:var(--panel-alt);}
+.tile h3{font-size:14.5px; color:var(--text); margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+.tile h3 .nr{
+  font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--teal);
+  border:1px solid var(--teal-dim); border-radius:var(--radius); min-width:22px; padding:1px 5px;
+  text-align:center; flex:none;
+}
+.tile p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.55;}
+.tile .open{display:inline-block; margin-top:10px; font-size:12.5px; color:var(--teal); border-bottom:1px solid var(--teal-dim);}
+.tile:hover .open{border-bottom-color:var(--teal);}
+
+.empty{
+  color:var(--text-faint); font-size:13px; padding:14px 16px;
+  border:1px dashed var(--line); border-radius:4px; background:transparent;
+}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (max-width:600px){
+  header, main, footer{padding-left:16px; padding-right:16px;}
+  nav{padding:0 16px;}
+  nav a{margin-right:14px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chemie Oberstufe</h1>
+  <span class="tag">Interaktive Simulationen &amp; Materialien</span>
+</header>
+
+<nav id="nav"></nav>
+
+<main id="inhalt"></main>
+
+<footer>Bastian Baumgart – Materialien und Simulationen für die Oberstufe</footer>
+
+<script>
+/* ============================================================
+   INHALTE PFLEGEN
+   Neue Einträge einfach in das passende "eintraege"-Array
+   schreiben. Die Nummerierung pro Rubrik ergibt sich automatisch
+   aus der Reihenfolge im Array. Format:
+   { titel: "…", beschreibung: "…", link: "Ordner/datei.html" }
+   ============================================================ */
+const rubriken = [
+  { id: "ef", kurz: "EF", titel: "Einführungsphase", eintraege: [] },
+  { id: "q1", kurz: "Q1", titel: "Qualifikationsphase 1. Semester", eintraege: [
+      {
+        titel: "Berechnung der Reaktionsenthalpie",
+        beschreibung: "Molare Standardreaktionsenthalpie aus Standardbildungsenthalpien berechnen – mit Ausgleichen, Tipps & Enthalpiediagramm.",
+        link: "Q1/1-Reaktionsenthalpie.html"
+      },
+      {
+        titel: "Chemisches Gleichgewicht",
+        beschreibung: "Verschiebung des Gleichgewichts durch Temperatur, Druck & Konzentration – Le Chatelier, Kc und Qc.",
+        link: "Q1/1-Chemisches_Gleichgewicht.html"
+      }
+  ]},
+  { id: "q2", kurz: "Q2", titel: "Qualifikationsphase 2. Semester", eintraege: [
+      {
+        titel: "Galvanische Zelle",
+        beschreibung: "Halbzellen kombinieren – Elektrodenvorgänge, Nernst-Gleichung & Zellspannung.",
+        link: "Q2/2-Galvanische_Zelle.html"
+      }
+  ]},
+  { id: "q3", kurz: "Q3", titel: "Qualifikationsphase 3. Semester", eintraege: [
+      {
+        titel: "GC-Simulator",
+        beschreibung: "Gaschromatographie – Trennung, Aufzeichnung & Auswertung von Stoffgemischen.",
+        link: "Q3/3-GC_Simualtion.html"
+      }
+  ]},
+  { id: "q4", kurz: "Q4", titel: "Qualifikationsphase 4. Semester", eintraege: [] }
+];
+
+/* ---------- Ab hier nichts ändern ---------- */
+const nav = document.getElementById("nav");
+const main = document.getElementById("inhalt");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+rubriken.forEach(r => {
+  nav.insertAdjacentHTML("beforeend", `<a href="#${r.id}" data-id="${r.id}">${esc(r.titel)}</a>`);
+  const inhalt = r.eintraege.length
+    ? `<div class="grid">${r.eintraege.map((e, i) => `
+        <a class="tile" href="${esc(e.link)}">
+          <h3><span class="nr">${i + 1}</span>${esc(e.titel)}</h3>
+          <p>${esc(e.beschreibung || "")}</p>
+          <span class="open">Öffnen →</span>
+        </a>`).join("")}</div>`
+    : `<div class="empty">Inhalte folgen.</div>`;
+  main.insertAdjacentHTML("beforeend", `
+    <section class="block" id="${r.id}">
+      <h2><span class="kurz">${r.kurz}</span>${esc(r.titel)}</h2>
+      ${inhalt}
+    </section>`);
+});
+
+/* aktive Rubrik in der Navigation markieren */
+const links = [...nav.querySelectorAll("a")];
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (en.isIntersecting) links.forEach(a => a.classList.toggle("active", a.dataset.id === en.target.id));
+  });
+}, { rootMargin: "-40% 0px -55% 0px" });
+document.querySelectorAll("section.block").forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

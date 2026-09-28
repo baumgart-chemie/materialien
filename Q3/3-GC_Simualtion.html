@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GC-Simulator · Gaschromatographie & Auswertung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --grid:#233029;
+  --danger:#e4785b;
+  --radius:3px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+    --line:#31383e; --line-soft:#262c31; --text:#e7e4dd; --text-dim:#9aa2a9;
+  }
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:620px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; position:sticky; top:0;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 4px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 320px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+
+.sidebar{
+  position:sticky; top:0; align-self:start;
+  padding:20px 20px 40px; max-height:100vh; overflow-y:auto; overscroll-behavior:contain;
+}
+@media (max-width:920px){ .sidebar{position:static; max-height:none; overflow:visible; border-bottom:1px solid var(--line);} }
+
+.main{padding:20px 24px 60px; min-width:0; border-left:1px solid var(--line); min-height:100vh;}
+@media (max-width:920px){ .main{border-left:none; min-height:0;} }
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; text-transform:none; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px;
+  letter-spacing:.2px;
+}
+
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+.row label{font-size:13px; color:var(--text-dim);}
+.row .val{font-size:13px; color:var(--amber); min-width:64px; text-align:right;}
+input[type=range]{
+  width:100%; accent-color: var(--teal); height:4px; background:transparent; cursor:pointer;
+}
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select, input[type=text], input[type=number]{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{
+  flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 6px;
+  font-size:12.5px; cursor:pointer; font-family:inherit;
+}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+
+.compound-list{display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
+.compound-row{
+  display:grid; grid-template-columns: 1fr 72px 54px 22px; gap:5px; align-items:center;
+  background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:var(--radius); padding:6px 6px;
+}
+.compound-row input{padding:5px 6px; font-size:12px;}
+.compound-row .swatch{width:9px;height:9px;border-radius:50%; margin-right:4px; flex:none;}
+.compound-row .name-wrap{display:flex; align-items:center; min-width:0;}
+.compound-row .rm{
+  background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:15px; line-height:1;
+}
+.compound-row .rm:hover{color:var(--danger);}
+.compound-row .mix-name{font-size:12.5px; padding:5px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;}
+.compound-row .mix-tag{grid-column:span 2; font-size:11px; color:var(--text-faint); padding-left:4px;}
+.compound-hint{font-size:10.5px; color:var(--text-faint); display:grid; grid-template-columns:1fr 72px 54px 22px; gap:5px; padding:0 6px; margin-bottom:6px; line-height:1.25;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit;
+  font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap;}
+.btn-add{width:100%; margin-top:2px;}
+
+/* chromatogram screen */
+.screen-card{
+  border:1px solid var(--line); background:#0e1113; border-radius:4px; padding:14px 14px 6px; position:relative;
+}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+.speed-group{display:flex; gap:4px; margin-left:auto;}
+.speed-group button{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:'JetBrains Mono',monospace;
+}
+.speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
+canvas#chrom{width:100%; height:340px; display:block; border-radius:2px;}
+.readout-bar{
+  display:flex; gap:26px; padding:10px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:4px;
+}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line);}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{
+  text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+tbody td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+tbody tr:hover{background:var(--panel-alt);}
+.id-match{color:var(--teal);}
+.id-unknown{color:var(--text-faint); font-style:italic;}
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.calib-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;}
+@media (max-width:700px){ .calib-grid{grid-template-columns:1fr;} }
+.calib-form .field-full{max-width:320px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:60ch;}
+
+.res-list{display:flex; flex-direction:column; gap:8px;}
+.res-item{
+  display:flex; justify-content:space-between; align-items:center; padding:9px 12px;
+  border:1px solid var(--line-soft); border-radius:4px; background:var(--panel-alt); font-size:13px;
+}
+.res-item .rs-val{font-size:15px;}
+.res-good{color:#7fd68a;} .res-mid{color:var(--amber);} .res-bad{color:var(--danger);}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GC-Simulator</h1>
+  <span class="tag">Gaschromatographie – Trennung, Aufzeichnung & Auswertung</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status" id="statusBadge"><span class="dot"></span><span id="statusText">bereit</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Ofentemperatur</h3>
+      <p><strong>Isotherm:</strong> Die Säule hat während des gesamten Laufs eine konstante Temperatur. Substanzen mit niedrigem Siedepunkt eluieren schnell, hochsiedende Substanzen erst spät oder gar nicht.</p>
+      <p><strong>Temperaturprogramm:</strong> Die Säule startet bei einer Starttemperatur, hält diese für die eingestellte Haltezeit und wird danach mit der Heizrate bis zur Endtemperatur aufgeheizt. Das sorgt für gleichmäßiger verteilte Peaks über einen weiten Siedebereich.</p>
+      <p><strong>Gase (Methan bis Butan):</strong> Bei üblichen Ofentemperaturen werden sie kaum zurückgehalten und eluieren gemeinsam kurz nach dem Luftpeak. Zum Trennen ein Temperaturprogramm mit Start bei −60 °C verwenden (1 min Haltezeit, 10 °C/min). Isotherm bei sehr tiefer Temperatur trennen sich die Gase zwar auch, spät eluierende Komponenten werden dann aber so breit und flach, dass sie kaum noch erkennbar sind. Reale Geräte erreichen solche Temperaturen mit Kryokühlung durch CO₂ oder Flüssigstickstoff.</p>
+
+      <h3>Säule &amp; Fluss</h3>
+      <p>Der <strong>Trägergasfluss</strong> bestimmt die Gesamtlaufzeit. Die <strong>Trennstufen (N)</strong> bestimmen, wie schmal und scharf die Peaks werden – mehr Trennstufen bedeuten eine leistungsfähigere Säule und bessere Trennung eng beieinanderliegender Peaks.</p>
+
+      <h3>Probenaufgabe &amp; Detektor</h3>
+      <p>Die <strong>Probenmenge</strong> skaliert die Signalhöhe aller Peaks gemeinsam. Das <strong>Detektorrauschen</strong> simuliert das Grundrauschen und die Basisliniendrift eines realen Detektors.</p>
+
+      <h3>Probengemisch</h3>
+      <p>In der Tabelle links legst du fest, welche Substanzen im Gemisch enthalten sind: Name, <strong>Siedepunkt</strong> (bestimmt die Retentionszeit) und <strong>Konzentration</strong> (bestimmt die Peakfläche). Einzelsubstanzen kommen aus der Bibliothek oder über „+ Manuell hinzufügen" in die Liste, über das × lassen sie sich wieder entfernen.</p>
+      <p>Gemische aus dem Dropdown „Stoffgemisch laden" erscheinen in der Liste nur mit ihrem Namen (siehe nächster Abschnitt).</p>
+
+      <h3>Stoffgemische</h3>
+      <p>Im Dropdown „Stoffgemisch laden" stehen 15 Gemische in vier Gruppen zur Auswahl:</p>
+      <p><strong>Gase:</strong> Feuerzeuggas, Erdgas, Autogas (LPG)<br>
+      <strong>Kraftstoffe &amp; Benzine:</strong> Benzin, Superbenzin mit MTBE, E10-Kraftstoff, Petrolether 40/60, Waschbenzin<br>
+      <strong>Haushalt &amp; Handwerk:</strong> Verdünner, Handdesinfektionsmittel, Nagellackentferner, Abbeizer<br>
+      <strong>Labor &amp; Lebensmittel:</strong> DC-Laufmittel, halogenierter Lösemittelabfall, Obstbrand-Vorlauf</p>
+      <p>Ein Gemisch erscheint in der Probenliste nur mit seinem Namen. Wie viele und welche Komponenten es enthält, zeigt sich erst nach dem Lauf in der Peaktabelle – so lässt sich die Zusammensetzung wie bei einer echten Analyse selbst ermitteln. Jedes Gemisch hat höchstens vier Komponenten.</p>
+      <p><strong>Empfohlene Messbedingungen:</strong> Für flüssige Gemische eignet sich das Temperaturprogramm mit Start bei 40 °C, 1 min Haltezeit, 10 °C/min bis 220 °C. Gase eluieren bei diesen Bedingungen fast gleichzeitig; für sie das Programm bei −60 °C starten. Erscheint unter der Peaktabelle ein Hinweis auf fehlende Peaks, die Bedingungen anpassen oder den Schwellenwert senken.</p>
+      <p><strong>Ideen zum Ausprobieren:</strong> Superbenzin und E10 unterscheiden sich im Oktanzahlverbesserer (MTBE bzw. Ethanol). Im Obstbrand-Vorlauf und im Handdesinfektionsmittel lässt sich giftiges Methanol nachweisen.</p>
+
+      <h3>Lauf starten</h3>
+      <p>Mit <strong>„Injektion starten"</strong> beginnt die Aufzeichnung des Chromatogramms in Echtzeit. Über die Geschwindigkeitsstufen (×1/×4/×15) lässt sich der Lauf beschleunigen. „Stopp" hält den Lauf an, „Zurücksetzen" löscht die aktuellen Daten.</p>
+
+      <h3>Luftpeak (Totzeit)</h3>
+      <p>Bei jeder Injektion gelangt mit der Spritze etwas Luft in die Säule. Luft wird von der Trennsäule nicht zurückgehalten und erscheint deshalb als erster Peak – beim Standardfluss von 1,5 mL/min nach <strong>10 Sekunden</strong>. Diese Zeit ist die <strong>Totzeit t₀</strong>: So lange braucht das Trägergas durch die Säule, und keine Substanz kann früher eluieren. Bei höherem Fluss erscheint der Luftpeak früher, bei geringerem später.</p>
+      <p>Mit der Totzeit lässt sich der <strong>Retentionsfaktor</strong> jeder Substanz berechnen: k = (t<sub>R</sub> − t₀) / t₀. Der Luftpeak ist in der Peaktabelle als „Luft (Totzeit)" gekennzeichnet und zählt nicht zu den Flächenprozenten der Probe. Sehr leichtflüchtige Stoffe wie Methan werden bei hohen Temperaturen kaum zurückgehalten und fallen mit dem Luftpeak zusammen.</p>
+
+      <h3>Peaktabelle</h3>
+      <p>Nach Abschluss des Laufs werden Peaks automatisch erkannt und integriert: Retentionszeit, Höhe, Fläche, Flächenanteil und Bodenzahl. Der <strong>Schwellenwert</strong> legt fest, ab welcher relativen Signalhöhe ein Peak erkannt wird – bei verrauschten Signalen höher stellen, um Fehlerkennungen zu vermeiden.</p>
+
+      <h3>Quantifizierung</h3>
+      <p>Über eine <strong>Einpunkt-Kalibrierung</strong> lässt sich aus einem Peak mit bekannter Konzentration die Konzentration aller anderen Peaks berechnen. Der Vergleich mit der tatsächlich eingestellten Konzentration zeigt, welchen Fehler unterschiedliche Responsefaktoren verursachen können.</p>
+
+      <h3>Auflösung</h3>
+      <p>Für jedes benachbarte Peakpaar wird die <strong>Auflösung R<sub>s</sub></strong> berechnet. Ab R<sub>s</sub> ≈ 1,5 gelten zwei Peaks als vollständig getrennt (Basislinientrennung).</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR: Methode -->
+  <div class="sidebar">
+
+    <section class="block">
+      <h2>Ofentemperatur</h2>
+      <div class="mode-toggle">
+        <button id="modeIso" class="active">Isotherm</button>
+        <button id="modeProg">Temperaturprogramm</button>
+      </div>
+
+      <div id="isoControls">
+        <div class="row"><label>Temperatur</label><span class="val mono" id="vTemp">80 °C</span></div>
+        <input type="range" id="rTemp" min="-60" max="220" value="80" step="1">
+      </div>
+
+      <div id="progControls" style="display:none">
+        <div class="row"><label>Starttemperatur</label><span class="val mono" id="vTStart">40 °C</span></div>
+        <input type="range" id="rTStart" min="-60" max="150" value="40" step="1">
+        <div class="row"><label>Haltezeit</label><span class="val mono" id="vHold">1.0 min</span></div>
+        <input type="range" id="rHold" min="0" max="6" value="1" step="0.5">
+        <div class="row"><label>Heizrate</label><span class="val mono" id="vRamp">10 °C/min</span></div>
+        <input type="range" id="rRamp" min="2" max="30" value="10" step="1">
+        <div class="row"><label>Endtemperatur</label><span class="val mono" id="vTEnd">220 °C</span></div>
+        <input type="range" id="rTEnd" min="100" max="280" value="220" step="5">
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Trennsäule & Fluss</h2>
+      <div class="row"><label>Trägergasfluss</label><span class="val mono" id="vFlow">1.5 mL/min</span></div>
+      <input type="range" id="rFlow" min="0.5" max="4" value="1.5" step="0.1">
+      <div class="row"><label>Trennstufen N</label><span class="val mono" id="vPlates">8000</span></div>
+      <input type="range" id="rPlates" min="1000" max="60000" value="8000" step="500">
+      <div class="row"><label>Laufzeit</label><span class="val mono" id="vRuntime">20 min</span></div>
+      <input type="range" id="rRuntime" min="8" max="40" value="20" step="1">
+    </section>
+
+    <section class="block">
+      <h2>Probenaufgabe & Detektor</h2>
+      <div class="row"><label>Probenmenge</label><span class="val mono" id="vAmt">1.0×</span></div>
+      <input type="range" id="rAmt" min="0.2" max="3" value="1" step="0.1">
+      <div class="row"><label>Detektorrauschen</label><span class="val mono" id="vNoise">gering</span></div>
+      <input type="range" id="rNoise" min="0" max="10" value="2" step="1">
+    </section>
+
+    <section class="block">
+      <h2>Probengemisch</h2>
+      <div class="compound-hint">
+        <span>Substanz</span><span>Siedepunkt °C</span><span>Konz.</span><span></span>
+      </div>
+      <div class="compound-list" id="compoundList"></div>
+      <div class="field-full" style="margin-top:4px;">
+        <label>Aus Bibliothek auswählen</label>
+        <div style="display:flex; gap:6px;">
+          <select id="librarySelect" style="flex:1; min-width:0;"></select>
+          <button class="btn ghost" id="addFromLibrary" style="flex:none;">+ Hinzufügen</button>
+        </div>
+      </div>
+      <div class="field-full" style="margin-top:10px;">
+        <label>Stoffgemisch laden (z. B. Benzin, Feuerzeuggas)</label>
+        <div style="display:flex; gap:6px;">
+          <select id="mixtureSelect" style="flex:1; min-width:0;"></select>
+          <button class="btn ghost" id="addMixture" style="flex:none;">+ Hinzufügen</button>
+        </div>
+      </div>
+      <button class="btn ghost btn-add" id="addCompound">+ Manuell hinzufügen</button>
+    </section>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnRun">Injektion starten</button>
+        <button class="btn" id="btnStop" disabled>Stopp</button>
+        <button class="btn ghost" id="btnReset">Zurücksetzen</button>
+        <div class="speed-group">
+          <button data-speed="1">×1</button>
+          <button data-speed="4" class="active">×4</button>
+          <button data-speed="15">×15</button>
+        </div>
+      </div>
+      <canvas id="chrom" width="1100" height="340"></canvas>
+      <div class="readout-bar">
+        <div class="readout"><span class="k">Laufzeit</span><span class="v mono" id="roTime">0.00 min</span></div>
+        <div class="readout"><span class="k">Signal</span><span class="v mono" id="roSignal">0.0 pA</span></div>
+        <div class="readout"><span class="k">Ofentemperatur</span><span class="v mono" id="roTemp">80 °C</span></div>
+        <div class="readout"><span class="k">erkannte Peaks</span><span class="v mono" id="roPeaks">–</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="peaks">Peaktabelle</button>
+      <button class="tabbtn" data-tab="quant">Quantifizierung</button>
+      <button class="tabbtn" data-tab="res">Auflösung</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-peaks">
+      <div class="row" style="margin:2px 0 14px 0;">
+        <label style="flex:none">Schwellenwert (Rauschunterdrückung)</label>
+        <input type="range" id="rThresh" min="0.5" max="10" value="2.5" step="0.5" style="max-width:220px;">
+        <span class="val mono" id="vThresh">2.5%</span>
+      </div>
+      <div class="table-wrap">
+        <table id="peakTable">
+          <thead><tr>
+            <th>#</th><th>tR (min)</th><th>Höhe</th><th>Fläche</th><th>Fläche %</th><th>Boden­zahl N</th><th>Substanz (Bibliothek)</th>
+          </tr></thead>
+          <tbody id="peakBody"><tr><td colspan="7" class="empty-hint">Noch keine Peaks – Injektion starten und Lauf abwarten.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="note" id="peakHint" style="display:none; color:var(--amber); max-width:none;"></p>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn ghost" id="btnExport">Peaktabelle als CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-quant">
+      <div class="calib-grid">
+        <div class="calib-form">
+          <div class="field-full">
+            <label>Standardpeak (bekannte Konzentration)</label>
+            <select id="stdPeakSelect"><option value="">– Peaktabelle zuerst füllen –</option></select>
+          </div>
+          <div class="field-full">
+            <label>Bekannte Konzentration des Standards</label>
+            <input type="number" id="stdConc" value="50" step="1" min="0.01">
+          </div>
+          <button class="btn primary" id="btnCalibrate">Kalibrieren & quantifizieren</button>
+          <p class="note">Einpunkt-Außenstandard-Kalibrierung: c<sub>i</sub> = Fläche<sub>i</sub> / Fläche<sub>Standard</sub> × c<sub>Standard</sub>. Der Vergleich mit der „wahren" Konzentration zeigt, wie stark unterschiedliche Responsefaktoren das Ergebnis verfälschen.</p>
+        </div>
+        <div>
+          <div class="table-wrap">
+            <table id="quantTable">
+              <thead><tr><th>#</th><th>tR</th><th>Fläche</th><th>c berechnet</th><th>c tatsächlich</th><th>Fehler %</th></tr></thead>
+              <tbody id="quantBody"><tr><td colspan="6" class="empty-hint">Noch keine Kalibrierung durchgeführt.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-res">
+      <p class="note" style="margin-top:0 0 14px;">Auflösung R<sub>s</sub> zwischen benachbarten Peaks: R<sub>s</sub> = 2×(t<sub>R2</sub>−t<sub>R1</sub>) / (w<sub>1</sub>+w<sub>2</sub>). Ab R<sub>s</sub> ≈ 1.5 gilt die Trennung als vollständig (Basislinientrennung).</p>
+      <div class="res-list" id="resList"><div class="empty-hint">Noch keine Peaks zum Vergleichen.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Simulierte Daten zu Lehrzwecken · Retentionszeiten, Peakformen und Rauschen werden aus vereinfachten physikalischen Modellen berechnet und bilden kein reales Säulen-/Detektorverhalten exakt ab.</p>
+  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.0 (erstellt mit Claude Pro)</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Zustand ----------
+  const compoundLibrary = [
+    {name:"Methan",               bp:-161.5,rf:1.00},
+    {name:"Ethan",                bp:-88.6, rf:1.00},
+    {name:"Propan",               bp:-42.1, rf:1.00},
+    {name:"n-Butan",              bp:-0.5,  rf:1.00},
+    {name:"Diethylether",         bp:34.6, rf:0.65},
+    {name:"n-Pentan",             bp:36.1, rf:1.00},
+    {name:"Dichlormethan",        bp:39.6, rf:0.35},
+    {name:"Methyl-tert-butylether", bp:55.2, rf:0.65},
+    {name:"Aceton",               bp:56.1, rf:0.55},
+    {name:"Chloroform",           bp:61.2, rf:0.40},
+    {name:"Methanol",             bp:64.7, rf:0.20},
+    {name:"Tetrahydrofuran",      bp:66.0, rf:0.70},
+    {name:"n-Hexan",              bp:69.0, rf:1.00},
+    {name:"Ethylacetat",          bp:77.1, rf:0.55},
+    {name:"Ethanol",              bp:78.4, rf:0.60},
+    {name:"Benzol",               bp:80.1, rf:1.05},
+    {name:"Cyclohexan",           bp:80.7, rf:1.00},
+    {name:"2-Propanol",           bp:82.3, rf:0.65},
+    {name:"1-Propanol",           bp:97.2, rf:0.70},
+    {name:"n-Heptan",             bp:98.4, rf:1.05},
+    {name:"Toluol",               bp:110.6,rf:1.05},
+    {name:"Pyridin",              bp:115.2,rf:0.65},
+    {name:"Essigsäure",           bp:118.1,rf:0.30},
+    {name:"n-Octan",              bp:125.6,rf:1.00}
+  ];
+  const palette = ["#ffb454","#4fd1c5","#9d8cf1","#f18cae","#7fd68a","#e4a85b","#6fb7ff","#e07a7a"];
+
+  let compounds = [];
+
+  let mode = "iso"; // "iso" | "prog"
+  let params = {
+    temp:80, tStart:40, hold:1, ramp:10, tEnd:220,
+    flow:1.5, plates:8000, runtime:20, amount:1, noise:2
+  };
+  let speed = 4;
+  let running = false, animId = null, simTime = 0, startPerf = 0;
+  let simData = null;      // {t:[], sig:[]}
+  let truePeaks = [];      // ground truth per compound for current run
+  let detectedPeaks = [];  // after evaluation
+  let activeRuntime = params.runtime; // Zeitachsen-Ende: aus Simulation oder importierten Daten
+
+  const N_SAMPLES = 2600;
+
+  // ---------- DOM ----------
+  const $ = id => document.getElementById(id);
+  const canvas = $("chrom"), ctx = canvas.getContext("2d");
+
+  function fitCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(340 * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", ()=>{ fitCanvas(); draw(); });
+
+  // ---------- Substanzliste UI ----------
+  function renderCompounds(){
+    const list = $("compoundList");
+    list.innerHTML = "";
+    compounds.forEach((c, i)=>{
+      const row = document.createElement("div");
+      row.className = "compound-row";
+      if(c.type === "mix"){
+        // Gemisch: nur der Name ist sichtbar, die Komponenten zeigt erst die Auswertung
+        row.innerHTML = `
+          <span class="name-wrap"><span class="swatch" style="background:${c.color}"></span>
+            <span class="mix-name">${c.name}</span></span>
+          <span class="mix-tag">Gemisch</span>
+          <button class="rm" data-i="${i}" title="Entfernen">×</button>`;
+      } else {
+        row.innerHTML = `
+          <span class="name-wrap"><span class="swatch" style="background:${c.color}"></span>
+            <input type="text" data-i="${i}" data-f="name" value="${c.name}"></span>
+          <input type="number" data-i="${i}" data-f="bp" value="${c.bp}">
+          <input type="number" data-i="${i}" data-f="conc" value="${c.conc}">
+          <button class="rm" data-i="${i}" title="Entfernen">×</button>`;
+      }
+      list.appendChild(row);
+    });
+    list.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("input", e=>{
+        const i = +e.target.dataset.i, f = e.target.dataset.f;
+        compounds[i][f] = f === "name" ? e.target.value : parseFloat(e.target.value)||0;
+      });
+    });
+    list.querySelectorAll(".rm").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        compounds.splice(+e.target.dataset.i, 1);
+        renderCompounds();
+      });
+    });
+  }
+
+  // Gemische für die Simulation in Einzelsubstanzen auflösen;
+  // gleiche Substanzen aus mehreren Einträgen werden zusammengefasst
+  function expandCompounds(){
+    const byKey = new Map();
+    compounds.forEach(c=>{
+      const parts = c.type === "mix" ? c.components : [c];
+      parts.forEach(p=>{
+        const key = p.name + "|" + p.bp;
+        if(byKey.has(key)) byKey.get(key).conc += p.conc;
+        else byKey.set(key, {name:p.name, bp:p.bp, conc:p.conc, rf:p.rf});
+      });
+    });
+    return Array.from(byKey.values());
+  }
+  function renderLibrarySelect(){
+    $("librarySelect").innerHTML = compoundLibrary.map((c,i)=>
+      `<option value="${i}">${c.name} (Siedepunkt ${c.bp} °C)</option>`).join("");
+  }
+  $("addFromLibrary").addEventListener("click", ()=>{
+    const lib = compoundLibrary[+$("librarySelect").value];
+    compounds.push({name:lib.name, bp:lib.bp, conc:40, rf:lib.rf, color: palette[compounds.length % palette.length]});
+    renderCompounds();
+  });
+
+  // ---------- Stoffgemisch-Presets ----------
+  // max. 4 Komponenten; innerhalb eines Gemischs keine Substanzen mit nahezu gleichem Siedepunkt
+  const mixtureGroups = ["Gase", "Kraftstoffe & Benzine", "Haushalt & Handwerk", "Labor & Lebensmittel"];
+  const mixturePresets = [
+    {group:0, name:"Feuerzeuggas", components:[
+      {name:"Propan", conc:30}, {name:"n-Butan", conc:70}
+    ]},
+    {group:0, name:"Erdgas", components:[
+      {name:"Methan", conc:70}, {name:"Ethan", conc:15}, {name:"Propan", conc:8}, {name:"n-Butan", conc:7}
+    ]},
+    {group:0, name:"Autogas (LPG)", components:[
+      {name:"Propan", conc:60}, {name:"n-Butan", conc:40}
+    ]},
+    {group:1, name:"Benzin (Ottokraftstoff)", components:[
+      {name:"n-Hexan", conc:35}, {name:"n-Heptan", conc:35}, {name:"Benzol", conc:15}, {name:"Toluol", conc:40}
+    ]},
+    {group:1, name:"Superbenzin mit MTBE", components:[
+      {name:"n-Pentan", conc:20}, {name:"Methyl-tert-butylether", conc:12}, {name:"n-Heptan", conc:30}, {name:"Toluol", conc:40}
+    ]},
+    {group:1, name:"E10-Kraftstoff", components:[
+      {name:"n-Hexan", conc:30}, {name:"Ethanol", conc:10}, {name:"n-Heptan", conc:30}, {name:"Toluol", conc:30}
+    ]},
+    {group:1, name:"Petrolether 40/60", components:[
+      {name:"n-Pentan", conc:65}, {name:"n-Hexan", conc:35}
+    ]},
+    {group:1, name:"Waschbenzin (Siedegrenzbenzin 80/110)", components:[
+      {name:"n-Hexan", conc:10}, {name:"Cyclohexan", conc:35}, {name:"n-Heptan", conc:55}
+    ]},
+    {group:2, name:"Verdünner / Lösemittelgemisch", components:[
+      {name:"Aceton", conc:35}, {name:"Ethylacetat", conc:30}, {name:"n-Hexan", conc:20}, {name:"Toluol", conc:30}
+    ]},
+    {group:2, name:"Handdesinfektionsmittel", components:[
+      {name:"Ethanol", conc:75}, {name:"2-Propanol", conc:15}, {name:"Methanol", conc:10}
+    ]},
+    {group:2, name:"Nagellackentferner", components:[
+      {name:"Aceton", conc:80}, {name:"Ethylacetat", conc:15}, {name:"2-Propanol", conc:8}
+    ]},
+    {group:2, name:"Abbeizer (klassisch)", components:[
+      {name:"Dichlormethan", conc:75}, {name:"Methanol", conc:15}, {name:"Toluol", conc:10}
+    ]},
+    {group:3, name:"DC-Laufmittel Hexan/Ethylacetat 7:3", components:[
+      {name:"n-Hexan", conc:70}, {name:"Ethylacetat", conc:30}
+    ]},
+    {group:3, name:"Halogenierter Lösemittelabfall", components:[
+      {name:"Dichlormethan", conc:50}, {name:"Chloroform", conc:35}, {name:"Toluol", conc:15}
+    ]},
+    {group:3, name:"Obstbrand-Vorlauf (Destillation)", components:[
+      {name:"Methanol", conc:20}, {name:"Ethanol", conc:65}, {name:"1-Propanol", conc:12}
+    ]}
+  ];
+  function renderMixtureSelect(){
+    $("mixtureSelect").innerHTML = mixtureGroups.map((g,gi)=>
+      `<optgroup label="${g}">` +
+      mixturePresets.map((m,i)=> m.group===gi ? `<option value="${i}">${m.name}</option>` : "").join("") +
+      `</optgroup>`).join("");
+  }
+  $("addMixture").addEventListener("click", ()=>{
+    const mix = mixturePresets[+$("mixtureSelect").value];
+    const components = mix.components.slice(0,4).map(comp=>{
+      const lib = compoundLibrary.find(c=>c.name===comp.name);
+      return lib ? {name:lib.name, bp:lib.bp, conc:comp.conc, rf:lib.rf} : null;
+    }).filter(Boolean);
+    compounds.push({type:"mix", name:mix.name, components, color: palette[compounds.length % palette.length]});
+    renderCompounds();
+  });
+
+  $("addCompound").addEventListener("click", ()=>{
+    compounds.push({name:"Neue Substanz", bp:100, conc:40, rf:1.0, color: palette[compounds.length % palette.length]});
+    renderCompounds();
+  });
+
+  // ---------- Slider-Bindings ----------
+  function bind(rangeId, valId, fmt, onchange){
+    const r = $(rangeId);
+    r.addEventListener("input", ()=>{ $(valId).textContent = fmt(+r.value); onchange(+r.value); });
+  }
+  bind("rTemp","vTemp", v=>v+" °C", v=>params.temp=v);
+  bind("rTStart","vTStart", v=>v+" °C", v=>params.tStart=v);
+  bind("rHold","vHold", v=>v.toFixed(1)+" min", v=>params.hold=v);
+  bind("rRamp","vRamp", v=>v+" °C/min", v=>params.ramp=v);
+  bind("rTEnd","vTEnd", v=>v+" °C", v=>params.tEnd=v);
+  bind("rFlow","vFlow", v=>v.toFixed(1)+" mL/min", v=>params.flow=v);
+  bind("rPlates","vPlates", v=>Math.round(v).toLocaleString('de-DE'), v=>params.plates=v);
+  bind("rRuntime","vRuntime", v=>v+" min", v=>params.runtime=v);
+  bind("rAmt","vAmt", v=>v.toFixed(1)+"×", v=>params.amount=v);
+  bind("rNoise","vNoise", v=>{
+    const labels=["aus","minimal","gering","gering","mäßig","mäßig","erhöht","erhöht","hoch","hoch","sehr hoch"];
+    return labels[Math.round(v)] ?? v;
+  }, v=>params.noise=v);
+  bind("rThresh","vThresh", v=>v.toFixed(1)+"%", v=>{ if(simData) evaluate(); });
+
+  $("modeIso").addEventListener("click", ()=>setMode("iso"));
+  $("modeProg").addEventListener("click", ()=>setMode("prog"));
+  function setMode(m){
+    mode = m;
+    $("modeIso").classList.toggle("active", m==="iso");
+    $("modeProg").classList.toggle("active", m==="prog");
+    $("isoControls").style.display = m==="iso" ? "" : "none";
+    $("progControls").style.display = m==="prog" ? "" : "none";
+  }
+
+  document.querySelectorAll(".speed-group button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.querySelectorAll(".speed-group button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      speed = +b.dataset.speed;
+    });
+  });
+
+  document.querySelectorAll(".tabbtn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".tabpanel").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      $("tab-"+b.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---------- Ofentemperatur zu Zeit t ----------
+  function ovenTemp(t){
+    if(mode==="iso") return params.temp;
+    if(t <= params.hold) return params.tStart;
+    const T = params.tStart + params.ramp*(t-params.hold);
+    return Math.min(T, params.tEnd);
+  }
+
+  // ---------- Retentionszeit-Modell ----------
+  // Totzeit t0 = Laufzeit der nicht zurückgehaltenen Luft (bei 1,5 mL/min genau 10 s).
+  // Retentionsfaktor k sinkt exponentiell mit der Differenz Ofentemperatur - Siedepunkt;
+  // K_SCALE hält die Abstände der Substanzpeaks trotz kurzer Totzeit im gewohnten Bereich.
+  // Temperaturprogramm: Wanderung durch die Säule wird schrittweise integriert
+  // (Anteil der Säule pro Zeitschritt = dt / (t0·(1+k(T)))), Elution bei 100 %.
+  const K_SCALE = 12;
+  function deadTime(){ return 0.25/Math.max(params.flow,0.1); }   // in min
+  function kAt(bp, T){ return K_SCALE*Math.exp((bp - T)/35); }
+  function computeRetention(c, jitter){
+    const t0 = deadTime();
+    const plates = Math.max(params.plates,200);
+    let tR, kElute;
+    if(mode==="iso"){
+      kElute = kAt(c.bp, params.temp);
+      tR = t0*(1+kElute);
+    } else {
+      let t = 0, pos = 0;
+      const dt = 0.001;
+      while(pos < 1 && t < 400){
+        pos += dt/(t0*(1+kAt(c.bp, ovenTemp(t))));
+        t += dt;
+      }
+      tR = t;
+      kElute = kAt(c.bp, ovenTemp(t));
+    }
+    const sigma = t0*(1+kElute)/Math.sqrt(plates);  // Peakbreite aus k bei Elution
+    if(jitter) tR *= (1 + (Math.random()-0.5)*0.006);
+    return {tR, sigma};
+  }
+
+  // ---------- Simulation erzeugen ----------
+  function buildRun(){
+    const rt = params.runtime;
+    const t = new Float64Array(N_SAMPLES);
+    const sig = new Float64Array(N_SAMPLES);
+    for(let i=0;i<N_SAMPLES;i++) t[i] = rt*i/(N_SAMPLES-1);
+
+    const minSigma = 2.5*rt/(N_SAMPLES-1);   // mind. ~2,5 Messpunkte pro Sigma
+    truePeaks = expandCompounds().map(c=>{
+      const ret = computeRetention(c, true);
+      const tR = ret.tR;
+      const sigma = Math.max(ret.sigma, minSigma);
+      const trueArea = c.conc * c.rf;               // Fläche ∝ Menge × Responsefaktor
+      const amp = (trueArea/(sigma*Math.sqrt(2*Math.PI))) * (params.amount) * 0.9;
+      return {name:c.name, bp:c.bp, tR, sigma, amp, trueConc:c.conc};
+    });
+    // Luftpeak: mit der Spritze injizierte Luft, wird nicht zurückgehalten -> erscheint bei t0
+    {
+      const tR = deadTime();
+      const sigma = Math.max(tR/Math.sqrt(Math.max(params.plates,200)), minSigma);
+      const airArea = 12;
+      truePeaks.push({name:"Luft", air:true, bp:null, tR, sigma, amp: airArea/(sigma*Math.sqrt(2*Math.PI))*0.9, trueConc:null});
+    }
+    truePeaks.sort((a,b)=>a.tR-b.tR);
+
+    const noiseAmp = params.noise * 0.35;
+    let drift = 0;
+    for(let i=0;i<N_SAMPLES;i++){
+      const ti = t[i];
+      const T = ovenTemp(ti);
+      let base = Math.max(0,(T-60))*0.012 + drift;      // Säulenbluten bei hoher Temperatur
+      let s = base;
+      for(const p of truePeaks){
+        const d = ti-p.tR;
+        s += p.amp*Math.exp(-(d*d)/(2*p.sigma*p.sigma));
+      }
+      s += (Math.random()-0.5)*noiseAmp;                 // weißes Rauschen
+      drift += (Math.random()-0.5)*0.0015*params.noise;   // langsame Basislinien-Drift
+      sig[i]=s;
+    }
+    simData = {t, sig};
+    activeRuntime = rt;
+  }
+
+  // ---------- Zeichnen ----------
+  function draw(){
+    const w = canvas.getBoundingClientRect().width, h = 340;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#0e1113"; ctx.fillRect(0,0,w,h);
+
+    const padL=46, padR=14, padT=14, padB=28;
+    const plotW = w-padL-padR, plotH = h-padT-padB;
+    if(!simData){
+      ctx.strokeStyle="#233029"; ctx.lineWidth=1;
+      for(let i=0;i<=8;i++){ const x=padL+plotW*i/8; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
+      ctx.fillStyle="#5f6870"; ctx.font="13px Inter"; ctx.fillText("Bereit — Methode einstellen und Injektion starten klicken.", padL, padT+plotH/2);
+      return;
+    }
+    const rt = activeRuntime;
+    let maxSig = 2;
+    for(let i=0;i<simData.sig.length;i++){ if(simData.sig[i]>maxSig) maxSig=simData.sig[i]; }
+    const totalSamples = simData.t.length;
+    const visibleT = running ? Math.min(simTime, rt) : rt;
+    const nVisible = Math.max(2, Math.round(totalSamples*visibleT/rt));
+
+    // Gitter
+    ctx.strokeStyle="#233029"; ctx.lineWidth=1; ctx.font="10.5px 'JetBrains Mono'"; ctx.fillStyle="#5f6870";
+    for(let i=0;i<=10;i++){
+      const x=padL+plotW*i/10;
+      ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
+      ctx.fillText((rt*i/10).toFixed(1), x-8, padT+plotH+18);
+    }
+    for(let j=0;j<=4;j++){
+      const y=padT+plotH*j/4;
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    }
+    ctx.fillStyle="#9aa2a9"; ctx.font="11px Inter"; ctx.fillText("Zeit (min)", padL+plotW/2-24, h-3);
+    ctx.save(); ctx.translate(12,padT+plotH/2+18); ctx.rotate(-Math.PI/2); ctx.fillText("Signal (pA)",0,0); ctx.restore();
+
+    // Trace
+    ctx.beginPath();
+    ctx.strokeStyle = "#ffb454"; ctx.lineWidth = 1.6; ctx.lineJoin="round";
+    for(let i=0;i<nVisible;i++){
+      const x = padL + plotW*(simData.t[i]/rt);
+      const y = padT + plotH - (simData.sig[i]/maxSig)*plotH*0.92;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowColor="#ffb454"; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+
+    // Peak-Markierungen (nur nach Auswertung)
+    if(detectedPeaks.length){
+      detectedPeaks.forEach(p=>{
+        const x = padL + plotW*(p.tR/rt);
+        const y = padT + plotH - (p.height/maxSig)*plotH*0.92 - 6;
+        if(x <= padL+plotW*(nVisible/totalSamples)+2){
+          ctx.strokeStyle="#4fd1c5"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle="#4fd1c5"; ctx.font="11px 'JetBrains Mono'"; ctx.fillText(String(p.num), x-3, Math.max(y,padT+10));
+        }
+      });
+    }
+
+    // Cursor
+    if(running){
+      const x = padL+plotW*(visibleT/rt);
+      ctx.strokeStyle="#e7e4dd"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
+    }
+  }
+
+  // ---------- Ablauf / Animation ----------
+  function startRun(){
+    buildRun(); detectedPeaks=[]; $("peakHint").style.display="none"; renderPeakTable(); renderQuant(); renderRes();
+    simTime = 0; running = true; startPerf = performance.now();
+    $("btnRun").disabled = true; $("btnStop").disabled=false;
+    $("statusBadge").classList.add("running"); $("statusText").textContent="Lauf aktiv";
+    cancelAnimationFrame(animId); tick();
+  }
+  function stopRun(finished){
+    running=false; cancelAnimationFrame(animId);
+    $("btnRun").disabled=false; $("btnStop").disabled=true;
+    $("statusBadge").classList.remove("running");
+    $("statusText").textContent = finished ? "Lauf beendet" : "gestoppt";
+    if(finished) evaluate();
+    draw();
+  }
+  function tick(){
+    const now = performance.now();
+    const elapsedSec = (now-startPerf)/1000;
+    simTime = elapsedSec * speed / 60 * 10; // Kalibrierung: 1 reale Sek. × speed ≈ sinnvolles Lauftempo
+    const T = ovenTemp(Math.min(simTime,params.runtime));
+    $("roTime").textContent = Math.min(simTime,params.runtime).toFixed(2)+" min";
+    $("roTemp").textContent = T.toFixed(0)+" °C";
+    const idx = Math.min(N_SAMPLES-1, Math.round(N_SAMPLES*Math.min(simTime,params.runtime)/params.runtime));
+    $("roSignal").textContent = (simData.sig[idx]).toFixed(1)+" pA";
+    draw();
+    if(simTime >= params.runtime){ stopRun(true); return; }
+    animId = requestAnimationFrame(tick);
+  }
+
+  $("btnRun").addEventListener("click", startRun);
+  $("btnStop").addEventListener("click", ()=>stopRun(false));
+  $("btnReset").addEventListener("click", ()=>{
+    stopRun(false); simData=null; detectedPeaks=[]; $("peakHint").style.display="none"; activeRuntime=params.runtime;
+    $("statusText").textContent="bereit";
+    $("roTime").textContent="0.00 min"; $("roSignal").textContent="0.0 pA"; $("roTemp").textContent=params.temp+" °C"; $("roPeaks").textContent="–";
+    renderPeakTable(); renderQuant(); renderRes(); draw();
+  });
+
+  // ---------- Peak-Erkennung & Integration ----------
+  function evaluate(){
+    if(!simData) return;
+    const {t, sig} = simData;
+    const n = sig.length;
+
+    // gleitende Baseline (Minimum in breiten Fenstern, geglättet)
+    const win = Math.max(20, Math.round(n*0.03));
+    const baseline = new Float64Array(n);
+    for(let i=0;i<n;i++){
+      let lo=Math.max(0,i-win), hi=Math.min(n-1,i+win), m=Infinity;
+      for(let j=lo;j<=hi;j+=4) if(sig[j]<m) m=sig[j];
+      baseline[i]=m;
+    }
+    // leichte Glättung der Baseline
+    const smBase = new Float64Array(n);
+    const sw=15;
+    for(let i=0;i<n;i++){
+      let lo=Math.max(0,i-sw), hi=Math.min(n-1,i+sw), sum=0,c=0;
+      for(let j=lo;j<=hi;j++){sum+=baseline[j];c++;}
+      smBase[i]=sum/c;
+    }
+
+    const corrected = new Float64Array(n);
+    let maxCorr=0;
+    for(let i=0;i<n;i++){ corrected[i]=Math.max(0,sig[i]-smBase[i]); if(corrected[i]>maxCorr) maxCorr=corrected[i]; }
+    const threshFrac = (+$("rThresh").value)/100;
+    const threshold = maxCorr*threshFrac;
+
+    // lokale Maxima finden
+    let peaks=[];
+    for(let i=2;i<n-2;i++){
+      if(corrected[i]>threshold && corrected[i]>=corrected[i-1] && corrected[i]>=corrected[i+1] && corrected[i]>corrected[i-2] && corrected[i]>corrected[i+2]){
+        peaks.push({idx:i,h:corrected[i]});
+      }
+    }
+    // Benachbarte Maxima nur zusammenfassen, wenn dazwischen kein echtes Tal liegt
+    // (Tal höher als 85 % des kleineren Peaks = Rauschzacke auf demselben Peak)
+    let merged = true;
+    while(merged && peaks.length>1){
+      merged = false;
+      for(let k=1;k<peaks.length;k++){
+        const a=peaks[k-1], b=peaks[k];
+        let valley=Infinity;
+        for(let i=a.idx;i<=b.idx;i++) if(corrected[i]<valley) valley=corrected[i];
+        if(valley > 0.85*Math.min(a.h,b.h)){
+          peaks.splice(k-1, 2, a.h>=b.h ? a : b);
+          merged = true;
+          break;
+        }
+      }
+    }
+
+    detectedPeaks = peaks.map((p,k)=>{
+      // Talgrenzen
+      let li=p.idx; while(li>0 && corrected[li-1]<=corrected[li] || (li>0 && corrected[li-1] < corrected[p.idx]*0.98 && corrected[li]>threshold*0.3)) { if(corrected[li-1] > corrected[li]) break; li--; if(li===0) break; }
+      // einfacher: Tal = lokales Minimum links/rechts
+      li = p.idx; while(li>1 && !(corrected[li-1]>corrected[li] && corrected[li]<=corrected[li+1]) && corrected[li]>threshold*0.15) li--;
+      let ri = p.idx; while(ri<n-2 && !(corrected[ri+1]>corrected[ri] && corrected[ri]<=corrected[ri-1]) && corrected[ri]>threshold*0.15) ri++;
+      li=Math.max(0,li); ri=Math.min(n-1,ri);
+
+      // Fläche (Trapezregel)
+      let area=0;
+      for(let i=li;i<ri;i++) area += (corrected[i]+corrected[i+1])/2 * (t[i+1]-t[i]);
+
+      // Halbwertsbreite
+      const half = p.h/2;
+      let lh=p.idx; while(lh>li && corrected[lh]>half) lh--;
+      let rh=p.idx; while(rh<ri && corrected[rh]>half) rh++;
+      const wHalf = Math.max(t[rh]-t[lh], (t[ri]-t[li])*0.05);
+      const tR = t[p.idx];
+      const N = 5.54*Math.pow(tR/wHalf,2);
+
+      return {num:k+1, tR, height:p.h, area, wHalf, N, li, ri, idx:p.idx};
+    }).sort((a,b)=>a.tR-b.tR).map((p,k)=>({...p, num:k+1}));
+
+    // Bibliotheks-Identifikation gegen aktuelle Methodensollwerte
+    const tol = 0.05;
+    detectedPeaks.forEach(p=>{
+      let best=null, bestDiff=Infinity;
+      truePeaks.forEach(tp=>{
+        const diff = Math.abs(tp.tR-p.tR)/tp.tR;
+        if(diff<bestDiff){ bestDiff=diff; best=tp; }
+      });
+      const hit = best && bestDiff<=tol;
+      p.match = hit ? best.name : null;
+      p.isAir = !!(hit && best.air);
+      p.trueConc = best ? best.trueConc : null;
+    });
+
+    // Flächenprozente nur über die Probe – der Luftpeak gehört nicht zur Probe
+    const totalArea = detectedPeaks.filter(p=>!p.isAir).reduce((s,p)=>s+p.area,0) || 1;
+    detectedPeaks.forEach(p=> p.areaPct = p.isAir ? null : 100*p.area/totalArea);
+
+    $("roPeaks").textContent = detectedPeaks.length;
+
+    // Hinweis bei nicht getrennten oder nicht eluierten Substanzen
+    const hint = $("peakHint");
+    const inWindow = truePeaks.filter(p=>p.tR <= params.runtime);
+    const lateCount = truePeaks.length - inWindow.length;
+    const msgs = [];
+    if(detectedPeaks.length < inWindow.length){
+      msgs.push(`${inWindow.length} Substanzen im Messfenster, aber nur ${detectedPeaks.length} Peaks erkannt – einige Substanzen eluieren gemeinsam. Ofentemperatur senken, Trennstufen erhöhen oder ein Temperaturprogramm verwenden (für Gase wie Methan bis Butan: Start bei −60 °C).`);
+    }
+    if(lateCount > 0){
+      msgs.push(`${lateCount} Substanz(en) eluieren erst nach Ende der Laufzeit – Laufzeit verlängern oder Temperatur erhöhen.`);
+    }
+    hint.textContent = msgs.join(" ");
+    hint.style.display = msgs.length ? "block" : "none";
+    renderPeakTable();
+    renderQuantOptions();
+    renderRes();
+  }
+
+  function renderPeakTable(){
+    const body = $("peakBody");
+    if(!detectedPeaks.length){
+      body.innerHTML = `<tr><td colspan="7" class="empty-hint">Noch keine Peaks erkannt – Lauf abwarten oder Schwellenwert anpassen.</td></tr>`;
+      return;
+    }
+    body.innerHTML = detectedPeaks.map(p=>`
+      <tr>
+        <td class="mono">${p.num}</td>
+        <td class="mono">${p.tR.toFixed(2)}</td>
+        <td class="mono">${p.height.toFixed(1)}</td>
+        <td class="mono">${p.area.toFixed(1)}</td>
+        <td class="mono">${p.isAir ? '—' : p.areaPct.toFixed(1)+'%'}</td>
+        <td class="mono">${Math.round(p.N).toLocaleString('de-DE')}</td>
+        <td class="${p.match?'id-match':'id-unknown'}">${p.isAir ? 'Luft (Totzeit)' : (p.match||'unbekannt')}</td>
+      </tr>`).join("");
+  }
+
+  // ---------- Quantifizierung ----------
+  function renderQuantOptions(){
+    const sel = $("stdPeakSelect");
+    if(!detectedPeaks.length){ sel.innerHTML=`<option value="">– Peaktabelle zuerst füllen –</option>`; return; }
+    sel.innerHTML = detectedPeaks.filter(p=>!p.isAir).map(p=>`<option value="${p.num}">Peak ${p.num} — tR ${p.tR.toFixed(2)} min ${p.match? '('+p.match+')':''}</option>`).join("");
+  }
+  $("btnCalibrate").addEventListener("click", renderQuant);
+  function renderQuant(){
+    const body = $("quantBody");
+    if(!detectedPeaks.length){ body.innerHTML=`<tr><td colspan="6" class="empty-hint">Noch keine Kalibrierung durchgeführt.</td></tr>`; return; }
+    const stdNum = +$("stdPeakSelect").value;
+    const std = detectedPeaks.find(p=>p.num===stdNum);
+    if(!std){ body.innerHTML=`<tr><td colspan="6" class="empty-hint">Bitte einen Standardpeak auswählen.</td></tr>`; return; }
+    const cStd = +$("stdConc").value || 1;
+    body.innerHTML = detectedPeaks.filter(p=>!p.isAir).map(p=>{
+      const cCalc = (p.area/std.area)*cStd;
+      const err = (p.trueConc!=null) ? ((cCalc-p.trueConc)/p.trueConc*100) : null;
+      return `<tr>
+        <td class="mono">${p.num}</td>
+        <td class="mono">${p.tR.toFixed(2)}</td>
+        <td class="mono">${p.area.toFixed(1)}</td>
+        <td class="mono">${cCalc.toFixed(2)}</td>
+        <td class="mono">${p.trueConc!=null? p.trueConc.toFixed(2) : '—'}</td>
+        <td class="mono" style="color:${err==null?'inherit': (Math.abs(err)<8?'#7fd68a': Math.abs(err)<20?'#ffb454':'#e4785b')}">${err==null?'—': (err>0?'+':'')+err.toFixed(1)+'%'}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  // ---------- Auflösung ----------
+  function renderRes(){
+    const list = $("resList");
+    if(detectedPeaks.length<2){ list.innerHTML = `<div class="empty-hint">Mindestens zwei Peaks nötig.</div>`; return; }
+    let html="";
+    for(let i=1;i<detectedPeaks.length;i++){
+      const a=detectedPeaks[i-1], b=detectedPeaks[i];
+      const wA = a.wHalf*1.7, wB = b.wHalf*1.7; // Basisbreite ≈ 1.7 × Halbwertsbreite
+      const rs = 2*(b.tR-a.tR)/(wA+wB);
+      const cls = rs>=1.5?'res-good': rs>=1.0?'res-mid':'res-bad';
+      const verdict = rs>=1.5?'Basislinientrennung':rs>=1.0?'teilweise getrennt':'nicht aufgelöst';
+      html += `<div class="res-item"><span>Peak ${a.num} → Peak ${b.num}</span><span class="mono rs-val ${cls}">Rs = ${rs.toFixed(2)} · ${verdict}</span></div>`;
+    }
+    list.innerHTML = html;
+  }
+
+  // ---------- CSV Export ----------
+  $("btnExport").addEventListener("click", ()=>{
+    if(!detectedPeaks.length) return;
+    let csv = "Peak;tR_min;Hoehe;Flaeche;Flaeche_pct;Bodenzahl_N;Substanz\n";
+    detectedPeaks.forEach(p=>{
+      csv += `${p.num};${p.tR.toFixed(3)};${p.height.toFixed(2)};${p.area.toFixed(2)};${p.isAir ? '' : p.areaPct.toFixed(2)};${Math.round(p.N)};${p.isAir ? 'Luft (Totzeit)' : (p.match||'unbekannt')}\n`;
+    });
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url; a.download="gc_peaktabelle.csv"; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ---------- Anleitung ----------
+  const guideBackdrop = $("guideBackdrop");
+  $("btnGuide").addEventListener("click", (e)=>{ e.preventDefault(); guideBackdrop.classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=> guideBackdrop.classList.remove("open"));
+  guideBackdrop.addEventListener("click", (e)=>{ if(e.target===guideBackdrop) guideBackdrop.classList.remove("open"); });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") guideBackdrop.classList.remove("open"); });
+
+  // ---------- Init ----------
+  renderCompounds();
+  renderLibrarySelect();
+  renderMixtureSelect();
+  fitCanvas();
+  draw();
+})();
+</script>
+</body>
+</html>

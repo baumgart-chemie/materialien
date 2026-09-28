@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gleichgewichts-Simulator · Le Chatelier & Massenwirkungsgesetz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --grid:#233029;
+  --danger:#e4785b;
+  --good:#7fd68a;
+  --radius:3px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+    --line:#31383e; --line-soft:#262c31; --text:#e7e4dd; --text-dim:#9aa2a9;
+  }
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.eq .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.eq{color:var(--teal); border-color:var(--teal-dim);}
+header .status.shift .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.shift{color:var(--amber); border-color:var(--amber-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:620px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; position:sticky; top:0;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 4px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 320px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none;} }
+
+.main{padding:20px 24px 60px; min-width:0;}
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px;
+  letter-spacing:.2px;
+}
+
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+.row label{font-size:13px; color:var(--text-dim);}
+.row .val{font-size:13px; color:var(--amber); min-width:64px; text-align:right;}
+input[type=range]{width:100%; accent-color: var(--teal); height:4px; background:transparent; cursor:pointer; margin-bottom:6px;}
+input[type=range]:disabled{opacity:.35; cursor:not-allowed;}
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+.hint{font-size:11.5px; color:var(--text-faint); line-height:1.45; margin:0 0 14px;}
+
+.compound-list{display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
+.compound-row{
+  display:grid; grid-template-columns: 1fr 86px 58px; gap:6px; align-items:center;
+  background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:var(--radius); padding:6px 6px;
+}
+.compound-row .swatch{width:9px;height:9px;border-radius:50%; margin-right:6px; flex:none;}
+.compound-row .name-wrap{display:flex; align-items:center; min-width:0; font-size:12.5px; font-weight:500;}
+.compound-row .name-wrap span.nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.compound-row .cval{font-size:12px; color:var(--amber); text-align:right;}
+.compound-row .pm{display:flex; gap:4px; justify-content:flex-end;}
+.compound-row .pm button{
+  width:25px; height:24px; padding:0; background:var(--raise); border:1px solid var(--line);
+  color:var(--text); border-radius:var(--radius); cursor:pointer; font-size:14px; line-height:1; font-family:inherit;
+}
+.compound-row .pm button:hover{border-color:var(--teal);}
+.compound-hint{font-size:10.5px; color:var(--text-faint); display:grid; grid-template-columns:1fr 86px 58px; gap:6px; padding:0 6px; margin-bottom:6px; line-height:1.25;}
+.compound-hint span:nth-child(2), .compound-hint span:nth-child(3){text-align:right;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit;
+  font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn.ghost{background:transparent;}
+.btn.on{background:var(--teal-dim); border-color:var(--teal); color:var(--text);}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap;}
+
+/* screen */
+.screen-card{
+  border:1px solid var(--line); background:#0e1113; border-radius:4px; padding:14px 14px 6px; position:relative;
+}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+.screen-top .title{font-size:12.5px; color:var(--text-dim); font-weight:600;}
+.speed-group{display:flex; gap:4px; margin-left:auto;}
+.speed-group button{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:'JetBrains Mono',monospace;
+}
+.speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
+.screen-grid{display:grid; grid-template-columns: 250px 1fr; gap:12px;}
+@media (max-width:700px){ .screen-grid{grid-template-columns:1fr;} }
+canvas{display:block; width:100%;}
+canvas#vessel{height:320px;}
+canvas#chart{height:320px;}
+canvas#kplot{height:260px;}
+.readout-bar{
+  display:flex; gap:26px; padding:10px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:8px;
+}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+.legend{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--text-dim); padding:4px 4px 8px;}
+.legend span{cursor:pointer; user-select:none; display:inline-flex; align-items:center;}
+.legend span.off{opacity:.35; text-decoration:line-through;}
+.legend .swatch{width:9px;height:9px;border-radius:50%;margin-right:5px;display:inline-block;}
+.chk{font-size:12px; color:var(--text-dim); display:inline-flex; gap:6px; align-items:center; margin-left:auto;}
+.chk input{accent-color:var(--teal);}
+
+/* Reaktion / MWG */
+.eq-card{margin-top:18px; border:1px solid var(--line-soft); background:var(--panel); border-radius:4px; padding:16px 18px;}
+.eq{font-size:19px; text-align:center; line-height:1.9;}
+.eq .arr{display:inline-block; margin:0 .4em; font-size:1.25em; vertical-align:-.06em;}
+.eq .arr.r{color:var(--good);} .eq .arr.l{color:var(--danger);}
+.meta{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 18px; font-size:12.5px; color:var(--text-dim); margin-top:2px;}
+.mwg{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:14px 34px; margin-top:14px; font-size:15px;}
+.frac{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin-left:4px;}
+.frac>span{padding:1px 6px;}
+.frac>span:first-child{border-bottom:1.5px solid var(--text-dim);}
+.kq{display:grid; grid-template-columns:auto auto; gap:4px 12px; font-size:13.5px;}
+.kq dt{color:var(--text-dim);} .kq dd{margin:0; color:var(--amber);}
+.defs{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px;}
+@media (max-width:760px){ .defs{grid-template-columns:1fr;} }
+.def{border:1px solid var(--line-soft); background:var(--panel-alt); border-radius:4px; padding:12px 14px;}
+.def h3{font-size:13px; color:var(--amber); margin:0 0 6px; font-weight:600;}
+.def p{font-size:12.8px; line-height:1.55; color:var(--text-dim); margin:0 0 6px;}
+.def p:last-child{margin:0;}
+.def strong{color:var(--text); font-weight:600;}
+.def .formula{text-align:center; color:var(--text); font-size:14px; margin:8px 0;}
+.explain{margin-top:16px; border-left:2px solid var(--teal); background:var(--panel-alt); padding:10px 14px; font-size:13.5px; line-height:1.6; color:var(--text-dim);}
+.explain p{margin:0 0 6px;} .explain p:last-child{margin:0;}
+.explain b{color:var(--text); font-weight:600;}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line);}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{
+  text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+tbody td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+tbody tr:hover{background:var(--panel-alt);}
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+.res-good{color:var(--good);} .res-bad{color:var(--danger);} .res-mid{color:var(--teal);}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:70ch;}
+.kgrid{display:grid; grid-template-columns: 1fr 280px; gap:20px; align-items:start;}
+@media (max-width:760px){ .kgrid{grid-template-columns:1fr;} }
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Gleichgewichts-Simulator</h1>
+  <span class="tag">Chemisches Gleichgewicht – Prinzip von Le Chatelier & Massenwirkungsgesetz</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status" id="statusBadge"><span class="dot"></span><span id="statusText">bereit</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Reaktion auswählen</h3>
+      <p>Im Dropdown „Reaktion" stehen acht Gleichgewichtsreaktionen zur Auswahl – fünf Gasreaktionen (z. B. Ammoniak-Synthese, NO₂/N₂O₄) und drei Reaktionen in Lösung (Veresterung, Eisen-thiocyanat, Cobalt-Komplex). Nach dem Laden liegen nur die Edukte vor. Temperatur, Druck und Konzentrationen lassen sich jetzt als Startbedingungen einstellen; mit <strong>„Reaktion starten“</strong> beginnt die Reaktion und die Simulation zeigt, wie sich das Gleichgewicht einstellt.</p>
+
+      <h3>Temperatur</h3>
+      <p>Die Temperatur verändert die <strong>Gleichgewichtskonstante K<sub>c</sub></strong>. Bei einer exothermen Hinreaktion sinkt K<sub>c</sub> mit steigender Temperatur, bei einer endothermen steigt es. Wärmezufuhr begünstigt immer die endotherme Teilreaktion. Der Verlauf von K<sub>c</sub> ist im Reiter „Temperaturabhängigkeit" dargestellt.</p>
+
+      <h3>Druck</h3>
+      <p>Bei Gasreaktionen wird der Druck durch Verschieben des Kolbens verändert. Alle Gaskonzentrationen ändern sich dabei um denselben Faktor. Stehen auf beiden Seiten unterschiedlich viele Gasteilchen, gilt anschließend <strong>Q<sub>c</sub> ≠ K<sub>c</sub></strong>: Das Gleichgewicht verschiebt sich bei Druckerhöhung zur Seite mit weniger Teilchen, und der Druck geht teilweise wieder zurück. K<sub>c</sub> bleibt dabei unverändert. Bei gleicher Teilchenzahl (z. B. HI-Gleichgewicht) und bei Reaktionen in Lösung hat der Druck keinen Einfluss.</p>
+
+      <h3>Konzentrationen</h3>
+      <p>Mit <strong>+</strong> wird ein Stoff zugegeben, mit <strong>−</strong> wird seine Stoffmenge halbiert (Entzug). Die Zugabe eines Edukts oder der Entzug eines Produkts verschiebt das Gleichgewicht nach rechts, umgekehrt nach links. K<sub>c</sub> bleibt konstant, nur der Reaktionsquotient Q<sub>c</sub> ändert sich.</p>
+
+      <h3>Katalysator</h3>
+      <p>Der Katalysator beschleunigt Hin- und Rückreaktion gleichermaßen. Das Gleichgewicht stellt sich schneller ein, seine Lage bleibt gleich.</p>
+
+      <h3>Anzeige</h3>
+      <p>Das <strong>Reaktionsgefäß</strong> zeigt die Teilchen der Stoffe (Anzahl proportional zur Stoffmenge); farbige Stoffe (NO₂, I₂, Eisen-thiocyanat, Cobalt-Komplexe) färben den Inhalt. Das <strong>c-t-Diagramm</strong> zeichnet die Konzentrationen fortlaufend auf, Störungen sind als gestrichelte Linien markiert. Ein Klick auf einen Stoff in der Legende blendet ihn aus.</p>
+      <p>Der Statusanzeiger oben rechts vergleicht Q<sub>c</sub> mit K<sub>c</sub>: Q<sub>c</sub> &lt; K<sub>c</sub> → Hinreaktion überwiegt, Q<sub>c</sub> &gt; K<sub>c</sub> → Rückreaktion überwiegt, Q<sub>c</sub> = K<sub>c</sub> → Gleichgewicht.</p>
+
+      <h3>Protokoll</h3>
+      <p>Jede Störung wird im Reiter „Protokoll" mit Zeitpunkt, K<sub>c</sub>, Q<sub>c</sub> direkt nach der Störung und der Verschiebungsrichtung festgehalten. Das Protokoll lässt sich als CSV-Datei exportieren.</p>
+
+      <h3>Ideen zum Ausprobieren</h3>
+      <p>Ammoniak-Synthese: Welche Bedingungen liefern die höchste NH₃-Konzentration – und warum arbeitet die Technik trotzdem bei 450 °C? NO₂/N₂O₄: Farbänderung beim Erwärmen und beim Komprimieren beobachten. HI-Gleichgewicht: Warum verschiebt eine Druckänderung hier nichts?</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <section class="block">
+      <h2>Reaktion</h2>
+      <div class="field-full">
+        <select id="rxSelect" aria-label="Reaktion auswählen"></select>
+      </div>
+      <p class="hint" id="rxInfo"></p>
+    </section>
+
+    <section class="block">
+      <h2>Reaktionsbedingungen</h2>
+      <div class="row"><label for="sT">Temperatur ϑ</label><span class="val mono" id="lT"></span></div>
+      <input type="range" id="sT">
+      <div class="row" style="margin-top:8px"><label for="sP">Druck p (Kolben)</label><span class="val mono" id="lP"></span></div>
+      <input type="range" id="sP">
+      <p class="hint" id="hintP"></p>
+    </section>
+
+    <section class="block">
+      <h2>Konzentrationen</h2>
+      <div class="compound-hint"><span>Stoff</span><span>c in mol/L</span><span>+ / −</span></div>
+      <div class="compound-list" id="tbl"></div>
+      <p class="hint">+ gibt eine feste Stoffmenge zu, − halbiert die Stoffmenge (Entzug).</p>
+    </section>
+
+    <section class="block">
+      <h2>Steuerung</h2>
+      <div class="btn-row">
+        <button class="btn" id="bCat" title="Katalysator beschleunigt die Einstellung des Gleichgewichts">Katalysator</button>
+        <button class="btn" id="bPause">Pause</button>
+        <button class="btn ghost" id="bReset">Zurücksetzen</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="bStart">Reaktion starten</button>
+        <span class="title">Reaktionsgefäß &amp; Konzentrations-Zeit-Diagramm</span>
+        <div class="speed-group">
+          <button data-speed="0.5">×0,5</button>
+          <button data-speed="1" class="active">×1</button>
+          <button data-speed="3">×3</button>
+        </div>
+      </div>
+      <div class="screen-grid">
+        <canvas id="vessel"></canvas>
+        <div style="min-width:0">
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+        <div class="legend" id="legend"></div>
+        <label class="chk"><input type="checkbox" id="logScale"> logarithmische Achse</label>
+      </div>
+      <div class="readout-bar">
+        <div class="readout"><span class="k">Zeit</span><span class="v mono" id="roTime">0 s</span></div>
+        <div class="readout"><span class="k">Temperatur</span><span class="v mono" id="roT">–</span></div>
+        <div class="readout"><span class="k">Gesamtdruck</span><span class="v mono" id="roP">–</span></div>
+        <div class="readout"><span class="k">Gleichgewichtskonstante K<sub>c</sub></span><span class="v mono" id="roK">–</span></div>
+        <div class="readout"><span class="k">Reaktionsquotient Q<sub>c</sub></span><span class="v mono" id="roQ">–</span></div>
+      </div>
+    </div>
+
+    <div class="eq-card">
+      <div class="eq" id="eq"></div>
+      <div class="meta" id="meta"></div>
+      <div class="mwg">
+        <div id="mwgExpr"></div>
+        <dl class="kq mono">
+          <dt>K<sub>c</sub>(ϑ)</dt><dd id="vK"></dd>
+          <dt>Q<sub>c</sub></dt><dd id="vQ"></dd>
+        </dl>
+      </div>
+      <div class="defs">
+        <div class="def">
+          <h3>K<sub>c</sub> – Gleichgewichtskonstante</h3>
+          <p>Quotient aus dem Produkt der <strong>Gleichgewichtskonzentrationen</strong> der Produkte und dem der Edukte, jeweils mit ihren stöchiometrischen Faktoren potenziert. Für a A + b B ⇌ c C + d D gilt:</p>
+          <p class="formula">K<sub>c</sub> = <span class="frac"><span>c<sup>c</sup>(C) · c<sup>d</sup>(D)</span><span>c<sup>a</sup>(A) · c<sup>b</sup>(B)</span></span></p>
+          <p>K<sub>c</sub> hängt für eine gegebene Reaktion nur von der <strong>Temperatur</strong> ab, nicht von Druck, Konzentrationen oder einem Katalysator. K<sub>c</sub> ≫ 1: Gleichgewicht liegt auf der Seite der Produkte; K<sub>c</sub> ≪ 1: auf der Seite der Edukte.</p>
+        </div>
+        <div class="def">
+          <h3>Q<sub>c</sub> – Reaktionsquotient</h3>
+          <p>Gleicher Term wie K<sub>c</sub>, aber mit den <strong>momentanen Konzentrationen</strong> zu einem beliebigen Zeitpunkt – also auch außerhalb des Gleichgewichts, z. B. direkt nach einer Störung. Im Gleichgewicht gilt Q<sub>c</sub> = K<sub>c</sub>.</p>
+          <p>Der Vergleich zeigt, in welche Richtung die Reaktion abläuft:</p>
+          <p>Q<sub>c</sub> &lt; K<sub>c</sub>: Hinreaktion überwiegt → <span class="res-good">Verschiebung nach rechts</span><br>
+             Q<sub>c</sub> &gt; K<sub>c</sub>: Rückreaktion überwiegt → <span class="res-bad">Verschiebung nach links</span><br>
+             Q<sub>c</sub> = K<sub>c</sub>: <span class="res-mid">Gleichgewicht</span></p>
+        </div>
+      </div>
+      <div class="explain" id="explain"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="log">Protokoll</button>
+      <button class="tabbtn" data-tab="kt">Temperaturabhängigkeit</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-log">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>t (s)</th><th>Änderung</th><th>K<sub>c</sub> vorher</th><th>K<sub>c</sub> nachher</th><th>Q<sub>c</sub> direkt danach</th><th>Verschiebung</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn ghost" id="btnExport">Protokoll als CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-kt">
+      <div class="kgrid">
+        <canvas id="kplot"></canvas>
+        <div>
+          <p class="note" id="kinfo" style="margin-top:0"></p>
+          <p class="note">Van-’t-Hoff-Gleichung (ΔH<sub>r</sub> als temperaturunabhängig angenommen):<br>
+          <span class="mono" style="color:var(--text-dim)">ln K(T) = ln K(T₀) − ΔH<sub>r</sub>/R · (1/T − 1/T₀)</span></p>
+          <p class="note">Der Punkt markiert die aktuell eingestellte Temperatur.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Simulierte Daten zu Lehrzwecken · Gasreaktionen im Zylinder mit arretiertem Kolben (konstantes Volumen, ideales Gas); Temperaturabhängigkeit nach Van ’t Hoff mit konstantem ΔH<sub>r</sub>. K<sub>c</sub>- und ΔH<sub>r</sub>-Werte gerundet, bei Eisen-thiocyanat und Cobalt-Komplex Modellwerte. Die Geschwindigkeit der Gleichgewichtseinstellung ist rein illustrativ.</p>
+  <p class="footer-credit">Bastian Baumgart · Gleichgewichts-Simulator V1.0 (erstellt mit Claude Pro)</p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const R = 0.08314;   // L·bar/(mol·K)
+const RJ = 8.314;    // J/(mol·K)
+
+const REACTIONS = [
+{
+  id:"nh3", name:"Ammoniak-Synthese (Haber-Bosch)", phase:"gas",
+  species:[
+    {html:"N<sub>2</sub>", txt:"N₂", nu:-1, color:"#6fb7ff", init:1},
+    {html:"H<sub>2</sub>", txt:"H₂", nu:-3, color:"#c9ced4", init:3},
+    {html:"NH<sub>3</sub>", txt:"NH₃", nu:2, color:"#7fd68a", init:0}],
+  dH:-92.4, K0:0.50, T0:673.15, T:[250,700,450], p:[10,400,200,5], step:0.5,
+  info:"Technisch: ca. 450 °C, 200–300 bar, Eisen-Katalysator."
+},
+{
+  id:"n2o4", name:"Stickstoffdioxid-Gleichgewicht (NO₂/N₂O₄)", phase:"gas",
+  species:[
+    {html:"N<sub>2</sub>O<sub>4</sub>", txt:"N₂O₄", nu:-1, color:"#9d8cf1", init:1},
+    {html:"NO<sub>2</sub>", txt:"NO₂", nu:2, color:"#e4a85b", init:0}],
+  dH:57.2, K0:4.64e-3, T0:298.15, T:[-10,150,25], p:[0.2,10,1,0.1], step:0.01,
+  info:"NO₂ ist rotbraun, N₂O₄ farblos – die Färbung zeigt die Lage des Gleichgewichts.",
+  tint:c=>({rgb:[170,85,30], a:1-Math.exp(-c[1]/0.02)})
+},
+{
+  id:"hi", name:"Iodwasserstoff-Gleichgewicht", phase:"gas",
+  species:[
+    {html:"H<sub>2</sub>", txt:"H₂", nu:-1, color:"#c9ced4", init:1},
+    {html:"I<sub>2</sub>", txt:"I₂", nu:-1, color:"#c07ae8", init:1},
+    {html:"HI", txt:"HI", nu:2, color:"#4fd1c5", init:0}],
+  dH:-9.4, K0:54.3, T0:698.15, T:[200,700,425], p:[0.5,20,2,0.1], step:0.01,
+  info:"Klassisches Beispiel (Bodenstein); gleiche Gasteilchenzahl auf beiden Seiten. Ioddampf ist violett.",
+  tint:c=>({rgb:[130,50,170], a:1-Math.exp(-c[1]/0.012)})
+},
+{
+  id:"so3", name:"Schwefeltrioxid-Bildung (Kontaktverfahren)", phase:"gas",
+  species:[
+    {html:"SO<sub>2</sub>", txt:"SO₂", nu:-2, color:"#ffd166", init:2},
+    {html:"O<sub>2</sub>", txt:"O₂", nu:-1, color:"#e4785b", init:1},
+    {html:"SO<sub>3</sub>", txt:"SO₃", nu:2, color:"#6fb7ff", init:0}],
+  dH:-198, K0:280, T0:1000, T:[400,1000,700], p:[0.5,20,2,0.1], step:0.006,
+  info:"Technisch: ca. 420–600 °C, leichter Überdruck, V₂O₅-Katalysator."
+},
+{
+  id:"co", name:"Wassergas-Shift-Reaktion", phase:"gas",
+  species:[
+    {html:"CO", txt:"CO", nu:-1, color:"#aab2bd", init:1},
+    {html:"H<sub>2</sub>O", txt:"H₂O", nu:-1, color:"#6fb7ff", init:1},
+    {html:"CO<sub>2</sub>", txt:"CO₂", nu:1, color:"#ffb454", init:0},
+    {html:"H<sub>2</sub>", txt:"H₂", nu:1, color:"#f18cae", init:0}],
+  dH:-41.2, K0:1.0, T0:1100, T:[300,1100,800], p:[1,30,5,0.5], step:0.015,
+  info:"Dient zur Wasserstoffgewinnung aus Synthesegas; gleiche Gasteilchenzahl auf beiden Seiten."
+},
+{
+  id:"ester", name:"Veresterung (Essigsäureethylester)", phase:"aq",
+  species:[
+    {html:"CH<sub>3</sub>COOH", txt:"Essigsäure", nu:-1, color:"#ffb454", init:1},
+    {html:"C<sub>2</sub>H<sub>5</sub>OH", txt:"Ethanol", nu:-1, color:"#7fd68a", init:1},
+    {html:"CH<sub>3</sub>COOC<sub>2</sub>H<sub>5</sub>", txt:"Ester", nu:1, color:"#9d8cf1", init:0},
+    {html:"H<sub>2</sub>O", txt:"Wasser", nu:1, color:"#6fb7ff", init:0}],
+  dH:-4, K0:4.0, T0:298.15, T:[10,80,25], step:0.5,
+  info:"Flüssige Phase – der Druck hat keinen Einfluss. Die Reaktion ist nahezu thermoneutral."
+},
+{
+  id:"fe", name:"Eisen(III)-thiocyanat-Komplex", phase:"aq",
+  species:[
+    {html:"Fe<sup>3+</sup>", txt:"Fe³⁺", nu:-1, color:"#ffd166", init:0.01},
+    {html:"SCN<sup>−</sup>", txt:"SCN⁻", nu:-1, color:"#aab2bd", init:0.01},
+    {html:"[Fe(SCN)]<sup>2+</sup>", txt:"[Fe(SCN)]²⁺", nu:1, color:"#e4785b", init:0}],
+  dH:-7, K0:140, T0:298.15, T:[0,80,20], step:0.005,
+  info:"Wässrige Lösung; der Komplex ist blutrot (vereinfacht als 1:1-Komplex, Modellwerte).",
+  tint:c=>({rgb:[175,25,25], a:1-Math.exp(-c[2]/0.004)})
+},
+{
+  id:"cobalt", name:"Cobalt(II)-Chlorido-Komplex", phase:"aq",
+  species:[
+    {html:"[Co(H<sub>2</sub>O)<sub>6</sub>]<sup>2+</sup>", txt:"[Co(H₂O)₆]²⁺", nu:-1, color:"#f18cae", init:0.1},
+    {html:"Cl<sup>−</sup>", txt:"Cl⁻", nu:-4, color:"#7fd68a", init:6, noParticles:true},
+    {html:"[CoCl<sub>4</sub>]<sup>2−</sup>", txt:"[CoCl₄]²⁻", nu:1, color:"#6f8fff", init:0}],
+  extraRight:" + 6 H<sub>2</sub>O", hideDefault:[1],
+  dH:50, K0:7.7e-4, T0:298.15, T:[0,100,25], step:0.05, stepOverride:{1:1.0},
+  info:"Rosa ⇌ blau (Modellwerte). Wasser ist Lösemittel und steht nicht im MWG; Cl⁻ liegt im Überschuss vor.",
+  tint:c=>{const t=(c[0]+c[2])||1, f=c[2]/t; return {rgb:[Math.round(225*(1-f)+40*f),Math.round(110*(1-f)+90*f),Math.round(160*(1-f)+215*f)], a:0.6};}
+}];
+
+/* ---------- Zustand ---------- */
+let rx, S = {}, speed = 1;
+const $ = id => document.getElementById(id);
+
+function lnK(T){ return Math.log(rx.K0) - rx.dH*1000/RJ*(1/T - 1/rx.T0); }
+function Kof(T){ return Math.exp(lnK(T)); }
+function conc(){ return S.n.map(n => n/S.V); }
+function isGas(){ return rx.phase === "gas"; }
+function pNow(){ return S.n.reduce((a,b)=>a+b,0)*R*S.T/S.V; }
+function dnu(){ return rx.species.reduce((a,s)=>a+s.nu,0); }
+function lnQ(c){
+  let q=0;
+  for(let i=0;i<c.length;i++){
+    const nu=rx.species[i].nu;
+    if(c[i]<=0) return nu>0 ? -Infinity : Infinity;
+    q += nu*Math.log(c[i]);
+  }
+  return q;
+}
+function xiEq(){
+  let lo=-Infinity, hi=Infinity;
+  rx.species.forEach((s,i)=>{ if(s.nu>0) lo=Math.max(lo,-S.n[i]/s.nu); else hi=Math.min(hi,S.n[i]/(-s.nu)); });
+  if(!(hi>lo)) return 0;
+  const lk=lnK(S.T);
+  const f = xi => { let q=0; rx.species.forEach((s,i)=>{ q+=s.nu*Math.log(Math.max(S.n[i]+s.nu*xi,1e-300)/S.V); }); return q-lk; };
+  for(let k=0;k<200;k++){ const m=(lo+hi)/2; if(f(m)>0) hi=m; else lo=m; }
+  return (lo+hi)/2;
+}
+
+/* ---------- Formatierung ---------- */
+const SUP = {"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+function fmt(x,d=3,html=true){
+  if(x===Infinity) return "∞";
+  if(x===0) return "0";
+  if(!isFinite(x)) return "–";
+  const a=Math.abs(x);
+  if(a>=0.01 && a<1000) return x.toPrecision(d).replace(".",",");
+  let e=Math.floor(Math.log10(a)), m=x/Math.pow(10,e);
+  if(Math.abs(Number(m.toFixed(d-1)))>=10){ m/=10; e+=1; }
+  const ms=m.toFixed(d-1).replace(".",",");
+  return html ? ms+"·10<sup>"+e+"</sup>" : ms+"·10"+String(e).split("").map(ch=>SUP[ch]).join("");
+}
+function fmtPlain(x){ return fmt(x,3,false); }
+function unitHTML(){
+  const d=dnu(); if(d===0) return "";
+  const a=Math.abs(d), s=a>1?"<sup>"+a+"</sup>":"";
+  return d>0 ? " mol"+s+"/L"+s : " L"+s+"/mol"+s;
+}
+function unitPlain(){
+  const d=dnu(); if(d===0) return "";
+  const a=Math.abs(d), s=a>1?SUP[a]:"";
+  return d>0 ? " mol"+s+"/L"+s : " L"+s+"/mol"+s;
+}
+function fmtNum(x,dec){ return x.toFixed(dec).replace(".",","); }
+function fmtP(p){ return (p<10?fmtNum(p,2):p<100?fmtNum(p,1):fmtNum(p,0))+" bar"; }
+
+/* ---------- Aufbau ---------- */
+const groups=[["Gasreaktionen","gas"],["Reaktionen in Lösung","aq"]];
+$("rxSelect").innerHTML = groups.map(([g,ph])=>`<optgroup label="${g}">`+REACTIONS.map((r,i)=>r.phase===ph?`<option value="${i}">${r.name}</option>`:"").join("")+"</optgroup>").join("");
+$("rxSelect").addEventListener("change", e => load(+e.target.value));
+
+function load(idx){
+  rx = REACTIONS[idx];
+  const T = rx.T[2]+273.15;
+  S = { T, V:1, n:[], t:0, hist:[], events:[], log:[], cat:false, paused:false, started:false, hidden:new Set(),
+        dragT:false, dragP:false, T0drag:T, p0drag:0, yMax:null, lastSample:-1, particles:[] };
+  if(isGas()){
+    const ntot = rx.p[2]*S.V/(R*T), sum = rx.species.reduce((a,s)=>a+s.init,0);
+    S.n = rx.species.map(s => ntot*s.init/sum);
+    S.Vmin=S.V*rx.p[2]/rx.p[1]; S.Vmax=S.V*rx.p[2]/rx.p[0];
+  } else {
+    S.n = rx.species.map(s => s.init);
+  }
+  (rx.hideDefault||[]).forEach(i=>S.hidden.add(i));
+  const vis = rx.species.map((s,i)=>s.noParticles?0:S.n[i]).reduce((a,b)=>a+b,0);
+  S.pScale = 120/vis;
+
+  // Gleichung
+  const g = isGas() ? "<sub style='font-size:.55em;color:var(--text-faint)'>(g)</sub>" : "";
+  const side = arr => arr.map(s=>{const a=Math.abs(s.nu);return (a>1?a+" ":"")+s.html+g;}).join(" + ");
+  $("eq").innerHTML = side(rx.species.filter(s=>s.nu<0)) + '<span class="arr" id="eqArr">⇌</span>' + side(rx.species.filter(s=>s.nu>0)) + (rx.extraRight||"");
+  const exo = rx.dH<0;
+  const nL=-rx.species.filter(s=>s.nu<0).reduce((a,s)=>a+s.nu,0), nR=rx.species.filter(s=>s.nu>0).reduce((a,s)=>a+s.nu,0);
+  $("meta").innerHTML = `<span>Δ<i>H</i><sub>r</sub> = ${rx.dH>0?"+":"−"}${fmtNum(Math.abs(rx.dH),1)} kJ/mol · Hinreaktion ${exo?"exotherm":"endotherm"}</span>`
+     + (isGas()?`<span>Gasteilchen: ${nL} → ${nR}</span>`:"");
+  $("rxInfo").textContent = rx.info;
+
+  // MWG
+  const term = s => { const a=Math.abs(s.nu); return "c"+(a>1?"<sup>"+a+"</sup>":"")+"("+s.html+")"; };
+  $("mwgExpr").innerHTML = `K<sub>c</sub> = <span class="frac"><span>${rx.species.filter(s=>s.nu>0).map(term).join(" · ")}</span><span>${rx.species.filter(s=>s.nu<0).map(term).join(" · ")}</span></span>`;
+
+  // Konzentrationsliste
+  const tb=$("tbl"); tb.innerHTML="";
+  rx.species.forEach((s,i)=>{
+    const row=document.createElement("div"); row.className="compound-row";
+    row.innerHTML=`<span class="name-wrap"><span class="swatch" style="background:${s.color}"></span><span class="nm">${s.html}</span></span>
+      <span class="cval mono" id="c${i}"></span>
+      <span class="pm"><button data-i="${i}" data-a="add" title="Stoff zugeben">+</button><button data-i="${i}" data-a="rem" title="Stoff entziehen (halbieren)">−</button></span>`;
+    tb.appendChild(row);
+  });
+  tb.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>changeConc(+b.dataset.i,b.dataset.a)));
+
+  // Legende
+  const lg=$("legend"); lg.innerHTML="";
+  rx.species.forEach((s,i)=>{
+    const sp=document.createElement("span"); sp.innerHTML=`<span class="swatch" style="background:${s.color}"></span>${s.html}`;
+    if(S.hidden.has(i)) sp.classList.add("off");
+    sp.title="Ein-/Ausblenden";
+    sp.addEventListener("click",()=>{ S.hidden.has(i)?S.hidden.delete(i):S.hidden.add(i); sp.classList.toggle("off"); S.yMax=null; });
+    lg.appendChild(sp);
+  });
+
+  // Regler
+  const sT=$("sT"); sT.min=rx.T[0]; sT.max=rx.T[1]; sT.step=1; sT.value=rx.T[2];
+  const sP=$("sP");
+  if(isGas()){
+    sP.disabled=false; sP.min=rx.p[0]; sP.max=rx.p[1]; sP.step=rx.p[3]; sP.value=rx.p[2];
+    $("hintP").textContent = dnu()===0 ? "Gleiche Gasteilchenzahl auf beiden Seiten: Eine Druckänderung verschiebt das Gleichgewicht nicht." : "Der Kolben wird verschoben und danach arretiert – beobachte, wie der Druck teilweise wieder zurückgeht.";
+  } else {
+    sP.disabled=true; sP.min=0; sP.max=2; sP.value=1;
+    $("hintP").textContent = "Reaktion in flüssiger Phase – der Druck hat praktisch keinen Einfluss auf das Gleichgewicht.";
+  }
+  $("bCat").classList.remove("on"); $("bPause").textContent="Pause"; $("bPause").classList.remove("on"); $("bPause").disabled=true;
+  $("bStart").disabled=false; $("bStart").textContent="Reaktion starten";
+  $("kinfo").innerHTML = exo ? "Exotherme Hinreaktion: K<sub>c</sub> sinkt mit steigender Temperatur – die Ausbeute an Produkten nimmt ab." : "Endotherme Hinreaktion: K<sub>c</sub> steigt mit steigender Temperatur – die Ausbeute an Produkten nimmt zu.";
+  setExplain(START_HINT);
+  renderLog();
+  syncParticles(true);
+  sizeCanvases();
+}
+
+/* ---------- Störungen ---------- */
+const START_HINT = `<p><b>Bereit:</b> Im Gefäß liegen nur die Edukte vor. Wähle die Startbedingungen (Temperatur, Druck, Konzentrationen) und klicke auf <b>„Reaktion starten“</b>.</p>`;
+function preStart(what){ syncParticles(false); setExplain(`<p><b>Startbedingung geändert:</b> ${what}. Die Reaktion läuft noch nicht – klicke auf <b>„Reaktion starten“</b>.</p>`); }
+function setExplain(h){ $("explain").innerHTML=h; }
+function shiftDir(){ const d=lnQ(conc())-lnK(S.T); return Math.abs(d)<0.005 ? 0 : (d<0?1:-1); }
+function addEvent(label, desc, Kbefore){
+  const c=conc(), lq=lnQ(c), K=Kof(S.T);
+  S.events.push({t:S.t,label});
+  S.log.push({t:S.t, desc, Kb:Kbefore, Ka:K, Q:(lq===-Infinity?0:lq===Infinity?Infinity:Math.exp(lq)), dir:shiftDir()});
+  renderLog();
+}
+function qkText(){
+  const c=conc(), lq=lnQ(c), lk=lnK(S.T);
+  const Q=Math.exp(lq), K=Math.exp(lk);
+  if(Math.abs(lq-lk)<0.005) return `Q<sub>c</sub> = K<sub>c</sub> = ${fmt(K)}${unitHTML()}`;
+  return lq<lk ? `Q<sub>c</sub> = ${fmt(Q)} &lt; K<sub>c</sub> = ${fmt(K)} → die Hinreaktion überwiegt, Verschiebung nach <b>rechts</b>.`
+               : `Q<sub>c</sub> = ${fmt(Q)} &gt; K<sub>c</sub> = ${fmt(K)} → die Rückreaktion überwiegt, Verschiebung nach <b>links</b>.`;
+}
+
+function changeConc(i,a){
+  const s=rx.species[i], step=(rx.stepOverride&&rx.stepOverride[i])||rx.step;
+  const K=Kof(S.T);
+  if(a==="add") S.n[i]+=step; else S.n[i]*=0.5;
+  syncPSlider();
+  if(!S.started){ preStart(`${a==="add"?"Zugabe":"Entzug"} von ${s.html}`); return; }
+  const add=a==="add", reactant=s.nu<0;
+  addEvent((add?"+":"−")+s.txt, (add?"Zugabe von ":"Entzug von ")+s.txt, K);
+  const right = (reactant && add) || (!reactant && !add);
+  setExplain(`<p><b>${add?"Zugabe":"Entzug"} von ${s.html}</b> (${reactant?"Edukt":"Produkt"}): ${qkText()}</p>
+    <p>Das System weicht dem Zwang aus: ${add?"Ein Teil des zugegebenen Stoffes wird wieder verbraucht":"Ein Teil des entzogenen Stoffes wird nachgebildet"}. Das Gleichgewicht verschiebt sich nach <b>${right?"rechts":"links"}</b>. K<sub>c</sub> bleibt unverändert, da sich die Temperatur nicht ändert.</p>`);
+}
+
+function onTInput(){
+  if(!S.dragT){ S.dragT=true; S.T0drag=S.T; }
+  S.T = +$("sT").value + 273.15;
+  syncPSlider();
+}
+function onTChange(){
+  S.dragT=false;
+  const T1=S.T0drag, T2=S.T; if(Math.abs(T2-T1)<0.01) return;
+  if(!S.started){ preStart(`Temperatur ${fmtNum(T2-273.15,0)} °C`); return; }
+  const up=T2>T1, exo=rx.dH<0;
+  const Kold=Kof(T1), Knew=Kof(T2);
+  addEvent(up?"T↑":"T↓", `Temperatur ${fmtNum(T1-273.15,0)} → ${fmtNum(T2-273.15,0)} °C`, Kold);
+  const weak = Math.abs(rx.dH)<15;
+  setExplain(`<p><b>Temperatur${up?"erhöhung":"senkung"}</b> (${fmtNum(T1-273.15,0)} °C → ${fmtNum(T2-273.15,0)} °C): Die Hinreaktion ist ${exo?"exotherm":"endotherm"}. ${up?"Die zugeführte Wärme wird verbraucht":"Der Wärmeentzug wird ausgeglichen"}, indem die ${up?"endotherme":"exotherme"} ${(up!==exo)?"Hinreaktion":"Rückreaktion"} begünstigt wird.</p>
+    <p>Die Gleichgewichtskonstante ändert sich: K<sub>c</sub> = ${fmt(Kold)} → ${fmt(Knew)}${unitHTML()}. ${qkText()}${weak?" Wegen des kleinen Betrags von ΔH<sub>r</sub> ist die Verschiebung nur gering.":""}</p>`);
+}
+
+function onPInput(){
+  if(!isGas()) return;
+  if(!S.dragP){ S.dragP=true; S.p0drag=pNow(); }
+  S.V *= pNow()/(+$("sP").value);
+}
+function onPChange(){
+  if(!isGas()) return;
+  S.dragP=false;
+  const p1=S.p0drag, p2=pNow(); if(Math.abs(p2-p1)/p1<1e-4) return;
+  if(!S.started){ preStart(`Druck ${fmtP(p2)}`); return; }
+  const up=p2>p1, d=dnu(), K=Kof(S.T);
+  addEvent(up?"p↑":"p↓", `Druck ${fmtP(p1)} → ${fmtP(p2)}`, K);
+  const nL=-rx.species.filter(s=>s.nu<0).reduce((a,s)=>a+s.nu,0), nR=rx.species.filter(s=>s.nu>0).reduce((a,s)=>a+s.nu,0);
+  let txt=`<p><b>Druck${up?"erhöhung":"senkung"}</b> (${fmtP(p1)} → ${fmtP(p2)}) durch ${up?"Verkleinern":"Vergrößern"} des Volumens: Alle Gaskonzentrationen ${up?"steigen":"sinken"} um den Faktor ${fmtNum(p2/p1,2)}.</p>`;
+  if(d===0){
+    txt+=`<p>Auf beiden Seiten stehen gleich viele Gasteilchen (${nL} → ${nR}). Zähler und Nenner des MWG ändern sich gleich stark, Q<sub>c</sub> bleibt gleich K<sub>c</sub>: <b>keine Verschiebung</b> des Gleichgewichts.</p>`;
+  } else {
+    const right = up ? (nR<nL) : (nR>nL);
+    txt+=`<p>${qkText()}</p><p>Das System weicht aus, indem es die Seite mit ${up?"weniger":"mehr"} Gasteilchen begünstigt (${nL} links, ${nR} rechts) → Verschiebung nach <b>${right?"rechts":"links"}</b>. Dadurch ${up?"sinkt":"steigt"} der Druck teilweise wieder. K<sub>c</sub> bleibt unverändert.</p>`;
+  }
+  setExplain(txt);
+}
+function syncPSlider(){ if(isGas() && !S.dragP) $("sP").value = Math.min(rx.p[1],Math.max(rx.p[0],pNow())); }
+
+$("sT").addEventListener("input",onTInput); $("sT").addEventListener("change",onTChange);
+$("sP").addEventListener("input",onPInput); $("sP").addEventListener("change",onPChange);
+$("bCat").addEventListener("click",()=>{
+  S.cat=!S.cat; $("bCat").classList.toggle("on",S.cat);
+  if(!S.started){ preStart(S.cat?"Katalysator zugesetzt":"Katalysator entfernt"); return; }
+  addEvent(S.cat?"Kat.+":"Kat.−", S.cat?"Katalysator zugesetzt":"Katalysator entfernt", Kof(S.T));
+  setExplain(`<p><b>Katalysator ${S.cat?"zugesetzt":"entfernt"}:</b> Ein Katalysator senkt die Aktivierungsenergie für Hin- <i>und</i> Rückreaktion gleichermaßen. Das Gleichgewicht stellt sich ${S.cat?"schneller":"langsamer"} ein, seine <b>Lage und K<sub>c</sub> bleiben unverändert</b>.</p>`);
+});
+$("bPause").addEventListener("click",()=>{ S.paused=!S.paused; $("bPause").textContent=S.paused?"Weiter":"Pause"; $("bPause").classList.toggle("on",S.paused); });
+$("bReset").addEventListener("click",()=>load(+$("rxSelect").value));
+$("bStart").addEventListener("click",()=>{
+  if(S.started) return;
+  S.started=true; S.t=0; S.hist=[{t:0,c:conc()}]; S.lastSample=0;
+  $("bStart").disabled=true; $("bStart").textContent="Reaktion läuft"; $("bPause").disabled=false;
+  setExplain(`<p><b>Start:</b> Zu Beginn liegen nur die Edukte vor (Q<sub>c</sub> = 0 &lt; K<sub>c</sub>). Die Hinreaktion überwiegt, bis Hin- und Rückreaktion gleich schnell ablaufen und Q<sub>c</sub> = K<sub>c</sub> gilt – das dynamische Gleichgewicht ist erreicht.</p><p>Verändere nun Temperatur, Druck oder Konzentrationen in der linken Spalte.</p>`);
+});
+$("logScale").addEventListener("change",()=>{S.yMax=null;});
+document.querySelectorAll(".speed-group button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".speed-group button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); speed=+b.dataset.speed;
+}));
+document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tabpanel").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); $("tab-"+b.dataset.tab).classList.add("active"); sizeCanvases();
+}));
+const guideBackdrop=$("guideBackdrop");
+$("btnGuide").addEventListener("click",e=>{ e.preventDefault(); guideBackdrop.classList.add("open"); });
+$("closeGuide").addEventListener("click",()=>guideBackdrop.classList.remove("open"));
+guideBackdrop.addEventListener("click",e=>{ if(e.target===guideBackdrop) guideBackdrop.classList.remove("open"); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") guideBackdrop.classList.remove("open"); });
+
+/* ---------- Protokoll ---------- */
+function dirLabel(d){ return d>0?'<span class="res-good">nach rechts →</span>':d<0?'<span class="res-bad">← nach links</span>':'<span class="res-mid">keine</span>'; }
+function renderLog(){
+  const b=$("logBody");
+  if(!S.log.length){ b.innerHTML=`<tr><td colspan="7" class="empty-hint">Noch keine Änderungen – Temperatur, Druck oder Konzentrationen verändern.</td></tr>`; return; }
+  b.innerHTML=S.log.map((e,k)=>`<tr><td class="mono">${k+1}</td><td class="mono">${fmtNum(e.t,1)}</td><td>${e.desc}</td>
+    <td class="mono">${fmt(e.Kb)}</td><td class="mono">${fmt(e.Ka)}</td><td class="mono">${fmt(e.Q)}</td><td>${dirLabel(e.dir)}</td></tr>`).join("");
+}
+$("btnExport").addEventListener("click",()=>{
+  const rows=[["Nr","t (s)","Änderung","Kc vorher","Kc nachher","Qc danach","Verschiebung"]];
+  S.log.forEach((e,k)=>rows.push([k+1,fmtNum(e.t,1),e.desc,fmtPlain(e.Ka===e.Kb?e.Kb:e.Kb),fmtPlain(e.Ka),fmtPlain(e.Q),e.dir>0?"rechts":e.dir<0?"links":"keine"]));
+  const csv="﻿"+"Reaktion;"+rx.name+"\n"+rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(";")).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="gleichgewicht_protokoll.csv"; document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* ---------- Teilchen ---------- */
+function syncParticles(reset){
+  if(reset) S.particles=[];
+  rx.species.forEach((s,i)=>{
+    if(s.noParticles) return;
+    const target=Math.min(250,Math.round(S.n[i]*S.pScale));
+    const mine=S.particles.filter(p=>p.sp===i).length;
+    if(mine<target){
+      for(let k=mine;k<target;k++){ const a=Math.random()*Math.PI*2; S.particles.push({sp:i,x:Math.random(),y:Math.random(),vx:Math.cos(a),vy:Math.sin(a)}); }
+    } else if(mine>target){
+      let rm=mine-target;
+      for(let k=S.particles.length-1;k>=0&&rm>0;k--) if(S.particles[k].sp===i){ S.particles.splice(k,1); rm--; }
+    }
+  });
+}
+
+/* ---------- Zeichnen ---------- */
+const vc=$("vessel"), ch=$("chart"), kp=$("kplot");
+let dpr=1;
+function sizeCanvases(){
+  dpr=window.devicePixelRatio||1;
+  [vc,ch,kp].forEach(c=>{ if(c.clientWidth){ c.width=Math.round(c.clientWidth*dpr); c.height=Math.round(c.clientHeight*dpr); } });
+}
+window.addEventListener("resize",sizeCanvases);
+const C={bg:"#0e1113", grid:"#233029", faint:"#5f6870", dim:"#9aa2a9", text:"#e7e4dd", glass:"#6b757e", inner:"#141a1e", piston:"#3a434b", teal:"#4fd1c5", amber:"#ffb454"};
+
+function drawVessel(){
+  const c=vc.getContext("2d"), W=vc.clientWidth, H=vc.clientHeight; if(!W) return;
+  c.setTransform(dpr,0,0,dpr,0,0); c.fillStyle=C.bg; c.fillRect(0,0,W,H);
+  const x0=Math.max(18,W*0.5-95), x1=Math.min(W-18,W*0.5+95), bottom=H-34;
+  let top, innerH;
+  const tint=rx.tint?rx.tint(conc()):null;
+  if(isGas()){
+    const f=Math.log(S.V/S.Vmin)/Math.log(S.Vmax/S.Vmin);
+    const frac=0.12+0.88*Math.min(1,Math.max(0,f));
+    innerH=(bottom-70)*frac; top=bottom-innerH;
+    c.fillStyle=C.inner; c.fillRect(x0,top,x1-x0,innerH);
+    if(tint){ c.fillStyle=`rgba(${tint.rgb.join(",")},${Math.min(0.9,tint.a)})`; c.fillRect(x0,top,x1-x0,innerH); }
+    c.fillStyle=C.piston; c.fillRect(x0-1,top-12,x1-x0+2,12);
+    c.fillRect((x0+x1)/2-5,0,10,top-12);
+    c.strokeStyle=C.glass; c.lineWidth=3;
+    c.beginPath(); c.moveTo(x0-3,52); c.lineTo(x0-3,bottom+2); c.lineTo(x1+3,bottom+2); c.lineTo(x1+3,52); c.stroke();
+  } else {
+    top=bottom-(bottom-60)*0.75; innerH=bottom-top;
+    c.fillStyle=C.inner; c.fillRect(x0,top,x1-x0,innerH);
+    if(tint){ c.fillStyle=`rgba(${tint.rgb.join(",")},${Math.min(0.9,tint.a)})`; c.fillRect(x0,top,x1-x0,innerH); }
+    c.strokeStyle=C.glass; c.lineWidth=3;
+    c.beginPath(); c.moveTo(x0-10,56); c.lineTo(x0-3,62); c.lineTo(x0-3,bottom+2); c.lineTo(x1+3,bottom+2); c.lineTo(x1+3,56); c.stroke();
+    c.strokeStyle=C.glass; c.globalAlpha=.6; c.lineWidth=1; c.beginPath(); c.moveTo(x0,top); c.lineTo(x1,top); c.stroke(); c.globalAlpha=1;
+  }
+  const r=isGas()?3.8:3.4;
+  S.particles.forEach(p=>{
+    const px=x0+r+1+p.x*(x1-x0-2*r-2), py=top+r+1+p.y*(innerH-2*r-2);
+    c.beginPath(); c.arc(px,py,r,0,Math.PI*2); c.fillStyle=rx.species[p.sp].color; c.fill();
+  });
+  // Heizplatte / Temperaturbalken
+  const tf=Math.min(1,Math.max(0,(S.T-273.15-rx.T[0])/(rx.T[1]-rx.T[0])));
+  const grad=c.createLinearGradient(x0,0,x1,0);
+  grad.addColorStop(0,`hsla(${210-190*tf},80%,58%,.9)`); grad.addColorStop(1,`hsla(${200-190*tf},80%,52%,.9)`);
+  c.fillStyle=grad; c.fillRect(x0-3,bottom+10,x1-x0+6,7);
+  c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace"; c.textAlign="center";
+  c.fillText(isGas()?`V = ${fmtNum(S.V,S.V<1?3:2)} L`:"V = 1,00 L", (x0+x1)/2, bottom+30);
+  if(rx.id==="cobalt"){ c.textAlign="left"; c.fillText("Cl⁻ nicht dargestellt",6,14); }
+}
+
+function niceStep(x){ const e=Math.pow(10,Math.floor(Math.log10(x))), m=x/e; return (m<1.5?1:m<3?2:m<7?5:10)*e; }
+
+function drawChart(){
+  const c=ch.getContext("2d"), W=ch.clientWidth, H=ch.clientHeight; if(!W) return;
+  c.setTransform(dpr,0,0,dpr,0,0); c.fillStyle=C.bg; c.fillRect(0,0,W,H);
+  const L=58, Rm=12, T=22, B=30, pw=W-L-Rm, ph=H-T-B;
+  const win=30, tEnd=Math.max(win,S.t), tStart=tEnd-win;
+  const data=S.hist.filter(h=>h.t>=tStart-0.1);
+  const log=$("logScale").checked;
+  let mx=0, mn=Infinity;
+  data.forEach(h=>h.c.forEach((v,i)=>{ if(S.hidden.has(i)) return; if(v>mx) mx=v; if(v>0&&v<mn) mn=v; }));
+  if(mx<=0) mx=1;
+  let yMin, yMax;
+  if(log){
+    yMax=Math.ceil(Math.log10(mx)+0.05); yMin=Math.floor(Math.log10(Math.max(mn,mx*1e-6)));
+    if(yMax-yMin<1) yMin=yMax-1;
+  } else {
+    const target=mx*1.12;
+    S.yMax = S.yMax==null ? target : (target>S.yMax ? target : S.yMax+(target-S.yMax)*0.03);
+    yMin=0; yMax=S.yMax;
+  }
+  const X=t=>L+(t-tStart)/win*pw;
+  const Y=v=>{ if(log){ const lv=Math.log10(Math.max(v,Math.pow(10,yMin))); return T+ph-(lv-yMin)/(yMax-yMin)*ph; } return T+ph-(v-yMin)/(yMax-yMin)*ph; };
+  c.strokeStyle=C.grid; c.lineWidth=1; c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace";
+  c.textAlign="right"; c.textBaseline="middle";
+  if(log){
+    for(let e=yMin;e<=yMax;e++){ const y=Y(Math.pow(10,e)); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText("10"+String(e).split("").map(ch=>SUP[ch]).join(""),L-6,y); }
+  } else {
+    const st=niceStep(yMax/5);
+    for(let v=0;v<=yMax+1e-12;v+=st){ const y=Y(v); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText(fmt(v,2,false),L-6,y); }
+  }
+  c.textAlign="center"; c.textBaseline="top";
+  for(let t=Math.ceil(tStart/5)*5;t<=tEnd+1e-9;t+=5){ const x=X(t); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillText(String(Math.round(t)),x,T+ph+6); }
+  c.fillStyle=C.dim; c.font="11px Inter, sans-serif";
+  c.fillText("Zeit (s)",L+pw/2,T+ph+18);
+  c.save(); c.translate(12,T+ph/2); c.rotate(-Math.PI/2); c.textBaseline="middle"; c.fillText("c (mol/L)",0,0); c.restore();
+  // Störungen
+  c.setLineDash([2,3]); c.strokeStyle=C.teal; c.textBaseline="bottom"; c.font="10.5px 'JetBrains Mono', monospace";
+  S.events.forEach(ev=>{ if(ev.t<tStart) return; const x=X(ev.t); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillStyle=C.teal; c.fillText(ev.label,x,T-4); });
+  c.setLineDash([]);
+  // Kurven
+  c.save(); c.beginPath(); c.rect(L,T,pw,ph); c.clip();
+  c.lineJoin="round";
+  rx.species.forEach((s,i)=>{
+    if(S.hidden.has(i)) return;
+    c.strokeStyle=s.color; c.lineWidth=1.8; c.beginPath();
+    data.forEach((h,k)=>{ const x=X(h.t), y=Y(h.c[i]); k?c.lineTo(x,y):c.moveTo(x,y); });
+    c.stroke();
+  });
+  c.restore();
+  c.strokeStyle=C.grid; c.strokeRect(L,T,pw,ph);
+  if(!S.started){ c.fillStyle=C.faint; c.font="13px Inter, sans-serif"; c.textAlign="left"; c.textBaseline="middle"; c.fillText("Bereit – Startbedingungen einstellen und „Reaktion starten“ klicken.", L+14, T+ph/2); }
+}
+
+function drawK(){
+  const c=kp.getContext("2d"), W=kp.clientWidth, H=kp.clientHeight; if(!W) return;
+  c.setTransform(dpr,0,0,dpr,0,0); c.fillStyle=C.bg; c.fillRect(0,0,W,H);
+  const L=50, Rm=14, T=14, B=34, pw=W-L-Rm, ph=H-T-B;
+  const a=rx.T[0], b=rx.T[1];
+  const pts=[]; for(let k=0;k<=100;k++){ const th=a+(b-a)*k/100; pts.push([th,Math.log10(Kof(th+273.15))]); }
+  let mn=Math.min(...pts.map(p=>p[1])), mx=Math.max(...pts.map(p=>p[1]));
+  if(mx-mn<0.5){ const m=(mx+mn)/2; mn=m-0.25; mx=m+0.25; }
+  const pad=(mx-mn)*0.08; mn-=pad; mx+=pad;
+  const X=th=>L+(th-a)/(b-a)*pw, Y=v=>T+ph-(v-mn)/(mx-mn)*ph;
+  c.strokeStyle=C.grid; c.fillStyle=C.faint; c.font="10.5px 'JetBrains Mono', monospace"; c.lineWidth=1;
+  const st=niceStep((mx-mn)/4); c.textAlign="right"; c.textBaseline="middle";
+  for(let v=Math.ceil(mn/st)*st; v<=mx; v+=st){ const y=Y(v); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText(fmtNum(v,st<1?1:0),L-6,y); }
+  const sx=niceStep((b-a)/6); c.textAlign="center"; c.textBaseline="top";
+  for(let v=Math.ceil(a/sx)*sx; v<=b; v+=sx){ const x=X(v); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillText(String(v),x,T+ph+6); }
+  c.fillStyle=C.dim; c.font="11px Inter, sans-serif";
+  c.fillText("Temperatur (°C)",L+pw/2,T+ph+19);
+  c.save(); c.translate(12,T+ph/2); c.rotate(-Math.PI/2); c.textBaseline="middle"; c.fillText("lg Kc",0,0); c.restore();
+  c.strokeStyle=C.amber; c.lineWidth=1.8; c.beginPath();
+  pts.forEach((p,k)=>{ k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])); }); c.stroke();
+  const th=S.T-273.15, px=X(th), py=Y(Math.log10(Kof(S.T)));
+  c.setLineDash([2,3]); c.strokeStyle=C.teal; c.beginPath(); c.moveTo(px,T); c.lineTo(px,T+ph); c.stroke(); c.setLineDash([]);
+  c.beginPath(); c.arc(px,py,5,0,Math.PI*2); c.fillStyle=C.teal; c.fill();
+  c.strokeStyle=C.grid; c.lineWidth=1; c.strokeRect(L,T,pw,ph);
+}
+
+/* ---------- Anzeige ---------- */
+function updateUI(){
+  const c=conc(), lq=lnQ(c), lk=lnK(S.T), u=unitHTML();
+  const Ks=fmt(Math.exp(lk)), Qs=(lq===-Infinity?"0":lq===Infinity?"∞":fmt(Math.exp(lq)));
+  $("vK").innerHTML=Ks+u; $("vQ").innerHTML=Qs+u;
+  $("roK").innerHTML=Ks; $("roQ").innerHTML=Qs;
+  c.forEach((v,i)=>$("c"+i).innerHTML=fmt(v));
+  const d=lq-lk, badge=$("statusBadge"), arr=$("eqArr");
+  if(!S.started){ badge.className="status"; $("statusText").textContent="bereit"; arr.className="arr"; }
+  else if(Math.abs(d)<0.005){ badge.className="status eq"; $("statusText").textContent="Gleichgewicht · Q = K"; arr.className="arr"; }
+  else if(d<0){ badge.className="status shift"; $("statusText").textContent="Q < K · Verschiebung nach rechts"; arr.className="arr r"; }
+  else { badge.className="status shift"; $("statusText").textContent="Q > K · Verschiebung nach links"; arr.className="arr l"; }
+  $("lT").textContent=fmtNum(S.T-273.15,0)+" °C"; $("roT").textContent=fmtNum(S.T-273.15,0)+" °C";
+  $("roTime").textContent=fmtNum(S.t,1)+" s";
+  if(isGas()){ const p=fmtP(pNow()); $("lP").textContent=p; $("roP").textContent=p; syncPSlider(); }
+  else { $("lP").textContent="–"; $("roP").textContent="–"; }
+}
+
+/* ---------- Schleife ---------- */
+let last=performance.now();
+function frame(now){
+  const dtReal=Math.min(0.05,(now-last)/1000); last=now;
+  if(!S.paused){
+    if(S.started){
+      const dt=dtReal*speed;
+      S.t+=dt;
+      const k=Math.max(0.12,0.9*Math.exp(-30000/RJ*(1/S.T-1/(rx.T[2]+273.15))))*(S.cat?5:1);
+      const step=xiEq()*(1-Math.exp(-k*dt));
+      rx.species.forEach((s,i)=>{ S.n[i]=Math.max(0,S.n[i]+s.nu*step); });
+      if(S.t-S.lastSample>=0.05){ S.hist.push({t:S.t,c:conc()}); S.lastSample=S.t; if(S.hist.length>1500) S.hist.shift(); }
+      syncParticles(false);
+    }
+    const sp=(isGas()?0.35:0.12)*Math.sqrt(S.T/300);
+    S.particles.forEach(p=>{
+      p.vx+=(Math.random()-.5)*0.6*dtReal; p.vy+=(Math.random()-.5)*0.6*dtReal;
+      const v=Math.hypot(p.vx,p.vy)||1; p.vx/=v; p.vy/=v;
+      p.x+=p.vx*sp*dtReal; p.y+=p.vy*sp*dtReal*1.3;
+      if(p.x<0){p.x=-p.x;p.vx=-p.vx;} if(p.x>1){p.x=2-p.x;p.vx=-p.vx;}
+      if(p.y<0){p.y=-p.y;p.vy=-p.vy;} if(p.y>1){p.y=2-p.y;p.vy=-p.vy;}
+    });
+  }
+  updateUI(); drawVessel(); drawChart(); drawK();
+  requestAnimationFrame(frame);
+}
+load(0);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

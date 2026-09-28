@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Berechnung der Reaktionsenthalpie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px 16px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{
+  font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text);
+  background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px;
+  overflow-x:auto; white-space:nowrap;
+}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;
+}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{
+  flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 6px;
+  font-size:12.5px; cursor:pointer; font-family:inherit;
+}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+
+.check-row{display:flex; align-items:center; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:16px; cursor:pointer;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:0;}
+
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select, input[type=text], input[type=search]{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap;}
+
+/* Tabelle der Bildungsenthalpien */
+.lib-wrap{max-height:380px; overflow-y:auto; border:1px solid var(--line-soft); border-radius:4px;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px; table-layout:fixed;}
+.lib-table col.c1{width:34%;} .lib-table col.c3{width:80px;}
+.lib-table td.nm{overflow-wrap:anywhere;}
+.lib-table thead th{
+  position:sticky; top:0; background:var(--panel-alt); text-align:left; font-weight:500; color:var(--text-faint);
+  font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line);
+}
+.lib-table thead th.num{text-align:right;}
+.lib-table td{padding:6px 8px; border-bottom:1px solid var(--line-soft);}
+.lib-table td.num{text-align:right; color:var(--amber);}
+.lib-table td.nm{color:var(--text-dim); font-size:11.5px;}
+.lib-table tbody tr{cursor:pointer;}
+.lib-table tbody tr:hover{background:var(--raise);}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; cursor:default; background:var(--bg);}
+.lib-table tr.grp:hover{background:var(--bg);}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.screen-top .spacer{margin-left:auto;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.task-ctx{font-size:13px; color:var(--text-dim);}
+.equation{
+  font-family:'JetBrains Mono',monospace; font-size:21px; color:var(--text); padding:14px 2px 18px;
+  line-height:1.5; overflow-x:auto; white-space:nowrap;
+}
+.equation sub{font-size:.66em;}
+.equation .st{font-size:.62em; color:var(--text-dim); margin-left:1px;}
+.equation .co{color:var(--amber); margin-right:3px;}
+.equation input.coef{
+  width:42px; background:var(--panel-alt); border:1px solid var(--line); color:var(--amber);
+  padding:3px 4px; margin-right:5px; border-radius:var(--radius); font-size:.8em; font-family:'JetBrains Mono',monospace;
+  text-align:center; vertical-align:middle;
+}
+.equation input.coef:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+table.calc td.nu.open{color:var(--text-faint);}
+.equation .arr{color:var(--teal); margin:0 12px;}
+.equation .plus{color:var(--text-faint); margin:0 8px;}
+@media (max-width:600px){ .equation{font-size:16px;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.calc{width:100%; border-collapse:collapse; font-size:13px;}
+table.calc thead th{
+  text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:7px 8px;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.calc td{padding:6px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap; vertical-align:middle;}
+table.calc tr.side td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; padding-bottom:5px; background:var(--panel);}
+table.calc td.sp{font-family:'JetBrains Mono',monospace;}
+table.calc td.sp sub{font-size:.72em;}
+table.calc td.sp .st{color:var(--text-dim); font-size:.85em;}
+table.calc td.nu{color:var(--amber); font-family:'JetBrains Mono',monospace; text-align:center; width:48px;}
+table.calc input{
+  width:128px; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:6px 8px; border-radius:var(--radius); font-size:13px; font-family:'JetBrains Mono',monospace;
+  text-align:right; font-variant-numeric:tabular-nums;
+}
+table.calc input[readonly]{background:transparent; border-color:transparent; color:var(--amber);}
+table.calc .times{color:var(--text-faint); font-size:12px; margin-right:6px;}
+input.ok{border-color:var(--teal) !important; box-shadow:0 0 0 1px var(--teal-dim);}
+input.bad{border-color:var(--danger) !important; box-shadow:0 0 0 1px var(--danger-dim);}
+
+.sum-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:12px; margin-top:14px;}
+.sum-box{border:1px solid var(--line-soft); background:var(--panel); border-radius:4px; padding:10px 12px;}
+.sum-box label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px;}
+.sum-box .unit-in{display:flex; align-items:center; gap:8px;}
+.sum-box input{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:14px; font-family:'JetBrains Mono',monospace; text-align:right;
+}
+.sum-box .unit{font-size:12px; color:var(--text-faint); white-space:nowrap;}
+.result-box{border-color:var(--amber-dim);}
+.result-box label{color:var(--amber);}
+.cls-toggle{margin:10px 0 0;}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb sub{font-size:.75em;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.way{font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:2; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:12px 16px; overflow-x:auto; white-space:nowrap;}
+.way sub{font-size:.72em;}
+.way .c{color:var(--text-faint);}
+.way .a{color:var(--amber);}
+.way .t{color:var(--teal);}
+
+canvas#diag{width:100%; height:320px; display:block; border-radius:4px; border:1px solid var(--line-soft); background:var(--screen);}
+
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+table.hist td sub{font-size:.72em;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+
+<header>
+  <h1>Berechnung der Reaktionsenthalpie</h1>
+  <span class="tag">Molare Standardreaktionsenthalpie aus Standardbildungsenthalpien</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Die <strong>molare Standardreaktionsenthalpie Δ<sub>r</sub>H°</strong> gibt an, wie viel Wärme bei konstantem Druck unter Standardbedingungen (25 °C, 1 bar) freigesetzt oder aufgenommen wird, wenn die Reaktion so abläuft, wie die Reaktionsgleichung sie beschreibt (Formelumsatz). Sie lässt sich aus den tabellierten <strong>Standardbildungsenthalpien Δ<sub>f</sub>H°</strong> der beteiligten Stoffe berechnen.</p>
+
+      <h3>Berechnung (Satz von Hess)</h3>
+      <div class="formula-box">Δ<sub>r</sub>H° = Σ ν · Δ<sub>f</sub>H°(Produkte) − Σ ν · Δ<sub>f</sub>H°(Edukte)</div>
+      <p>ν ist der <strong>stöchiometrische Faktor</strong> aus der Reaktionsgleichung. Jeder Tabellenwert wird mit seinem Faktor multipliziert, dann werden Produkte und Edukte getrennt aufsummiert. Immer gilt: <strong>Produkte minus Edukte</strong>.</p>
+      <p><strong>Elemente</strong> in ihrer stabilsten Form unter Standardbedingungen (z. B. H₂, O₂, N₂, C als Graphit, Fe) haben per Definition Δ<sub>f</sub>H° = 0 kJ/mol.</p>
+      <p>Δ<sub>r</sub>H° &lt; 0: Die Reaktion ist <strong>exotherm</strong>, Wärme wird abgegeben. Δ<sub>r</sub>H° &gt; 0: Die Reaktion ist <strong>endotherm</strong>, Wärme wird aufgenommen.</p>
+
+      <h3>Aufgabe einstellen</h3>
+      <p><strong>Schwierigkeit:</strong> Leicht (Faktoren meist 1, wenige Stoffe), Mittel (stöchiometrische Faktoren), Schwer (viele Stoffe, große Faktoren, Aggregatzustände beachten) oder Gemischt.</p>
+      <p><strong>Reaktionsgleichung:</strong> Bei „Vorgegeben" stehen die stöchiometrischen Faktoren bereits in der Gleichung. Bei „Selbst ausgleichen" enthält die Gleichung leere Kästchen, in die die Koeffizienten eingetragen werden (auch die 1). Verlangt sind die kleinsten ganzzahligen Koeffizienten. Erst wenn die Gleichung stimmt, werden die Faktoren in die Rechentabelle übernommen und der Rest der Aufgabe wird geprüft. Bei Fehlern zeigt die Prüfung, welche Atomsorten links und rechts nicht übereinstimmen.</p>
+      <p><strong>Bearbeitung:</strong> „Schrittweise" fragt jeden Zwischenschritt ab: Tabellenwert, Produkt ν · Δ<sub>f</sub>H°, beide Summen und das Ergebnis. „Nur Ergebnis" fragt nur Δ<sub>r</sub>H° und die Einordnung ab.</p>
+      <p><strong>Δ<sub>f</sub>H°-Werte vorgeben:</strong> Die Tabellenwerte stehen schon in der Aufgabe. Ohne diese Option müssen sie aus der Tabelle links herausgesucht werden. Ein Klick auf eine Tabellenzeile trägt den Wert in das zuletzt ausgewählte Eingabefeld ein.</p>
+      <p>Über „Reaktion gezielt wählen" lässt sich jede Aufgabe direkt aufrufen, zum Beispiel für die gemeinsame Besprechung im Unterricht.</p>
+
+      <h3>Eingabe &amp; Prüfung</h3>
+      <p>Zahlen mit Komma oder Punkt eingeben, negative Werte mit Minuszeichen. Einheit ist immer kJ/mol. „Prüfen" markiert richtige Felder türkis und falsche rot. Für das Endergebnis wird eine Abweichung von ±1 kJ/mol als Rundungsfehler akzeptiert.</p>
+      <p>„Tipp" gibt schrittweise Hinweise. „Lösung zeigen" füllt alle Felder aus, die Aufgabe zählt dann nicht als gelöst.</p>
+
+      <h3>Auswertung</h3>
+      <p>Nach dem Lösen zeigt der Tab <strong>Lösungsweg</strong> die vollständige Rechnung. Das <strong>Enthalpiediagramm</strong> stellt die Enthalpie von Edukten und Produkten relativ zu den Elementen (0 kJ/mol) dar. Im <strong>Verlauf</strong> stehen alle bearbeiteten Aufgaben dieser Sitzung.</p>
+
+      <h3>Typische Fehler</h3>
+      <p>Edukte minus Produkte gerechnet (falsches Vorzeichen) · stöchiometrische Faktoren vergessen · Wert für H₂O(g) statt H₂O(l) verwendet oder umgekehrt · Elementen einen Wert ungleich 0 gegeben. Die Prüfung erkennt diese Fehler und weist gezielt darauf hin.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Schwierigkeit</p>
+      <div class="mode-toggle" id="levelToggle">
+        <button data-level="1">Leicht</button>
+        <button data-level="2">Mittel</button>
+        <button data-level="3">Schwer</button>
+        <button data-level="0" class="active">Gemischt</button>
+      </div>
+      <p class="sub-label">Reaktionsgleichung</p>
+      <div class="mode-toggle" id="balanceToggle">
+        <button data-balance="auto" class="active">Vorgegeben</button>
+        <button data-balance="self">Selbst ausgleichen</button>
+      </div>
+      <p class="sub-label">Bearbeitung</p>
+      <div class="mode-toggle" id="modeToggle">
+        <button data-mode="step" class="active">Schrittweise</button>
+        <button data-mode="direct">Nur Ergebnis</button>
+      </div>
+      <label class="check-row" for="chkGiven"><input type="checkbox" id="chkGiven"><span>Δ<sub>f</sub>H°-Werte in der Aufgabe vorgeben</span></label>
+      <div class="field-full">
+        <label for="reactionSelect">Reaktion gezielt wählen</label>
+        <div style="display:flex; gap:6px;">
+          <select id="reactionSelect" style="flex:1; min-width:0;"></select>
+          <button class="btn ghost" id="btnLoad" style="flex:none;">Laden</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Standardbildungsenthalpien Δ<sub>f</sub>H° (25 °C, 1 bar)</h2>
+      <div class="field-full">
+        <input type="search" id="libSearch" placeholder="Stoff oder Formel suchen, z. B. Methan oder CO2" aria-label="Tabelle durchsuchen">
+      </div>
+      <div class="lib-wrap">
+        <table class="lib-table"><colgroup><col class="c1"><col><col class="c3"></colgroup>
+          <thead><tr><th>Formel</th><th>Stoff</th><th class="num">kJ/mol</th></tr></thead>
+          <tbody id="libBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Klick auf eine Zeile überträgt den Wert in das zuletzt gewählte Eingabefeld.</p>
+    </section>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn" id="btnCheck">Prüfen</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskLevel">leicht</span>
+        <span class="task-ctx" id="taskCtx"></span>
+      </div>
+      <div class="equation" id="equation"></div>
+
+      <div class="table-wrap">
+        <table class="calc">
+          <thead><tr id="calcHead"></tr></thead>
+          <tbody id="calcBody"></tbody>
+        </table>
+      </div>
+
+      <div class="sum-grid" id="sumGrid">
+        <div class="sum-box step-only">
+          <label for="inSP">Σ ν · Δ<sub>f</sub>H° (Produkte)</label>
+          <div class="unit-in"><input type="text" inputmode="decimal" id="inSP" autocomplete="off"><span class="unit">kJ/mol</span></div>
+        </div>
+        <div class="sum-box step-only">
+          <label for="inSE">Σ ν · Δ<sub>f</sub>H° (Edukte)</label>
+          <div class="unit-in"><input type="text" inputmode="decimal" id="inSE" autocomplete="off"><span class="unit">kJ/mol</span></div>
+        </div>
+        <div class="sum-box result-box">
+          <label for="inR">Δ<sub>r</sub>H° = Σ Produkte − Σ Edukte</label>
+          <div class="unit-in"><input type="text" inputmode="decimal" id="inR" autocomplete="off"><span class="unit">kJ/mol</span></div>
+          <div class="mode-toggle cls-toggle" id="clsToggle" style="margin-bottom:0;">
+            <button data-cls="exo">exotherm</button>
+            <button data-cls="endo">endotherm</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="diag">Enthalpiediagramm</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der vollständige Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+
+    <div class="tabpanel" id="tab-diag">
+      <canvas id="diag" width="1000" height="320"></canvas>
+      <p class="note">Bezugsniveau sind die Elemente in ihrer stabilsten Form (0 kJ/mol). Die gestrichelten Pfeile zeigen die Summen der Bildungsenthalpien, der durchgezogene Pfeil die Reaktionsenthalpie.</p>
+    </div>
+
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Reaktion</th><th>Δ<sub>r</sub>H° (kJ/mol)</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="4" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Tabellenwerte für 25 °C und 1 bar nach gängigen Tabellenwerken (NIST, CRC Handbook), auf eine Nachkommastelle gerundet. Einzelne Schulbücher geben teilweise leicht abweichende Werte an.</p>
+  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.0 (erstellt mit Claude Pro)</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Stoffdaten: Standardbildungsenthalpien in kJ/mol (298,15 K, 1 bar) ----------
+  // el: Element in stabilster Form (ΔfH° = 0)
+  const S = {
+    H2:{f:"H2",s:"g",h:0,n:"Wasserstoff",el:1},
+    O2:{f:"O2",s:"g",h:0,n:"Sauerstoff",el:1},
+    N2:{f:"N2",s:"g",h:0,n:"Stickstoff",el:1},
+    Cl2:{f:"Cl2",s:"g",h:0,n:"Chlor",el:1},
+    C:{f:"C",s:"s",h:0,n:"Kohlenstoff (Graphit)",el:1},
+    S:{f:"S",s:"s",h:0,n:"Schwefel (rhombisch)",el:1},
+    Na:{f:"Na",s:"s",h:0,n:"Natrium",el:1},
+    Mg:{f:"Mg",s:"s",h:0,n:"Magnesium",el:1},
+    Al:{f:"Al",s:"s",h:0,n:"Aluminium",el:1},
+    Ca:{f:"Ca",s:"s",h:0,n:"Calcium",el:1},
+    Fe:{f:"Fe",s:"s",h:0,n:"Eisen",el:1},
+    Cu:{f:"Cu",s:"s",h:0,n:"Kupfer",el:1},
+    Zn:{f:"Zn",s:"s",h:0,n:"Zink",el:1},
+
+    O3:{f:"O3",s:"g",h:142.7,n:"Ozon"},
+    H2O_l:{f:"H2O",s:"l",h:-285.8,n:"Wasser (flüssig)"},
+    H2O_g:{f:"H2O",s:"g",h:-241.8,n:"Wasser (gasförmig)"},
+    H2O2:{f:"H2O2",s:"l",h:-187.8,n:"Wasserstoffperoxid"},
+    CO:{f:"CO",s:"g",h:-110.5,n:"Kohlenstoffmonooxid"},
+    CO2:{f:"CO2",s:"g",h:-393.5,n:"Kohlenstoffdioxid"},
+    CH4:{f:"CH4",s:"g",h:-74.8,n:"Methan"},
+    C2H6:{f:"C2H6",s:"g",h:-84.0,n:"Ethan"},
+    C3H8:{f:"C3H8",s:"g",h:-103.8,n:"Propan"},
+    C4H10:{f:"C4H10",s:"g",h:-125.7,n:"n-Butan"},
+    C8H18:{f:"C8H18",s:"l",h:-250.1,n:"n-Octan"},
+    C2H4:{f:"C2H4",s:"g",h:52.4,n:"Ethen"},
+    C2H2:{f:"C2H2",s:"g",h:226.7,n:"Ethin"},
+    C6H6:{f:"C6H6",s:"l",h:49.0,n:"Benzol"},
+    CH3OH:{f:"CH3OH",s:"l",h:-238.7,n:"Methanol"},
+    C2H5OH:{f:"C2H5OH",s:"l",h:-277.7,n:"Ethanol"},
+    CH3COOH:{f:"CH3COOH",s:"l",h:-484.3,n:"Essigsäure"},
+    EtOAc:{f:"CH3COOC2H5",s:"l",h:-479.3,n:"Ethylacetat"},
+    C6H12O6:{f:"C6H12O6",s:"s",h:-1273.3,n:"Glucose"},
+    NH3:{f:"NH3",s:"g",h:-45.9,n:"Ammoniak"},
+    NH4Cl:{f:"NH4Cl",s:"s",h:-314.4,n:"Ammoniumchlorid"},
+    NO:{f:"NO",s:"g",h:90.3,n:"Stickstoffmonooxid"},
+    NO2:{f:"NO2",s:"g",h:33.2,n:"Stickstoffdioxid"},
+    N2O4:{f:"N2O4",s:"g",h:9.2,n:"Distickstofftetraoxid"},
+    HNO3:{f:"HNO3",s:"l",h:-174.1,n:"Salpetersäure"},
+    N2H4:{f:"N2H4",s:"l",h:50.6,n:"Hydrazin"},
+    SO2:{f:"SO2",s:"g",h:-296.8,n:"Schwefeldioxid"},
+    SO3:{f:"SO3",s:"g",h:-395.7,n:"Schwefeltrioxid"},
+    H2SO4:{f:"H2SO4",s:"l",h:-814.0,n:"Schwefelsäure"},
+    H2S:{f:"H2S",s:"g",h:-20.6,n:"Schwefelwasserstoff"},
+    HCl:{f:"HCl",s:"g",h:-92.3,n:"Chlorwasserstoff"},
+    NaCl:{f:"NaCl",s:"s",h:-411.2,n:"Natriumchlorid"},
+    NaOH:{f:"NaOH",s:"s",h:-425.6,n:"Natriumhydroxid"},
+    NaHCO3:{f:"NaHCO3",s:"s",h:-950.8,n:"Natriumhydrogencarbonat"},
+    Na2CO3:{f:"Na2CO3",s:"s",h:-1130.7,n:"Natriumcarbonat"},
+    CaCO3:{f:"CaCO3",s:"s",h:-1206.9,n:"Calciumcarbonat"},
+    CaO:{f:"CaO",s:"s",h:-635.1,n:"Calciumoxid"},
+    CaOH2:{f:"Ca(OH)2",s:"s",h:-986.1,n:"Calciumhydroxid"},
+    CaC2:{f:"CaC2",s:"s",h:-59.8,n:"Calciumcarbid"},
+    MgO:{f:"MgO",s:"s",h:-601.6,n:"Magnesiumoxid"},
+    Fe2O3:{f:"Fe2O3",s:"s",h:-824.2,n:"Eisen(III)-oxid"},
+    Al2O3:{f:"Al2O3",s:"s",h:-1675.7,n:"Aluminiumoxid"},
+    CuO:{f:"CuO",s:"s",h:-157.3,n:"Kupfer(II)-oxid"},
+    ZnO:{f:"ZnO",s:"s",h:-350.5,n:"Zinkoxid"},
+    ZnS:{f:"ZnS",s:"s",h:-206.0,n:"Zinksulfid"}
+  };
+
+  // ---------- Reaktionen: d = Schwierigkeit (1 leicht, 2 mittel, 3 schwer) ----------
+  const R = [
+    {d:1, c:"Verbrennung von Kohlenstoff", e:[[1,"C"],[1,"O2"]], p:[[1,"CO2"]]},
+    {d:1, c:"Kalkbrennen", e:[[1,"CaCO3"]], p:[[1,"CaO"],[1,"CO2"]]},
+    {d:1, c:"Kalklöschen", e:[[1,"CaO"],[1,"H2O_l"]], p:[[1,"CaOH2"]]},
+    {d:1, c:"Bildung von Ammoniumchlorid", e:[[1,"NH3"],[1,"HCl"]], p:[[1,"NH4Cl"]]},
+    {d:1, c:"Hydrierung von Ethen", e:[[1,"C2H4"],[1,"H2"]], p:[[1,"C2H6"]]},
+    {d:1, c:"Wassergas-Shift-Reaktion", e:[[1,"CO"],[1,"H2O_g"]], p:[[1,"CO2"],[1,"H2"]]},
+    {d:1, c:"Bildung von Schwefelsäure aus Schwefeltrioxid", e:[[1,"SO3"],[1,"H2O_l"]], p:[[1,"H2SO4"]]},
+    {d:1, c:"Reduktion von Kupferoxid mit Wasserstoff", e:[[1,"CuO"],[1,"H2"]], p:[[1,"Cu"],[1,"H2O_l"]]},
+    {d:1, c:"Verdampfen von Wasser", e:[[1,"H2O_l"]], p:[[1,"H2O_g"]]},
+    {d:1, c:"Wassergasreaktion (Kohlevergasung)", e:[[1,"C"],[1,"H2O_g"]], p:[[1,"CO"],[1,"H2"]]},
+
+    {d:2, c:"Verbrennung von Erdgas", e:[[1,"CH4"],[2,"O2"]], p:[[1,"CO2"],[2,"H2O_l"]]},
+    {d:2, c:"Ammoniaksynthese (Haber-Bosch-Verfahren)", e:[[1,"N2"],[3,"H2"]], p:[[2,"NH3"]]},
+    {d:2, c:"Kontaktverfahren (Schwefelsäureherstellung)", e:[[2,"SO2"],[1,"O2"]], p:[[2,"SO3"]]},
+    {d:2, c:"Oxidation von Stickstoffmonooxid an der Luft", e:[[2,"NO"],[1,"O2"]], p:[[2,"NO2"]]},
+    {d:2, c:"Dimerisierung von Stickstoffdioxid", e:[[2,"NO2"]], p:[[1,"N2O4"]]},
+    {d:2, c:"Boudouard-Gleichgewicht", e:[[1,"C"],[1,"CO2"]], p:[[2,"CO"]]},
+    {d:2, c:"Dampfreformierung von Methan", e:[[1,"CH4"],[1,"H2O_g"]], p:[[1,"CO"],[3,"H2"]]},
+    {d:2, c:"Thermitreaktion (Schienenschweißen)", e:[[1,"Fe2O3"],[2,"Al"]], p:[[1,"Al2O3"],[2,"Fe"]]},
+    {d:2, c:"Zerfall von Wasserstoffperoxid", e:[[2,"H2O2"]], p:[[2,"H2O_l"],[1,"O2"]]},
+    {d:2, c:"Bildung von Ozon", e:[[3,"O2"]], p:[[2,"O3"]]},
+    {d:2, c:"Verbrennung von Magnesium", e:[[2,"Mg"],[1,"O2"]], p:[[2,"MgO"]]},
+    {d:2, c:"Zersetzung von Natron (Backpulver)", e:[[2,"NaHCO3"]], p:[[1,"Na2CO3"],[1,"CO2"],[1,"H2O_g"]]},
+    {d:2, c:"Hydrazin als Raketentreibstoff", e:[[1,"N2H4"],[1,"O2"]], p:[[1,"N2"],[2,"H2O_g"]]},
+
+    {d:3, c:"Verbrennung von Ethanol", e:[[1,"C2H5OH"],[3,"O2"]], p:[[2,"CO2"],[3,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Propan (Gasbrenner)", e:[[1,"C3H8"],[5,"O2"]], p:[[3,"CO2"],[4,"H2O_l"]]},
+    {d:3, c:"Reduktion von Eisenoxid im Hochofen", e:[[1,"Fe2O3"],[3,"CO"]], p:[[2,"Fe"],[3,"CO2"]]},
+    {d:3, c:"Verbrennung von Methanol", e:[[2,"CH3OH"],[3,"O2"]], p:[[2,"CO2"],[4,"H2O_l"]]},
+    {d:3, c:"Zellatmung (Oxidation von Glucose)", e:[[1,"C6H12O6"],[6,"O2"]], p:[[6,"CO2"],[6,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Octan (Benzinbestandteil)", e:[[2,"C8H18"],[25,"O2"]], p:[[16,"CO2"],[18,"H2O_l"]]},
+    {d:3, c:"Ammoniakverbrennung (Ostwald-Verfahren)", e:[[4,"NH3"],[5,"O2"]], p:[[4,"NO"],[6,"H2O_g"]]},
+    {d:3, c:"Bildung von Salpetersäure (Ostwald-Verfahren)", e:[[3,"NO2"],[1,"H2O_l"]], p:[[2,"HNO3"],[1,"NO"]]},
+    {d:3, c:"Rösten von Zinkblende", e:[[2,"ZnS"],[3,"O2"]], p:[[2,"ZnO"],[2,"SO2"]]},
+    {d:3, c:"Carbidlampe (Ethin aus Calciumcarbid)", e:[[1,"CaC2"],[2,"H2O_l"]], p:[[1,"C2H2"],[1,"CaOH2"]]},
+    {d:3, c:"Verbrennung von Ethin (Schweißbrenner)", e:[[2,"C2H2"],[5,"O2"]], p:[[4,"CO2"],[2,"H2O_l"]]},
+    {d:3, c:"Veresterung von Essigsäure mit Ethanol", e:[[1,"CH3COOH"],[1,"C2H5OH"]], p:[[1,"EtOAc"],[1,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Benzol", e:[[2,"C6H6"],[15,"O2"]], p:[[12,"CO2"],[6,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Schwefelwasserstoff (Claus-Verfahren)", e:[[2,"H2S"],[3,"O2"]], p:[[2,"SO2"],[2,"H2O_g"]]}
+  ];
+  const LEVEL_NAMES = ["gemischt","leicht","mittel","schwer"];
+
+  // ---------- Hilfsfunktionen ----------
+  const $ = id => document.getElementById(id);
+  const r1 = x => Math.round(x*10)/10;
+  function fmt(x){
+    const v = r1(x);
+    const s = Math.abs(v).toLocaleString("de-DE",{minimumFractionDigits:1, maximumFractionDigits:1});
+    return (v < 0 ? "−" : "") + s;
+  }
+  function fmtSigned(x){ const v=r1(x); return (v>0?"+":"") + fmt(v); }
+  function parseNum(s){
+    if(s == null) return null;
+    s = String(s).trim().replace(/\s/g,"").replace(/[−–]/g,"-").replace(",",".").replace(/kJ\/mol$/i,"");
+    if(s === "" || s === "-" || s === "+") return null;
+    const v = Number(s);
+    return isFinite(v) ? v : NaN;
+  }
+  function fHTML(f){ return f.replace(/(\d+)/g,"<sub>$1</sub>"); }
+  function spHTML(key){ const sp=S[key]; return fHTML(sp.f)+'<span class="st">('+sp.s+')</span>'; }
+  function spText(key){ return S[key].f+"("+S[key].s+")"; }
+  function eqHTML(r, open){
+    let i = 0;
+    const side = arr => arr.map(([nu,k])=>{
+      const id = "c"+(i++);
+      const co = open
+        ? `<input type="text" inputmode="numeric" autocomplete="off" class="coef" id="${id}" data-id="${id}" value="${task.vals[id] ?? ""}" aria-label="Koeffizient für ${S[k].f}">`
+        : (nu>1?'<span class="co">'+nu+'</span>':'');
+      return co + spHTML(k);
+    }).join('<span class="plus">+</span>');
+    return side(r.e)+'<span class="arr">⟶</span>'+side(r.p);
+  }
+  // Atome einer Formel zählen, z. B. Ca(OH)2 -> {Ca:1, O:2, H:2}
+  function atoms(f){
+    const tokens = f.match(/[A-Z][a-z]?|\(|\)|\d+/g);
+    const stack = [{}];
+    let last = null;
+    tokens.forEach(t=>{
+      if(t === "("){ stack.push({}); last = null; }
+      else if(t === ")"){ last = stack.pop(); const top = stack[stack.length-1]; Object.entries(last).forEach(([el,n])=>top[el]=(top[el]||0)+n); last = {group:last}; }
+      else if(/^\d+$/.test(t)){
+        const n = +t, top = stack[stack.length-1];
+        if(last && last.group) Object.entries(last.group).forEach(([el,m])=>top[el]+=m*(n-1));
+        else if(last) top[last] += n-1;
+        last = null;
+      } else { const top = stack[stack.length-1]; top[t]=(top[t]||0)+1; last = t; }
+    });
+    return stack[0];
+  }
+  function eqShort(r){
+    const side = arr => arr.map(([nu,k])=>(nu>1?nu+" ":"")+fHTML(S[k].f)).join(" + ");
+    return side(r.e)+" → "+side(r.p);
+  }
+  function sums(r){
+    const se = r1(r.e.reduce((a,[nu,k])=>a+nu*S[k].h,0));
+    const sp = r1(r.p.reduce((a,[nu,k])=>a+nu*S[k].h,0));
+    return {se, sp, dr: r1(sp-se)};
+  }
+
+  // ---------- Zustand ----------
+  let level = 0, mode = "step", given = false, balance = "auto";
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+  let lastFocus = null;
+
+  // ---------- Tabelle der Bildungsenthalpien ----------
+  function renderLib(){
+    const q = $("libSearch").value.trim().toLowerCase().replace(/[₀-₉]/g, c=>String(c.charCodeAt(0)-8320));
+    const keys = Object.keys(S);
+    const match = k => !q || S[k].n.toLowerCase().includes(q) || S[k].f.toLowerCase().includes(q);
+    const els = keys.filter(k=>S[k].el && match(k)).sort((a,b)=>S[a].n.localeCompare(S[b].n,"de"));
+    const cps = keys.filter(k=>!S[k].el && match(k)).sort((a,b)=>S[a].n.localeCompare(S[b].n,"de"));
+    const row = k => `<tr data-k="${k}"><td class="mono">${spHTML(k)}</td><td class="nm">${S[k].n}</td><td class="num mono">${fmt(S[k].h)}</td></tr>`;
+    let html = "";
+    if(cps.length) html += `<tr class="grp"><td colspan="3">Verbindungen</td></tr>` + cps.map(row).join("");
+    if(els.length) html += `<tr class="grp"><td colspan="3">Elemente (stabilste Form)</td></tr>` + els.map(row).join("");
+    if(!html) html = `<tr class="grp"><td colspan="3">Kein Treffer</td></tr>`;
+    $("libBody").innerHTML = html;
+  }
+  $("libSearch").addEventListener("input", renderLib);
+  $("libBody").addEventListener("click", e=>{
+    const tr = e.target.closest("tr[data-k]");
+    if(!tr || !lastFocus || !document.body.contains(lastFocus) || lastFocus.readOnly || lastFocus.disabled) return;
+    lastFocus.value = fmt(S[tr.dataset.k].h);
+    lastFocus.dispatchEvent(new Event("input"));
+    lastFocus.focus();
+  });
+
+  // ---------- Reaktionsauswahl ----------
+  function renderReactionSelect(){
+    let html = "";
+    [1,2,3].forEach(d=>{
+      html += `<optgroup label="${LEVEL_NAMES[d][0].toUpperCase()+LEVEL_NAMES[d].slice(1)}">`;
+      R.forEach((r,i)=>{ if(r.d===d) html += `<option value="${i}">${r.c}</option>`; });
+      html += `</optgroup>`;
+    });
+    $("reactionSelect").innerHTML = html;
+  }
+  $("btnLoad").addEventListener("click", ()=> newTask(+$("reactionSelect").value));
+
+  // ---------- Toggles ----------
+  function setupToggle(id, attr, cb){
+    $(id).querySelectorAll("button").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        $(id).querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+        cb(b.dataset[attr]);
+      });
+    });
+  }
+  setupToggle("levelToggle","level", v=>{ level=+v; newTask(); });
+  setupToggle("modeToggle","mode", v=>{ mode=v; renderTask(); });
+  $("chkGiven").addEventListener("change", e=>{ given=e.target.checked; renderTask(); });
+  setupToggle("balanceToggle","balance", v=>{ balance=v; renderTask(); });
+  function isBalanced(){ return balance === "auto" || task.coefOk || task.done; }
+  $("clsToggle").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(!task || task.done) return;
+      task.cls = b.dataset.cls;
+      syncCls();
+    });
+  });
+  function syncCls(){
+    $("clsToggle").querySelectorAll("button").forEach(x=>x.classList.toggle("active", task && x.dataset.cls===task.cls));
+  }
+
+  // ---------- Aufgabe erzeugen ----------
+  function newTask(index){
+    if(task && !task.done && task.touched) logHistory(task, "open");
+    let idx = index;
+    if(idx == null){
+      const pool = R.map((r,i)=>i).filter(i=> level===0 || R[i].d===level);
+      const avoid = task ? task.idx : -1;
+      const cand = pool.length>1 ? pool.filter(i=>i!==avoid) : pool;
+      idx = cand[Math.floor(Math.random()*cand.length)];
+    }
+    const r = R[idx];
+    const rows = [];
+    r.e.forEach(([nu,k])=>rows.push({side:"e",nu,k}));
+    r.p.forEach(([nu,k])=>rows.push({side:"p",nu,k}));
+    task = {idx, r, rows, vals:{}, cls:null, wrong:false, done:false, shown:false, hint:0, bhint:0, coefOk:false, touched:false, sol:sums(r), num:++taskCounter};
+    $("feedback").innerHTML = "";
+    renderTask();
+    renderWay(); drawDiagram();
+  }
+
+  // ---------- Aufgabe darstellen ----------
+  function inputHTML(id, extraCls){
+    const v = task.vals[id] ?? "";
+    return `<input type="text" inputmode="decimal" autocomplete="off" id="${id}" data-id="${id}" class="${extraCls||""}" value="${v}" ${task.done?"readonly":""} aria-label="Eingabe">`;
+  }
+  function renderTask(){
+    if(!task) return;
+    const r = task.r;
+    $("taskNum").textContent = "Aufgabe " + task.num;
+    $("taskLevel").textContent = LEVEL_NAMES[r.d];
+    $("taskLevel").className = "chip l"+r.d;
+    $("taskCtx").textContent = r.c;
+    $("equation").innerHTML = eqHTML(r, !isBalanced());
+    const bal = isBalanced();
+
+    const step = mode === "step";
+    const showH = step || given;
+    let head = `<th>Stoff</th><th style="text-align:center">ν</th>`;
+    if(showH) head += `<th>Δ<sub>f</sub>H° in kJ/mol</th>`;
+    if(step) head += `<th>ν · Δ<sub>f</sub>H° in kJ/mol</th>`;
+    $("calcHead").innerHTML = head;
+    const cols = 2 + (showH?1:0) + (step?1:0);
+
+    let body = "";
+    ["e","p"].forEach(side=>{
+      body += `<tr class="side"><td colspan="${cols}">${side==="e"?"Edukte":"Produkte"}</td></tr>`;
+      task.rows.forEach((row,i)=>{
+        if(row.side!==side) return;
+        let tr = `<tr><td class="sp">${spHTML(row.k)}</td><td class="nu${bal?"":" open"}">${bal?row.nu:"?"}</td>`;
+        if(showH){
+          if(given || task.done && task.shown) tr += `<td><input type="text" readonly value="${fmt(S[row.k].h)}" tabindex="-1" aria-label="Tabellenwert"></td>`;
+          else tr += `<td>${inputHTML("h"+i)}</td>`;
+        }
+        if(step) tr += `<td><span class="times">${bal?row.nu:"ν"} ·</span>${inputHTML("p"+i)}</td>`;
+        body += tr + `</tr>`;
+      });
+    });
+    $("calcBody").innerHTML = body;
+
+    document.querySelectorAll(".step-only").forEach(el=> el.hidden = !step);
+    ["inSP","inSE","inR"].forEach(id=>{
+      const el = $(id);
+      el.value = task.vals[id] ?? "";
+      el.readOnly = task.done;
+      el.classList.remove("ok","bad");
+    });
+    syncCls();
+
+    document.querySelectorAll("#calcBody input[data-id]").forEach(inp=>{
+      inp.addEventListener("input", onInput);
+      inp.addEventListener("focus", ()=>{ lastFocus = inp; });
+    });
+    document.querySelectorAll("#equation input.coef").forEach(inp=> inp.addEventListener("input", onInput));
+    if(task.marks) applyMarks(task.marks);
+    $("btnCheck").disabled = task.done;
+    $("btnHint").disabled = task.done;
+    $("btnSolve").disabled = task.done;
+    setStatus();
+  }
+  function onInput(e){
+    const id = e.target.dataset.id || e.target.id;
+    task.vals[id] = e.target.value;
+    task.touched = true;
+    e.target.classList.remove("ok","bad");
+    if(task.marks) delete task.marks[id];
+  }
+  ["inSP","inSE","inR"].forEach(id=>{
+    $(id).addEventListener("input", onInput);
+    $(id).addEventListener("focus", ()=>{ lastFocus = $(id); });
+  });
+
+  function setStatus(){
+    const b = $("statusBadge");
+    b.classList.remove("running","done");
+    if(!task.done){ b.classList.add("running"); $("statusText").textContent = "Aufgabe offen"; }
+    else if(task.shown){ $("statusText").textContent = "Lösung angezeigt"; }
+    else { b.classList.add("done"); $("statusText").textContent = "gelöst"; }
+  }
+  function applyMarks(marks){
+    Object.entries(marks).forEach(([id,ok])=>{
+      const el = $(id);
+      if(el){ el.classList.remove("ok","bad"); el.classList.add(ok?"ok":"bad"); }
+    });
+  }
+
+  // ---------- Prüfen ----------
+  function near(a,b,tol){ return a!=null && !isNaN(a) && Math.abs(a-b) <= tol; }
+  function fb(type, html){ return `<div class="fb ${type}">${html}</div>`; }
+
+  function diagnose(v){
+    const r = task.r, sol = task.sol;
+    const msgs = [];
+    if(near(v, -sol.dr, 1) && sol.dr !== 0) msgs.push("Das Vorzeichen stimmt nicht. Es gilt: Summe der Produkte <strong>minus</strong> Summe der Edukte.");
+    const noCoef = r1(r.p.reduce((a,[nu,k])=>a+S[k].h,0) - r.e.reduce((a,[nu,k])=>a+S[k].h,0));
+    if(noCoef !== sol.dr && (near(v,noCoef,1) || near(v,-noCoef,1))) msgs.push("Die stöchiometrischen Faktoren wurden offenbar nicht berücksichtigt. Jeder Δ<sub>f</sub>H°-Wert wird mit seinem Faktor ν multipliziert.");
+    const swap = {H2O_l:"H2O_g", H2O_g:"H2O_l"};
+    if([...r.e,...r.p].some(([nu,k])=>swap[k])){
+      const hs = k => swap[k] ? S[swap[k]].h : S[k].h;
+      const alt = r1(r.p.reduce((a,[nu,k])=>a+nu*hs(k),0) - r.e.reduce((a,[nu,k])=>a+nu*hs(k),0));
+      if(near(v,alt,1)) msgs.push("Auf den Aggregatzustand von Wasser achten: H<sub>2</sub>O(l) und H<sub>2</sub>O(g) haben unterschiedliche Bildungsenthalpien.");
+    }
+    return msgs;
+  }
+
+  function check(){
+    if(!task || task.done) return;
+    task.touched = true;
+    const step = mode === "step";
+    const marks = {};
+    const out = [];
+    if(!isBalanced()){
+      const res = checkCoefficients();
+      if(!res.ok){
+        task.marks = res.marks; applyMarks(res.marks);
+        $("feedback").innerHTML = res.out.join("");
+        if(res.wrong){ task.wrong = true; stats.streak = 0; }
+        renderStats();
+        return;
+      }
+      task.coefOk = true; task.marks = null;
+      renderTask();
+      out.push(fb("good","Die Reaktionsgleichung ist richtig ausgeglichen. Die Faktoren stehen jetzt in der Tabelle."));
+    }
+    let rowErrors = 0, rowEmpty = 0;
+
+    if(step){
+      task.rows.forEach((row,i)=>{
+        const h = S[row.k].h;
+        if(!given){
+          const v = parseNum(task.vals["h"+i]);
+          if(v == null) rowEmpty++;
+          else { const ok = near(v,h,0.06); marks["h"+i]=ok; if(!ok) rowErrors++; }
+          if(v != null && !near(v,h,0.06) && S[row.k].el && v !== 0) out.push(fb("bad", `${fHTML(S[row.k].f)} ist ein Element in seiner stabilsten Form. Seine Standardbildungsenthalpie ist 0 kJ/mol.`));
+        }
+        const pv = parseNum(task.vals["p"+i]);
+        if(pv == null) rowEmpty++;
+        else { const ok = near(pv, row.nu*h, 0.15); marks["p"+i]=ok; if(!ok) rowErrors++; }
+      });
+      const sp = parseNum(task.vals.inSP), se = parseNum(task.vals.inSE);
+      if(sp != null){ marks.inSP = near(sp, task.sol.sp, 0.3); if(!marks.inSP) rowErrors++; } else rowEmpty++;
+      if(se != null){ marks.inSE = near(se, task.sol.se, 0.3); if(!marks.inSE) rowErrors++; } else rowEmpty++;
+      if(sp != null && se != null && marks.inSP===false && marks.inSE===false && near(sp,task.sol.se,0.3) && near(se,task.sol.sp,0.3)){
+        out.push(fb("bad","Die beiden Summen sind vertauscht: oben stehen die Produkte, darunter die Edukte."));
+      }
+    }
+
+    const rv = parseNum(task.vals.inR);
+    let finalOk = false;
+    if(rv == null){
+      out.push(fb("info","Trage das Ergebnis Δ<sub>r</sub>H° ein, um die Aufgabe abzuschließen."));
+    } else if(isNaN(rv)){
+      marks.inR = false;
+      out.push(fb("bad","Das Ergebnis ist keine gültige Zahl. Beispiel für eine richtige Eingabe: −890,3"));
+    } else {
+      finalOk = near(rv, task.sol.dr, 1.0);
+      marks.inR = finalOk;
+      if(!finalOk){
+        task.wrong = true;
+        const d = diagnose(rv);
+        out.push(fb("bad", "Das Ergebnis für Δ<sub>r</sub>H° stimmt noch nicht." + (d.length ? " " + d.join(" ") : "")));
+      }
+    }
+    let clsOk = false;
+    if(finalOk){
+      const right = task.sol.dr < 0 ? "exo" : "endo";
+      if(!task.cls) out.push(fb("info","Δ<sub>r</sub>H° ist richtig. Ordne die Reaktion noch als exotherm oder endotherm ein."));
+      else if(task.cls !== right){ task.wrong = true; out.push(fb("bad", `Die Einordnung passt nicht zum Vorzeichen: Δ<sub>r</sub>H° ${task.sol.dr<0?"&lt;":"&gt;"} 0 bedeutet ${right==="exo"?"exotherm":"endotherm"}.`)); }
+      else clsOk = true;
+    }
+    if(step && rowErrors) out.unshift(fb("bad", `${rowErrors} ${rowErrors===1?"Zwischenwert ist":"Zwischenwerte sind"} falsch (rot markiert).`));
+
+    task.marks = marks;
+    applyMarks(marks);
+
+    if(finalOk && clsOk){
+      task.done = true;
+      stats.solved++;
+      const firstTry = !task.wrong && task.hint === 0 && task.bhint === 0;
+      if(firstTry) stats.first++;
+      stats.streak++;
+      logHistory(task, firstTry ? "first" : "ok");
+      const word = task.sol.dr < 0 ? "exotherm" : "endotherm";
+      let msg = `Richtig! Δ<sub>r</sub>H° = ${fmt(task.sol.dr)} kJ/mol, die Reaktion ist ${word}.`;
+      if(step && rowEmpty) msg += " Einige Zwischenschritte waren leer, der Lösungsweg zeigt sie vollständig.";
+      out.push(fb("good", msg));
+      renderTask(); renderWay(); drawDiagram();
+    } else if(task.wrong){
+      stats.streak = 0;
+    }
+    $("feedback").innerHTML = out.join("");
+    renderStats();
+  }
+
+  // ---------- Koeffizienten prüfen ----------
+  function checkCoefficients(){
+    const rows = task.rows, marks = {}, out = [];
+    const vals = rows.map((row,i)=>{
+      const raw = String(task.vals["c"+i] ?? "").trim();
+      if(raw === "") return null;
+      return /^\d+$/.test(raw) ? +raw : NaN;
+    });
+    if(vals.some(v=>v===null)){
+      rows.forEach((row,i)=>{ if(vals[i]!==null) marks["c"+i] = !isNaN(vals[i]) && vals[i]===row.nu; });
+      return {ok:false, wrong:false, marks:{}, out:[fb("info","Trage vor jedem Stoff einen Koeffizienten ein, auch die 1. Danach wird die Gleichung geprüft.")]};
+    }
+    if(vals.some(v=>isNaN(v) || v<1)){
+      rows.forEach((row,i)=>{ marks["c"+i] = !(isNaN(vals[i]) || vals[i]<1); });
+      return {ok:false, wrong:true, marks, out:[fb("bad","Koeffizienten müssen ganze Zahlen ab 1 sein.")]};
+    }
+    if(vals.every((v,i)=>v===rows[i].nu)){
+      rows.forEach((row,i)=> marks["c"+i] = true);
+      return {ok:true, marks};
+    }
+    // Atombilanz mit den eingegebenen Koeffizienten
+    const left = {}, right = {};
+    rows.forEach((row,i)=>{
+      const tgt = row.side==="e" ? left : right;
+      Object.entries(atoms(S[row.k].f)).forEach(([el,n])=> tgt[el]=(tgt[el]||0)+n*vals[i]);
+    });
+    const els = [...new Set([...Object.keys(left), ...Object.keys(right)])];
+    const off = els.filter(el=>(left[el]||0)!==(right[el]||0));
+    if(!off.length){
+      // ausgeglichen, aber nicht die kleinsten ganzen Zahlen
+      rows.forEach((row,i)=> marks["c"+i] = false);
+      return {ok:false, wrong:true, marks, out:[fb("bad","Die Gleichung ist ausgeglichen, aber nicht mit den kleinsten ganzzahligen Koeffizienten. Kürze alle Koeffizienten durch ihren größten gemeinsamen Teiler. Die Reaktionsenthalpie bezieht sich auf diesen Formelumsatz.")]};
+    }
+    rows.forEach((row,i)=>{
+      const has = Object.keys(atoms(S[row.k].f)).some(el=>off.includes(el));
+      marks["c"+i] = !has;
+    });
+    const list = off.map(el=>`${el}: links ${left[el]||0}, rechts ${right[el]||0}`).join(" · ");
+    return {ok:false, wrong:true, marks, out:[fb("bad",`Die Gleichung ist noch nicht ausgeglichen. ${list}. Rot markiert sind die Stoffe, die diese Atomsorten enthalten.`)]};
+  }
+
+  // ---------- Tipps ----------
+  function hint(){
+    if(!task || task.done) return;
+    task.touched = true;
+    if(!isBalanced()){
+      const rows = task.rows;
+      const byNu = rows.map((row,i)=>({row,i})).sort((a,b)=>b.row.nu-a.row.nu);
+      const bh = [
+        "Zähle die Atome jeder Elementsorte links und rechts. Beginne mit dem Element, das in den wenigsten Stoffen vorkommt, und gleiche O<sub>2</sub> und H<sub>2</sub> zuletzt aus.",
+        "Ist am Ende ein halbzahliger Koeffizient nötig (z. B. ½ O<sub>2</sub>), multipliziere alle Koeffizienten mit 2."
+      ];
+      if(task.bhint < bh.length){
+        $("feedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: ${bh[task.bhint]}`));
+      } else {
+        const k = task.bhint - bh.length;
+        if(k < byNu.length - 1){
+          const {row} = byNu[k];
+          $("feedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: Vor ${spHTML(row.k)} steht der Koeffizient ${row.nu}.`));
+        } else {
+          $("feedback").insertAdjacentHTML("beforeend", fb("info","Keine weiteren Tipps zum Ausgleichen. Mit „Lösung zeigen\" wird die ganze Aufgabe gelöst."));
+          return;
+        }
+      }
+      task.bhint++;
+      return;
+    }
+    const r = task.r;
+    const all = [...r.e, ...r.p];
+    const els = [...new Set(all.filter(([nu,k])=>S[k].el).map(([nu,k])=>k))];
+    const hasWater = all.some(([nu,k])=>k==="H2O_l"||k==="H2O_g");
+    const hints = [
+      "Satz von Hess: Δ<sub>r</sub>H° = Σ ν · Δ<sub>f</sub>H°(Produkte) − Σ ν · Δ<sub>f</sub>H°(Edukte).",
+      els.length
+        ? `Elemente in ihrer stabilsten Form haben Δ<sub>f</sub>H° = 0 kJ/mol. In dieser Reaktion: ${els.map(k=>fHTML(S[k].f)).join(", ")}.`
+        : "In dieser Reaktion kommt kein Element vor. Jeder Stoff hat einen eigenen Tabellenwert.",
+      hasWater
+        ? "Aggregatzustand beachten: Hier wird " + all.filter(([nu,k])=>k.startsWith("H2O_")).map(([nu,k])=>spHTML(k)).join(" und ") + " gebraucht."
+        : "Jeden Tabellenwert mit dem stöchiometrischen Faktor aus der Reaktionsgleichung multiplizieren.",
+      `Zwischenergebnis: Σ ν · Δ<sub>f</sub>H°(Edukte) = ${fmt(task.sol.se)} kJ/mol.`,
+      `Zwischenergebnis: Σ ν · Δ<sub>f</sub>H°(Produkte) = ${fmt(task.sol.sp)} kJ/mol.`
+    ];
+    if(task.hint >= hints.length){
+      $("feedback").insertAdjacentHTML("beforeend", fb("info","Keine weiteren Tipps. Mit „Lösung zeigen\" wird die vollständige Rechnung eingeblendet."));
+      return;
+    }
+    $("feedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp ${task.hint+1}: ${hints[task.hint]}`));
+    task.hint++;
+  }
+
+  // ---------- Lösung zeigen ----------
+  function showSolution(){
+    if(!task || task.done) return;
+    task.touched = true;
+    task.rows.forEach((row,i)=>{
+      task.vals["h"+i] = fmt(S[row.k].h);
+      task.vals["p"+i] = fmt(row.nu*S[row.k].h);
+    });
+    task.vals.inSP = fmt(task.sol.sp);
+    task.vals.inSE = fmt(task.sol.se);
+    task.vals.inR = fmt(task.sol.dr);
+    task.cls = task.sol.dr < 0 ? "exo" : "endo";
+    task.rows.forEach((row,i)=>{ task.vals["c"+i] = String(row.nu); });
+    task.coefOk = true;
+    task.done = true; task.shown = true; task.marks = null;
+    stats.shown++; stats.streak = 0;
+    logHistory(task, "shown");
+    $("feedback").innerHTML = fb("info", "Die Lösung ist eingetragen. Im Tab „Lösungsweg\" steht die vollständige Rechnung.");
+    renderTask(); renderWay(); drawDiagram(); renderStats();
+    activateTab("way");
+  }
+
+  // ---------- Lösungsweg ----------
+  function renderWay(){
+    const box = $("wayBox");
+    if(!task || !task.done){
+      box.innerHTML = `<div class="empty-hint">Der vollständige Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`;
+      return;
+    }
+    const r = task.r, s = task.sol;
+    const term = arr => arr.map(([nu,k])=>`${nu} · (${fmt(S[k].h)})`).join(" + ");
+    const names = arr => arr.map(([nu,k])=>`${nu} · Δ<sub>f</sub>H°(${fHTML(S[k].f)}<span class="c">,${S[k].s}</span>)`).join(" + ");
+    const word = s.dr < 0 ? "exotherm" : "endotherm";
+    box.innerHTML = `<div class="way">
+      <span class="c">Reaktion:</span> ${eqShort(r)}<br>
+      Δ<sub>r</sub>H° = Σ ν · Δ<sub>f</sub>H°(Produkte) − Σ ν · Δ<sub>f</sub>H°(Edukte)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= [${names(r.p)}] − [${names(r.e)}]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= [${term(r.p)}] kJ/mol − [${term(r.e)}] kJ/mol<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (${fmt(s.sp)} kJ/mol) − (${fmt(s.se)} kJ/mol)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="a">${fmt(s.dr)} kJ/mol</span><br>
+      <span class="t">Δ<sub>r</sub>H° ${s.dr<0?"&lt;":"&gt;"} 0 → die Reaktion ist ${word}.</span>
+    </div>`;
+  }
+
+  // ---------- Enthalpiediagramm ----------
+  const canvas = $("diag"), ctx = canvas.getContext("2d");
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function arrow(x, y1, y2, color, dashed, width){
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width||1.5;
+    if(dashed) ctx.setLineDash([4,4]);
+    const dir = y2 > y1 ? 1 : -1;
+    const head = Math.min(9, Math.abs(y2-y1)/2);
+    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2 - dir*head); ctx.stroke();
+    ctx.setLineDash([]);
+    if(head > 1.5){
+      ctx.beginPath(); ctx.moveTo(x,y2); ctx.lineTo(x-5,y2-dir*head); ctx.lineTo(x+5,y2-dir*head); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawDiagram(){
+    const rect = canvas.getBoundingClientRect();
+    if(rect.width < 10) return;   // Tab nicht sichtbar
+    const dpr = window.devicePixelRatio || 1, W = rect.width, H = 320;
+    canvas.width = Math.round(W*dpr); canvas.height = Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle = css("--screen"); ctx.fillRect(0,0,W,H);
+    const faint = css("--text-faint"), dim = css("--text-dim"), text = css("--text");
+    const amber = css("--amber"), teal = css("--teal"), grid = css("--grid");
+
+    if(!task || !task.done){
+      ctx.fillStyle = faint; ctx.font = "13px Inter, system-ui, sans-serif";
+      ctx.fillText("Das Diagramm erscheint, sobald die Aufgabe gelöst ist.", 20, H/2);
+      return;
+    }
+    const s = task.sol;
+    const vals = [0, s.se, s.sp];
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const span = Math.max(hi - lo, 1);
+    lo -= span*0.12; hi += span*0.12;
+    const padT = 26, padB = 26, padL = 64, padR = 16;
+    const plotH = H - padT - padB, plotW = W - padL - padR;
+    const y = v => padT + (hi - v)/(hi - lo)*plotH;
+
+    // Achse mit Ticks
+    const rawStep = (hi-lo)/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const step = [1,2,2.5,5,10].map(m=>m*mag).find(st=>st>=rawStep) || 10*mag;
+    ctx.font = "10.5px 'JetBrains Mono', monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for(let v = Math.ceil(lo/step)*step; v <= hi; v += step){
+      const yy = y(v);
+      ctx.strokeStyle = grid; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
+      ctx.fillStyle = faint; ctx.fillText(fmt(v).replace(",0",""), padL-8, yy);
+    }
+    ctx.save(); ctx.translate(14, padT+plotH/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign = "center"; ctx.fillStyle = dim; ctx.font = "11px Inter, sans-serif";
+    ctx.fillText("H in kJ/mol", 0, 0); ctx.restore();
+
+    // Niveaus
+    const x0 = padL + 10, x1 = W - padR - 10;
+    const eL = padL + plotW*0.12, eR = padL + plotW*0.40;
+    const pL = padL + plotW*0.60, pR = padL + plotW*0.88;
+    // Elemente (0)
+    ctx.strokeStyle = dim; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(x0, y(0)); ctx.lineTo(x1, y(0)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = dim; ctx.font = "11px Inter, sans-serif";
+    ctx.fillText("Elemente (0 kJ/mol)", x1 - 2, y(0) - 4);
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = teal; ctx.beginPath(); ctx.moveTo(eL, y(s.se)); ctx.lineTo(eR, y(s.se)); ctx.stroke();
+    ctx.strokeStyle = amber; ctx.beginPath(); ctx.moveTo(pL, y(s.sp)); ctx.lineTo(pR, y(s.sp)); ctx.stroke();
+
+    // Bildungsenthalpie-Pfeile
+    if(Math.abs(s.se) > 0.05) arrow(eL + 12, y(0), y(s.se), teal, true, 1.2);
+    if(Math.abs(s.sp) > 0.05) arrow(pR - 12, y(0), y(s.sp), amber, true, 1.2);
+
+    // Beschriftung Niveaus
+    const lab = (txt, val, xc, v, color) => {
+      const above = v >= 0 ? (y(v) - y(0) < -18 || v === 0 ? true : false) : false;
+      ctx.textAlign = "center"; ctx.fillStyle = color; ctx.font = "600 12px Inter, sans-serif";
+      const ty = (v > 0 || (v === 0)) ? y(v) - 8 : y(v) + 16;
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(txt, xc, ty);
+      ctx.font = "11px 'JetBrains Mono', monospace"; ctx.fillStyle = dim;
+      ctx.fillText(fmt(val)+" kJ/mol", xc, ty + (v > 0 || v===0 ? -14 : 14));
+    };
+    lab("Edukte", s.se, (eL+eR)/2, s.se, teal);
+    lab("Produkte", s.sp, (pL+pR)/2, s.sp, amber);
+
+    // Reaktionsenthalpie-Pfeil
+    const xm = padL + plotW*0.50;
+    ctx.strokeStyle = text; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(eR, y(s.se)); ctx.lineTo(xm+14, y(s.se)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xm-14, y(s.sp)); ctx.lineTo(pL, y(s.sp)); ctx.stroke();
+    ctx.setLineDash([]);
+    if(Math.abs(s.dr) > 0.05) arrow(xm, y(s.se), y(s.sp), text, false, 2);
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.font = "600 12px 'JetBrains Mono', monospace"; ctx.fillStyle = text;
+    const my = (y(s.se)+y(s.sp))/2;
+    ctx.fillText("ΔrH° = " + fmt(s.dr), xm + 8, my);
+  }
+  window.addEventListener("resize", drawDiagram);
+
+  // ---------- Tabs ----------
+  function activateTab(name){
+    document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x.dataset.tab===name));
+    document.querySelectorAll(".tabpanel").forEach(x=>x.classList.toggle("active", x.id==="tab-"+name));
+    if(name==="diag") drawDiagram();
+  }
+  document.querySelectorAll(".tabbtn").forEach(b=> b.addEventListener("click", ()=>activateTab(b.dataset.tab)));
+
+  // ---------- Verlauf & Statistik ----------
+  function logHistory(t, status){
+    const existing = history.find(h=>h.num===t.num);
+    if(existing){ existing.status = status; }
+    else history.push({num:t.num, r:t.r, dr:t.sol.dr, status});
+    renderHistory();
+  }
+  function renderHistory(){
+    if(!history.length) return;
+    const label = {first:["gelöst im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    $("histBody").innerHTML = history.slice().reverse().map(h=>
+      `<tr><td class="mono">${h.num}</td><td class="mono">${eqShort(h.r)}</td><td class="mono">${h.status==="open"?"–":fmt(h.dr)}</td><td class="${label[h.status][1]}">${label[h.status][0]}</td></tr>`
+    ).join("");
+  }
+  function renderStats(){
+    $("roSolved").textContent = stats.solved;
+    $("roFirst").textContent = stats.first;
+    $("roStreak").textContent = stats.streak;
+    $("roShown").textContent = stats.shown;
+  }
+
+  // ---------- Buttons ----------
+  $("btnNew").addEventListener("click", ()=>newTask());
+  $("btnCheck").addEventListener("click", check);
+  $("btnHint").addEventListener("click", hint);
+  $("btnSolve").addEventListener("click", showSolution);
+  document.addEventListener("keydown", e=>{
+    if(e.key==="Enter" && e.target.tagName==="INPUT" && e.target.type==="text" && !$("guideBackdrop").classList.contains("open")){ e.preventDefault(); check(); }
+    if(e.key==="Escape") $("guideBackdrop").classList.remove("open");
+  });
+
+  // ---------- Anleitung ----------
+  $("btnGuide").addEventListener("click", e=>{ e.preventDefault(); $("guideBackdrop").classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
+  $("guideBackdrop").addEventListener("click", e=>{ if(e.target.id==="guideBackdrop") $("guideBackdrop").classList.remove("open"); });
+
+  // ---------- Start: Beispielaufgabe Erdgasverbrennung ----------
+  renderLib();
+  renderReactionSelect();
+  renderStats();
+  newTask(R.findIndex(r=>r.c==="Verbrennung von Erdgas"));
+})();
+</script>
+
+</body>
+</html>
