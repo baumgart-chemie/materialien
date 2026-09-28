@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Schalenmodell-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased;}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+header{padding:22px 28px 18px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line); border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100; align-items:center; justify-content:center; padding:24px 16px;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--panel); border:1px solid var(--line); border-radius:5px; width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body ol{padding-left:20px; margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{border-right:1px solid var(--line); padding:20px 20px 60px; max-height:calc(100vh - 70px); overflow-y:auto;}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{font-size:12.5px; color:var(--text-dim); font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 4px; font-size:12.5px; cursor:pointer; font-family:inherit; min-width:0;}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.mode-toggle.big button{padding:10px 4px; font-size:13px; font-weight:500;}
+
+.check-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:12px; cursor:pointer; line-height:1.4;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:1px 0 0; flex:none;}
+
+.btn{border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt); color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn.small{padding:5px 10px; font-size:12px;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+/* PSE-Ausschnitt */
+.pse{display:grid; grid-template-columns:14px repeat(8,minmax(0,1fr)); gap:2px;}
+.pse .hd{font-size:9.5px; color:var(--text-faint); text-align:center; padding:2px 0; font-family:'JetBrains Mono',monospace;}
+.pse .rh{font-size:9.5px; color:var(--text-faint); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace;}
+.pse .cell{position:relative; background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:2px; height:44px; padding:0; cursor:pointer; color:var(--text); font-family:'JetBrains Mono',monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0;}
+.pse .cell:hover{border-color:var(--text-faint);}
+.pse .cell:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.pse .cell .z{position:absolute; left:3px; top:1px; font-size:9px; color:var(--text-dim);}
+.pse .cell .sy{font-size:14px; font-weight:600; line-height:1; margin-top:4px;}
+.pse .cell .ms{font-size:8.5px; color:var(--text-faint); margin-top:3px; letter-spacing:-.2px;}
+.pse .cell.noble{background:#1c2626;}
+.pse .cell.sel{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+.pse .cell.hint{border-color:var(--amber); box-shadow:0 0 0 1px var(--amber-dim); background:#2a241b;}
+.pse .legend{grid-column:3 / span 6; font-size:10.5px; color:var(--text-faint); line-height:1.35; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 4px;}
+.pse-info{margin-top:8px; font-size:12.5px; color:var(--text-dim); min-height:36px; line-height:1.45; background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:7px 10px;}
+.pse-info b{color:var(--text); font-weight:600;}
+.pse-info .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
+
+.lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim); line-height:1.4;}
+.lib-table td.k{color:var(--amber); font-family:'JetBrains Mono',monospace; width:1%; white-space:nowrap;}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
+.lib-table tr:last-child td{border-bottom:none;}
+details.rules{margin-bottom:26px;}
+details.rules summary{list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--text-dim); font-weight:600; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); letter-spacing:.2px;}
+details.rules summary::-webkit-details-marker{display:none;}
+details.rules summary:hover{border-color:var(--text-faint); color:var(--text);}
+details.rules summary:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+details.rules .rules-state{font-weight:500; color:var(--teal); font-size:12px;}
+details.rules .rules-state::after{content:"anzeigen +";}
+details.rules[open] .rules-state::after{content:"ausblenden −";}
+details.rules[open] summary{margin-bottom:12px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.task-ctx{font-size:13px; color:var(--text-dim);}
+.task-prompt{font-size:19px; margin:8px 0 2px; color:var(--text);}
+.task-prompt b{color:var(--amber); font-family:'JetBrains Mono',monospace; font-weight:600;}
+.task-prompt sup{font-size:.62em;}
+
+.atom-grid{display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:14px; align-items:start; margin:10px 0 4px;}
+@media (max-width:760px){ .atom-grid{grid-template-columns:1fr;} }
+.stage{position:relative; border:1px solid var(--line-soft); border-radius:4px;
+  background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px, linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px, var(--screen);
+  min-height:340px; display:flex; align-items:center; justify-content:center; padding:14px 10px; overflow:hidden;}
+.stage::before{content:""; position:absolute; inset:0; background:var(--screen); opacity:.72; pointer-events:none;}
+.stage svg{position:relative; display:block; width:100%; max-width:380px; height:auto; user-select:none; -webkit-user-select:none;}
+.stage .stylelbl{position:absolute; left:10px; top:8px; font-size:10.5px; color:var(--text-faint); z-index:1; letter-spacing:.3px;}
+.stage .formula{position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--text-dim); z-index:1;}
+svg .shell{fill:none; stroke:var(--line); stroke-width:1.6;}
+svg .shell.empty{stroke-dasharray:4 5;}
+svg .shell.bad{stroke:var(--danger);}
+svg .hit{fill:none; stroke:transparent; stroke-width:30; cursor:pointer; pointer-events:stroke;}
+svg .hit:hover + .shell, svg g.sg:hover .shell{stroke:var(--teal-dim);}
+svg .slbl{fill:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:12px;}
+svg .el{fill:var(--teal); stroke:var(--screen); stroke-width:2;}
+svg .nuc{fill:var(--raise); stroke:var(--amber-dim); stroke-width:1.6;}
+svg .nuc.ok{stroke:var(--teal);}
+svg .nt1{fill:var(--amber); font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600;}
+svg .nt2{fill:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:13px;}
+
+.inputs{display:flex; flex-direction:column; gap:12px;}
+.field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
+input.num-in{width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:var(--radius); font-size:17px; font-family:'JetBrains Mono',monospace;}
+input.num-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+input.num-in.ok, .stp.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+input.num-in.bad, .stp.bad{border-color:var(--danger); box-shadow:0 0 0 1px var(--danger-dim);}
+input.num-in[readonly]{color:var(--teal);}
+.stp-wrap{display:flex; flex-direction:column; gap:6px;}
+.stp{display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:4px 4px 4px 12px;}
+.stp .l{font-size:13px; color:var(--text-dim);}
+.stp .l b{font-family:'JetBrains Mono',monospace; color:var(--text); font-weight:600; margin-right:4px;}
+.stp .c{display:flex; align-items:center; gap:4px;}
+.stp .c button{width:32px; height:32px; border:1px solid var(--line); background:var(--raise); color:var(--text); border-radius:var(--radius); font-size:17px; line-height:1; cursor:pointer; font-family:inherit;}
+.stp .c button:hover:not(:disabled){border-color:var(--text-faint);}
+.stp .c button:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.stp .c button:disabled{opacity:.35; cursor:default;}
+.stp .c .v{min-width:26px; text-align:center; font-size:16px; color:var(--teal);}
+.stp-note{font-size:11.5px; color:var(--text-faint); line-height:1.45;}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb .nm{font-family:'JetBrains Mono',monospace; color:var(--text);}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
+.step{display:grid; grid-template-columns:28px 150px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
+.step:last-child{border-bottom:none;}
+.step .n{font-family:'JetBrains Mono',monospace; color:var(--text-faint); font-size:12px;}
+.step .h{color:var(--text-dim);}
+.step .b{color:var(--text);}
+.step .b .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
+.step .b .t{color:var(--teal); font-family:'JetBrains Mono',monospace;}
+.step.final .b{font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--teal);}
+.step sup{font-size:.7em;}
+@media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+table.hist sup{font-size:.7em;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+
+<header>
+  <h1>Schalenmodell nach Bohr</h1>
+  <span class="tag">Atombau der Hauptgruppenelemente der 1. bis 3. Periode</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Zu einem Atom sollst du das <strong>Schalenmodell nach Bohr</strong> aufstellen: Wie viele Protonen und Neutronen sitzen im Kern, und wie verteilen sich die Elektronen auf die Schalen K, L und M? Die nötigen Angaben entnimmst du dem <strong>Periodensystem</strong> links. Ein Klick auf ein Element zeigt seinen Namen und seine Daten.</p>
+
+      <h3>Vorgehen in vier Schritten</h3>
+      <ol>
+        <li><strong>Element im PSE suchen.</strong> Die Aufgabe nennt das Elementsymbol, bei Isotopen zusätzlich die Massenzahl oben links (z. B. <sup>37</sup>Cl).</li>
+        <li><strong>Protonen bestimmen.</strong> Die Ordnungszahl (oben links in der Zelle) gibt die Zahl der Protonen an.</li>
+        <li><strong>Neutronen berechnen.</strong> Die Massenzahl ist die gerundete Atommasse (unten in der Zelle). Bei einem Isotop ist die Massenzahl in der Aufgabe angegeben. Es gilt: Neutronen = Massenzahl − Protonen.</li>
+        <li><strong>Elektronen verteilen.</strong> Ein Atom ist elektrisch neutral und hat so viele Elektronen wie Protonen. Die Schalen werden von innen nach außen besetzt: K höchstens 2, L höchstens 8, M (bis Periode 3) höchstens 8.</li>
+      </ol>
+      <div class="formula-box">Chlor: Z = 17, Atommasse 35,45 u → A = 35<br>17 p⁺ · 35 − 17 = 18 n · 17 e⁻<br>K: 2 · L: 8 · M: 7</div>
+
+      <h3>Bedienung</h3>
+      <p>Protonen und Neutronen trägst du in die beiden Felder ein, sie erscheinen sofort im Kern. Elektronen setzt du mit <strong>+</strong> und <strong>−</strong> neben den Schalen oder durch einen Klick auf eine Schale im Modell. Ein Rechtsklick auf die Schale nimmt ein Elektron wieder weg. Mit <strong>Enter</strong> in einem Eingabefeld prüfst du.</p>
+      <p>Die Elektronen auf L- und M-Schale werden zuerst einzeln auf vier Plätze gesetzt, danach paarweise. So siehst du gleich, wie viele ungepaarte Außenelektronen das Atom hat.</p>
+
+      <h3>Einstellungen</h3>
+      <p><strong>Periode</strong> legt fest, aus welcher Zeile des PSE die Elemente stammen. Mit <strong>Isotope einbeziehen</strong> kommen auch seltenere Isotope wie Chlor-37 oder Kohlenstoff-14 vor. Dann ist die Massenzahl vorgegeben und weicht von der gerundeten Atommasse ab.</p>
+
+      <h3>Tipp, Lösung, Auswertung</h3>
+      <p>„Tipp“ hilft in vier Stufen: Element finden, Element im PSE markieren, Neutronenzahl, Schalenbesetzung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+      <p>Die Prüfung erkennt typische Fehler, zum Beispiel Massenzahl statt Protonenzahl, fehlendes Abziehen der Protonen, eine überfüllte Schale oder eine äußere Schale, die besetzt wurde, bevor die innere voll ist.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Periode</p>
+      <div class="mode-toggle big" id="perToggle">
+        <button data-per="1">1.</button>
+        <button data-per="2">2.</button>
+        <button data-per="3">3.</button>
+        <button data-per="0" class="active">Gemischt</button>
+      </div>
+      <label class="check-row" for="chkIso"><input type="checkbox" id="chkIso"><span>Isotope einbeziehen (z. B. Chlor-37, Kohlenstoff-14)</span></label>
+      <label class="check-row" for="chkSum"><input type="checkbox" id="chkSum" checked><span>Summe der Elektronen anzeigen</span></label>
+    </section>
+
+    <section class="block">
+      <h2>Periodensystem (Hauptgruppen, Periode 1–3)</h2>
+      <div class="pse" id="pse"></div>
+      <div class="pse-info" id="pseInfo">Klicke auf ein Element, um Namen und Daten zu sehen.</div>
+    </section>
+
+    <details class="block rules" id="rulesBox">
+      <summary><span>Regeln zum Atombau</span><span class="rules-state" aria-hidden="true"></span></summary>
+      <div class="lib-wrap">
+        <table class="lib-table">
+          <tbody>
+            <tr class="grp"><td colspan="2">Atomkern</td></tr>
+            <tr><td class="k">p⁺</td><td>Protonenzahl = Ordnungszahl Z</td></tr>
+            <tr><td class="k">A</td><td>Massenzahl = Protonen + Neutronen</td></tr>
+            <tr><td class="k">n</td><td>Neutronen = A − Z</td></tr>
+            <tr class="grp"><td colspan="2">Atomhülle</td></tr>
+            <tr><td class="k">e⁻</td><td>Elektronen = Protonen (Atom ist neutral)</td></tr>
+            <tr><td class="k">K</td><td>1. Schale, höchstens 2 e⁻</td></tr>
+            <tr><td class="k">L</td><td>2. Schale, höchstens 8 e⁻</td></tr>
+            <tr><td class="k">M</td><td>3. Schale, bis Periode 3 höchstens 8 e⁻</td></tr>
+            <tr class="grp"><td colspan="2">Zusammenhang mit dem PSE</td></tr>
+            <tr><td class="k">Periode</td><td>Anzahl der besetzten Schalen</td></tr>
+            <tr><td class="k">Gruppe</td><td>Anzahl der Außenelektronen (Ausnahme He: 2)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Die Massenzahl des häufigsten Isotops erhältst du, indem du die Atommasse auf eine ganze Zahl rundest.</p>
+    </details>
+  </div>
+
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn" id="btnCheck">Prüfen</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskLevel">Atom</span>
+        <span class="task-ctx" id="taskCtx">Stelle das Schalenmodell auf.</span>
+      </div>
+      <div class="task-prompt" id="taskPrompt"></div>
+
+      <div class="atom-grid">
+        <div class="stage" id="stage">
+          <span class="stylelbl">Schalenmodell</span>
+          <div id="atomBox" style="width:100%;display:flex;justify-content:center;position:relative"></div>
+          <span class="formula mono" id="sumLbl"></span>
+        </div>
+        <div class="inputs">
+          <div class="field">
+            <label for="pIn">Protonen im Kern</label>
+            <input type="text" inputmode="numeric" id="pIn" class="num-in" autocomplete="off" placeholder="z. B. 17">
+          </div>
+          <div class="field">
+            <label for="nIn">Neutronen im Kern</label>
+            <input type="text" inputmode="numeric" id="nIn" class="num-in" autocomplete="off" placeholder="z. B. 18">
+          </div>
+          <div class="field">
+            <label>Elektronen auf den Schalen</label>
+            <div class="stp-wrap" id="stpWrap"></div>
+          </div>
+          <p class="stp-note">Klick auf eine Schale im Modell setzt ein Elektron, Rechtsklick entfernt eins.</p>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Atom</th><th>Kern</th><th>Schalen K · L · M</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="5" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Vereinfachtes Atommodell nach Niels Bohr (1913) für die Hauptgruppenelemente der ersten drei Perioden. Atommassen gerundet nach IUPAC-Standardwerten.</p>
+  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.0 (erstellt mit Claude Pro)</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  // ---------- Elementdaten ----------
+  const EL = [
+    {z:1, s:"H",  n:"Wasserstoff", m:"1,008", g:1, p:1},
+    {z:2, s:"He", n:"Helium",      m:"4,003", g:8, p:1},
+    {z:3, s:"Li", n:"Lithium",     m:"6,94",  g:1, p:2},
+    {z:4, s:"Be", n:"Beryllium",   m:"9,012", g:2, p:2},
+    {z:5, s:"B",  n:"Bor",         m:"10,81", g:3, p:2},
+    {z:6, s:"C",  n:"Kohlenstoff", m:"12,01", g:4, p:2},
+    {z:7, s:"N",  n:"Stickstoff",  m:"14,01", g:5, p:2},
+    {z:8, s:"O",  n:"Sauerstoff",  m:"16,00", g:6, p:2},
+    {z:9, s:"F",  n:"Fluor",       m:"19,00", g:7, p:2},
+    {z:10,s:"Ne", n:"Neon",        m:"20,18", g:8, p:2},
+    {z:11,s:"Na", n:"Natrium",     m:"22,99", g:1, p:3},
+    {z:12,s:"Mg", n:"Magnesium",   m:"24,31", g:2, p:3},
+    {z:13,s:"Al", n:"Aluminium",   m:"26,98", g:3, p:3},
+    {z:14,s:"Si", n:"Silicium",    m:"28,09", g:4, p:3},
+    {z:15,s:"P",  n:"Phosphor",    m:"30,97", g:5, p:3},
+    {z:16,s:"S",  n:"Schwefel",    m:"32,06", g:6, p:3},
+    {z:17,s:"Cl", n:"Chlor",       m:"35,45", g:7, p:3},
+    {z:18,s:"Ar", n:"Argon",       m:"39,95", g:8, p:3}
+  ];
+  EL.forEach(e=>{ e.A = Math.round(parseFloat(e.m.replace(",","."))); });
+  const ISO = {1:[2,3], 2:[3], 3:[6], 5:[10], 6:[13,14], 7:[15], 8:[17,18], 10:[22], 12:[25,26], 14:[29,30], 16:[34], 17:[37], 18:[36]};
+  const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII"];
+  const SHELL = ["K","L","M"];
+  const R_SHELL = [72, 112, 152];
+  const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const config = z => [Math.min(z,2), Math.min(Math.max(z-2,0),8), Math.max(z-10,0)];
+  const sup = n => `<sup>${n}</sup>`;
+
+  // ---------- PSE aufbauen ----------
+  function buildPSE(){
+    let h = `<div></div>`;
+    for(let g=1; g<=8; g++) h += `<div class="hd">${ROMAN[g]}</div>`;
+    for(let p=1; p<=3; p++){
+      h += `<div class="rh">${p}</div>`;
+      if(p===1){
+        h += cellHTML(EL[0]) + `<div class="legend">Ordnungszahl oben links,<br>Atommasse in u unten</div>` + cellHTML(EL[1]);
+      } else {
+        EL.filter(e=>e.p===p).forEach(e=> h += cellHTML(e));
+      }
+    }
+    $("pse").innerHTML = h;
+  }
+  function cellHTML(e){
+    return `<button class="cell${e.g===8?' noble':''}" data-z="${e.z}" title="${e.n}" aria-label="${e.n}, Ordnungszahl ${e.z}"><span class="z">${e.z}</span><span class="sy">${e.s}</span><span class="ms">${e.m}</span></button>`;
+  }
+  function showInfo(z){
+    const e = EL[z-1];
+    document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("sel", +c.dataset.z===z));
+    $("pseInfo").innerHTML = `<b>${e.n}</b> (${e.s}) · Ordnungszahl <span class="a">${e.z}</span> · Atommasse <span class="a">${e.m} u</span><br>${e.p}. Periode · ${ROMAN[e.g]}. Hauptgruppe${e.g===8?" (Edelgase)":""}`;
+  }
+  function markHint(z){
+    document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("hint", z!=null && +c.dataset.z===z));
+  }
+
+  // ---------- Zustand ----------
+  let per = 0, useIso = false, showSum = true;
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+
+  function nuclideHTML(t){ return sup(t.A) + t.el.s; }
+  function nuclideName(t){ return t.el.n + "-" + t.A; }
+
+  function newTask(){
+    if(task && !task.done && task.touched) logHistory(task, "open");
+    let pool = EL.filter(e=> !per || e.p===per);
+    let el;
+    for(let i=0;i<20;i++){ el = pick(pool); if(!task || el!==task.el || pool.length===1) break; }
+    let A = el.A, iso = false;
+    if(useIso && ISO[el.z] && Math.random()<.5){ A = pick(ISO[el.z]); iso = true; }
+    task = {num:++taskCounter, el, A, iso, hint:0, wrong:false, done:false, shown:false, touched:false, e:[0,0,0], sol:config(el.z)};
+    $("pIn").value = ""; $("nIn").value = "";
+    ["pIn","nIn"].forEach(id=>{ $(id).readOnly=false; $(id).classList.remove("ok","bad"); });
+    $("feedback").innerHTML = "";
+    markHint(null);
+    renderTask();
+    renderWay();
+  }
+
+  function promptHTML(t){
+    const e = t.el;
+    return t.iso ? `Atom: <b>${sup(t.A)}${e.s}</b>` : `Atom: <b>${e.s}</b>`;
+  }
+
+  function renderTask(){
+    const t = task;
+    $("taskNum").textContent = "Aufgabe " + t.num;
+    $("taskLevel").textContent = t.iso ? "Isotop" : "Atom";
+    $("taskLevel").className = "chip " + (t.iso ? "l2" : "l1");
+    $("taskCtx").textContent = t.iso ? "Die Massenzahl ist vorgegeben. Stelle das Schalenmodell auf." : "Entnimm die Daten dem PSE und stelle das Schalenmodell auf.";
+    $("taskPrompt").innerHTML = promptHTML(t);
+    renderSteppers();
+    drawAtom();
+    $("btnCheck").disabled = t.done;
+    $("btnHint").disabled = t.done;
+    $("btnSolve").disabled = t.done;
+    setStatus();
+  }
+  function setStatus(){
+    const b = $("statusBadge");
+    b.classList.remove("running","done");
+    if(!task.done){ b.classList.add("running"); $("statusText").textContent = "Aufgabe offen"; }
+    else if(task.shown){ $("statusText").textContent = "Lösung angezeigt"; }
+    else { b.classList.add("done"); $("statusText").textContent = "gelöst"; }
+  }
+
+  // ---------- Elektronen-Steuerung ----------
+  function renderSteppers(){
+    const t = task;
+    let h = "";
+    SHELL.forEach((s,i)=>{
+      h += `<div class="stp" id="stp${i}"><span class="l"><b>${s}</b>${i+1}. Schale</span><span class="c">`+
+           `<button data-sh="${i}" data-d="-1" aria-label="Elektron von ${s}-Schale entfernen" ${t.done||t.e[i]===0?"disabled":""}>−</button>`+
+           `<span class="v mono">${t.e[i]}</span>`+
+           `<button data-sh="${i}" data-d="1" aria-label="Elektron auf ${s}-Schale setzen" ${t.done||t.e[i]>=18?"disabled":""}>+</button></span></div>`;
+    });
+    $("stpWrap").innerHTML = h;
+  }
+  function changeE(i, d){
+    const t = task; if(t.done) return;
+    const v = t.e[i] + d; if(v<0 || v>18) return;
+    t.e[i] = v; t.touched = true; t._badShell = null;
+    document.querySelectorAll(".stp").forEach(s=>s.classList.remove("ok","bad"));
+    renderSteppers(); drawAtom();
+  }
+
+  // ---------- Zeichnen ----------
+  function electronPos(i, n, r){
+    const pts = [];
+    if(i===0){
+      const ang = n===1 ? [-90] : [-90, 90];
+      ang.slice(0,n).forEach(a=>pts.push(a));
+    } else {
+      const base = [-90, 0, 90, 180];
+      const perSlot = Math.ceil(n/4);   // bei >8 Elektronen (Fehleingabe) mehr pro Platz
+      const counts = [0,0,0,0];
+      for(let k=0;k<n;k++) counts[k%4]++;
+      const spread = perSlot<=2 ? 12 : 30/perSlot;
+      base.forEach((a,s)=>{
+        const c = counts[s];
+        for(let k=0;k<c;k++) pts.push(a + (k-(c-1)/2)*spread*(c>1?1:0));
+      });
+    }
+    return pts.map(a=>({x:r*Math.cos(a*Math.PI/180), y:r*Math.sin(a*Math.PI/180)}));
+  }
+  function drawAtom(){
+    const t = task;
+    const pv = $("pIn").value.trim(), nv = $("nIn").value.trim();
+    let s = "";
+    const badShell = t._badShell || new Set();
+    R_SHELL.forEach((r,i)=>{
+      const cls = "shell" + (t.e[i]===0 ? " empty" : "") + (badShell.has(i) ? " bad" : "");
+      s += `<g class="sg"><circle class="hit" data-shell="${i}" cx="0" cy="0" r="${r}"/><circle class="${cls}" cx="0" cy="0" r="${r}"/></g>`;
+      const la = -38*Math.PI/180;
+      s += `<text class="slbl" x="${((r+2)*Math.cos(la)+6).toFixed(1)}" y="${((r+2)*Math.sin(la)-6).toFixed(1)}">${SHELL[i]}</text>`;
+    });
+    R_SHELL.forEach((r,i)=>{
+      electronPos(i, t.e[i], r).forEach(p=>{ s += `<circle class="el" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6.2" pointer-events="none"/>`; });
+    });
+    const nucOk = t.done && !t.shown;
+    s += `<circle class="nuc${nucOk?" ok":""}" cx="0" cy="0" r="40"/>`;
+    s += `<text class="nt1" x="0" y="-7" text-anchor="middle" dominant-baseline="central">${pv===""?"?":esc(pv)} p⁺</text>`;
+    s += `<text class="nt2" x="0" y="13" text-anchor="middle" dominant-baseline="central">${nv===""?"?":esc(nv)} n</text>`;
+    $("atomBox").innerHTML = `<svg viewBox="-172 -172 344 344" role="img" aria-label="Schalenmodell mit Kern und Schalen K, L, M">${s}</svg>`;
+    const sum = t.e[0]+t.e[1]+t.e[2];
+    $("sumLbl").textContent = showSum ? `Σ e⁻ = ${sum}` : "";
+  }
+  function esc(v){ return String(v).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])).slice(0,4); }
+
+  // ---------- Prüfen ----------
+  function readInt(id){ const v = $(id).value.trim(); if(v==="") return null; const n = Number(v); return Number.isInteger(n) ? n : NaN; }
+  function fb(cls, html){ return `<div class="fb ${cls}">${html}</div>`; }
+
+  function check(){
+    const t = task; if(t.done) return;
+    t.touched = true;
+    const Z = t.el.z, N = t.A - Z, sol = t.sol;
+    const p = readInt("pIn"), n = readInt("nIn"), e = t.e;
+    const msgs = [];
+    let okP = false, okN = false, okE = false;
+
+    if(p===null) msgs.push("Trage die Anzahl der Protonen ein.");
+    else if(p===Z) okP = true;
+    else if(p===t.A) msgs.push("Bei den Protonen hast du die Massenzahl eingetragen. Die Protonenzahl ist die Ordnungszahl, die kleine Zahl oben links in der PSE-Zelle.");
+    else if(p===N) msgs.push("Protonen und Neutronen sind vertauscht. Die Protonenzahl entspricht der Ordnungszahl.");
+    else msgs.push("Die Protonenzahl stimmt nicht. Sie entspricht der Ordnungszahl des Elements im PSE.");
+
+    if(n===null) msgs.push("Trage die Anzahl der Neutronen ein.");
+    else if(n===N) okN = true;
+    else if(n===t.A) msgs.push("Die Massenzahl zählt Protonen und Neutronen zusammen. Ziehe die Protonen noch ab: Neutronen = Massenzahl − Protonen.");
+    else if(t.iso && n===t.el.A - Z) msgs.push(`Du hast mit der gerundeten Atommasse gerechnet. Bei diesem Isotop ist die Massenzahl ${t.A} vorgegeben.`);
+    else if(!okP && p!==null && !isNaN(p) && n===t.A - p) msgs.push("Die Rechnung für die Neutronen passt zu deiner Protonenzahl, ist aber ein Folgefehler. Korrigiere zuerst die Protonen.");
+    else if(n===Z) msgs.push("Die Neutronenzahl ist nicht automatisch gleich der Protonenzahl. Rechne: Neutronen = Massenzahl − Protonen.");
+    else msgs.push("Die Neutronenzahl stimmt nicht. Die Massenzahl ist die gerundete Atommasse; davon ziehst du die Protonen ab.");
+
+    const sum = e[0]+e[1]+e[2];
+    const bad = new Set();
+    if(e[0]===sol[0] && e[1]===sol[1] && e[2]===sol[2]) okE = true;
+    else if(sum===0) msgs.push("Verteile die Elektronen auf die Schalen.");
+    else {
+      if(e[0]>2){ bad.add(0); msgs.push("Die K-Schale fasst höchstens 2 Elektronen."); }
+      if(e[1]>8){ bad.add(1); msgs.push("Die L-Schale fasst höchstens 8 Elektronen."); }
+      if(e[2]>8){ bad.add(2); msgs.push("In den ersten drei Perioden fasst die M-Schale höchstens 8 Elektronen."); }
+      if(!bad.size){
+        if((e[1]>0 && e[0]<2) || (e[2]>0 && e[1]<8)){
+          if(e[1]>0 && e[0]<2) bad.add(0); else bad.add(1);
+          msgs.push("Die Schalen werden von innen nach außen besetzt. Eine äußere Schale kommt erst dran, wenn die innere voll ist.");
+        }
+        if(sum!==Z) msgs.push(`Du hast ${sum} Elektronen gesetzt. Ein Atom ist elektrisch neutral: Es hat genauso viele Elektronen wie Protonen.`);
+      }
+      if(!msgs.length) msgs.push("Die Verteilung der Elektronen stimmt noch nicht.");
+    }
+    t._badShell = bad;
+
+    $("pIn").classList.toggle("ok", okP); $("pIn").classList.toggle("bad", !okP && p!==null);
+    $("nIn").classList.toggle("ok", okN); $("nIn").classList.toggle("bad", !okN && n!==null);
+    const stp = document.querySelectorAll(".stp");
+    stp.forEach((s,i)=>{ s.classList.remove("ok","bad"); if(okE) s.classList.add("ok"); else if(sum>0 && e[i]!==sol[i]) s.classList.add("bad"); });
+
+    if(okP && okN && okE){
+      t.done = true;
+      const firstTry = !t.wrong && t.hint===0;
+      stats.solved++; if(firstTry) stats.first++; stats.streak++;
+      $("pIn").readOnly = true; $("nIn").readOnly = true;
+      $("feedback").innerHTML = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${nuclideHTML(t)}</span>: ${Z} Protonen, ${N} Neutronen, Elektronen ${sol.filter((x,i)=>x||i===0).join(" · ")}.`) + fb("info", summaryLine(t));
+      logHistory(t, firstTry ? "first" : "ok");
+      renderTask(); renderWay(); updateStats();
+      document.querySelectorAll(".stp").forEach(x=>x.classList.add("ok"));
+      return;
+    }
+    // unvollständige Eingaben sind keine Fehlversuche
+    const incomplete = p===null || n===null || sum===0;
+    if(!incomplete){ t.wrong = true; stats.streak = 0; }
+    $("feedback").innerHTML = msgs.map(m=>fb(incomplete && /^Trage|^Verteile/.test(m) ? "info" : "bad", m)).join("");
+    drawAtom(); updateStats();
+  }
+
+  function summaryLine(t){
+    const e = t.el, sol = t.sol, shells = sol.filter(x=>x>0).length, outer = sol[shells-1];
+    if(e.z===2) return "Helium hat nur die K-Schale, und die ist mit 2 Elektronen voll. Deshalb steht es trotz 2 Außenelektronen bei den Edelgasen (VIII. Hauptgruppe).";
+    const full = (outer===8) ? " Die Außenschale ist voll besetzt (Edelgaskonfiguration)." : "";
+    return `${shells} besetzte Schale${shells>1?"n":""} → ${e.p}. Periode · ${outer} Außenelektron${outer>1?"en":""} → ${ROMAN[e.g]}. Hauptgruppe.${full}`;
+  }
+
+  // ---------- Tipps ----------
+  function hint(){
+    const t = task; if(t.done) return;
+    t.hint = Math.min(t.hint+1, 4); t.touched = true;
+    const e = t.el, out = [];
+    if(t.hint>=1) out.push("Tipp 1: Suche das Symbol im PSE. Die Ordnungszahl steht oben links in der Zelle.");
+    if(t.hint>=2){ out.push(`Tipp 2: Das Element ist markiert: ${e.n}, Ordnungszahl ${e.z}. Ordnungszahl = Protonenzahl = Elektronenzahl im Atom.`); markHint(e.z); showInfo(e.z); }
+    if(t.hint>=3) out.push(t.iso ? `Tipp 3: Die Massenzahl ${t.A} ist vorgegeben. Neutronen = Massenzahl − Protonen.` :
+                                   `Tipp 3: Atommasse ${e.m} u, gerundet ergibt das die Massenzahl ${e.A}. Neutronen = Massenzahl − Protonen.`);
+    if(t.hint>=4) out.push(e.z===2 ? "Tipp 4: Helium steht in der 1. Periode, also ist nur die K-Schale besetzt." :
+                  `Tipp 4: Das Element steht in der ${e.p}. Periode, also sind ${e.p} Schalen besetzt. In der ${ROMAN[e.g]}. Hauptgruppe hat es ${e.g} Außenelektron${e.g>1?"en":""}. Innere Schalen sind voll (K: 2, L: 8).`);
+    $("feedback").innerHTML = out.map(m=>fb("hint", m)).join("");
+  }
+
+  function solve(){
+    const t = task; if(t.done) return;
+    t.done = true; t.shown = true;
+    stats.shown++; stats.streak = 0;
+    t.e = t.sol.slice(); t._badShell = new Set();
+    $("pIn").value = t.el.z; $("nIn").value = t.A - t.el.z;
+    ["pIn","nIn"].forEach(id=>{ $(id).readOnly = true; $(id).classList.remove("ok","bad"); });
+    $("feedback").innerHTML = fb("info", `Lösung: <span class="nm">${nuclideHTML(t)}</span> · ${t.el.z} p⁺ · ${t.A - t.el.z} n · Elektronen ${t.sol.filter((x,i)=>x||i===0).join(" · ")}. Der Lösungsweg steht unten.`);
+    markHint(t.el.z);
+    logHistory(t, "shown");
+    renderTask(); renderWay(); updateStats();
+  }
+
+  // ---------- Lösungsweg ----------
+  function renderWay(){
+    const t = task;
+    if(!t.done){ $("wayBox").innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
+    const e = t.el, Z = e.z, N = t.A - Z, sol = t.sol;
+    const shellTxt = SHELL.map((s,i)=>sol[i]?`${s}: <span class="t">${sol[i]}</span>`:"").filter(Boolean).join(" · ");
+    const outerRule = e.z===2 ? "Die K-Schale ist mit 2 Elektronen voll." :
+      `Innere Schalen voll besetzen (K: 2${e.p===3?", L: 8":""}), der Rest kommt auf die ${SHELL[e.p-1]}-Schale.`;
+    const rows = [
+      ["Element im PSE", `<b>${e.n}</b> (${e.s}), ${e.p}. Periode, ${ROMAN[e.g]}. Hauptgruppe`],
+      ["Protonen", `Ordnungszahl <span class="a">${Z}</span> → <span class="t">${Z}</span> Protonen`],
+      ["Massenzahl", t.iso ? `vorgegeben: <span class="a">${t.A}</span> (Isotop ${nuclideName(t)}; die gerundete Atommasse ${e.A} gilt für das häufigste Isotop)` :
+                             `Atommasse <span class="a">${e.m} u</span> → gerundet <span class="t">${t.A}</span>`],
+      ["Neutronen", `<span class="a">${t.A}</span> − <span class="a">${Z}</span> = <span class="t">${N}</span>`],
+      ["Elektronen", `Atom ist neutral → <span class="t">${Z}</span> Elektronen`],
+      ["Verteilung", `${outerRule}<br>${shellTxt}`],
+      ["Kontrolle", summaryLine(t)]
+    ];
+    let h = `<div class="steps">`;
+    rows.forEach((r,i)=>{ h += `<div class="step"><span class="n">${i+1}</span><span class="h">${r[0]}</span><span class="b">${r[1]}</span></div>`; });
+    h += `<div class="step final"><span class="n">=</span><span class="h">Ergebnis</span><span class="b">${nuclideHTML(t)} · ${Z} p⁺ · ${N} n · ${sol.filter((x,i)=>x||i===0).join(" | ")}</span></div></div>`;
+    $("wayBox").innerHTML = h;
+  }
+
+  // ---------- Verlauf & Statistik ----------
+  function logHistory(t, status){
+    if(t.logged) return; t.logged = true;
+    history.unshift({num:t.num, nuc:nuclideHTML(t) + " · " + t.el.n, kern:`${t.el.z} p⁺, ${t.A-t.el.z} n`, sh:t.sol.filter((x,i)=>x||i===0).join(" · "), status});
+    const lbl = {first:["im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    $("histBody").innerHTML = history.map(r=>`<tr><td class="mono">${r.num}</td><td>${r.nuc}</td><td class="mono">${r.kern}</td><td class="mono">${r.sh}</td><td class="${lbl[r.status][1]}">${lbl[r.status][0]}</td></tr>`).join("");
+  }
+  function updateStats(){
+    $("roSolved").textContent = stats.solved;
+    $("roFirst").textContent = stats.first;
+    $("roStreak").textContent = stats.streak;
+    $("roShown").textContent = stats.shown;
+  }
+
+  // ---------- Ereignisse ----------
+  function bindToggle(id, attr, fn){
+    $(id).addEventListener("click", ev=>{
+      const b = ev.target.closest("button"); if(!b) return;
+      $(id).querySelectorAll("button").forEach(x=>x.classList.toggle("active", x===b));
+      fn(b.dataset[attr]);
+    });
+  }
+  bindToggle("perToggle","per", v=>{ per = +v; newTask(); });
+  $("chkIso").addEventListener("change", ev=>{ useIso = ev.target.checked; newTask(); });
+  $("chkSum").addEventListener("change", ev=>{ showSum = ev.target.checked; drawAtom(); });
+
+  $("pse").addEventListener("click", ev=>{ const c = ev.target.closest(".cell"); if(c) showInfo(+c.dataset.z); });
+  $("stpWrap").addEventListener("click", ev=>{ const b = ev.target.closest("button[data-sh]"); if(b) changeE(+b.dataset.sh, +b.dataset.d); });
+  $("atomBox").addEventListener("click", ev=>{ const c = ev.target.closest("[data-shell]"); if(c) changeE(+c.dataset.shell, 1); });
+  $("atomBox").addEventListener("contextmenu", ev=>{ const c = ev.target.closest("[data-shell]"); if(c){ ev.preventDefault(); changeE(+c.dataset.shell, -1); } });
+  ["pIn","nIn"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{ $(id).classList.remove("ok","bad"); task.touched = true; drawAtom(); });
+    $(id).addEventListener("keydown", ev=>{ if(ev.key==="Enter") check(); });
+  });
+  $("btnNew").addEventListener("click", newTask);
+  $("btnCheck").addEventListener("click", check);
+  $("btnHint").addEventListener("click", hint);
+  $("btnSolve").addEventListener("click", solve);
+
+  document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+  }));
+  $("btnGuide").addEventListener("click", ev=>{ ev.preventDefault(); $("guideBackdrop").classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
+  $("guideBackdrop").addEventListener("click", ev=>{ if(ev.target===$("guideBackdrop")) $("guideBackdrop").classList.remove("open"); });
+  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") $("guideBackdrop").classList.remove("open"); });
+
+  buildPSE();
+  newTask();
+  updateStats();
+})();
+</script>
+
+</body>
+</html>

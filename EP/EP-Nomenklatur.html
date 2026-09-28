@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nomenklatur-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --oxy:#ff8a7a;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100; align-items:center; justify-content:center; padding:24px 16px;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--panel); border:1px solid var(--line); border-radius:5px; width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body ol{padding-left:20px; margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
+
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{border-right:1px solid var(--line); padding:20px 20px 60px; max-height:calc(100vh - 70px); overflow-y:auto;}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{font-size:12.5px; color:var(--text-dim); font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 4px; font-size:12.5px; cursor:pointer; font-family:inherit; min-width:0;}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.mode-toggle.big button{padding:10px 4px; font-size:13px; font-weight:500;}
+
+.check-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:12px; cursor:pointer; line-height:1.4;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:1px 0 0; flex:none;}
+
+.btn{border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt); color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+/* Spickzettel */
+.lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.lib-table thead th{background:var(--panel-alt); text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line);}
+.lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim);}
+.lib-table td.k{color:var(--amber); font-family:'JetBrains Mono',monospace; width:1%; white-space:nowrap; text-align:right;}
+.lib-table sub{font-size:.75em;}
+.lib-table td.v{color:var(--text); font-family:'JetBrains Mono',monospace;}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
+.lib-table tr:last-child td{border-bottom:none;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.task-ctx{font-size:13px; color:var(--text-dim);}
+
+.stage{
+  position:relative; border:1px solid var(--line-soft); border-radius:4px; margin:10px 0 12px;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+    var(--screen);
+  background-blend-mode:normal;
+  min-height:220px; display:flex; align-items:center; justify-content:center; padding:10px; overflow-x:auto;
+}
+.stage::before{content:""; position:absolute; inset:0; background:var(--screen); opacity:.72; pointer-events:none;}
+.stage svg{position:relative; display:block; max-width:100%; height:auto;}
+.stage .formula{position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--text-dim); z-index:1;}
+.stage .formula sub{font-size:.75em;}
+.stage .stylelbl{position:absolute; left:10px; top:8px; font-size:10.5px; color:var(--text-faint); z-index:1; letter-spacing:.3px;}
+svg .bond{stroke:var(--text); stroke-width:2.2; stroke-linecap:round; fill:none;}
+svg .hl{stroke:var(--teal); stroke-width:16; stroke-linecap:round; stroke-linejoin:round; fill:none; opacity:.22;}
+svg .lbl{fill:var(--text); font-family:'JetBrains Mono',monospace; font-size:15px;}
+svg .lbl.o{fill:var(--oxy);}
+svg .lbl.h{fill:var(--text-dim);}
+svg .num{fill:var(--teal); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; paint-order:stroke; stroke:var(--screen); stroke-width:4px;}
+
+.answer-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;}
+.answer-row label{flex-basis:100%; font-size:12px; color:var(--text-dim);}
+input.name-in{
+  flex:1; min-width:0; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:10px 12px; border-radius:var(--radius); font-size:17px; font-family:'JetBrains Mono',monospace;
+}
+input.name-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+input.name-in.ok{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+input.name-in.bad{border-color:var(--danger); box-shadow:0 0 0 1px var(--danger-dim);}
+input.name-in[readonly]{color:var(--teal);}
+
+.mc-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;}
+@media (max-width:600px){ .mc-grid{grid-template-columns:1fr;} }
+.mc-opt{
+  text-align:left; background:var(--panel-alt); border:1px solid var(--line); color:var(--text); border-radius:var(--radius);
+  padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:14.5px; cursor:pointer; overflow-wrap:anywhere;
+}
+.mc-opt:hover:not(:disabled){border-color:var(--text-faint);}
+.mc-opt:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.mc-opt.ok{border-color:var(--teal); color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+.mc-opt.bad{border-color:var(--danger); color:var(--danger); opacity:.8; text-decoration:line-through;}
+.mc-opt:disabled{cursor:default;}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb .nm{font-family:'JetBrains Mono',monospace; color:var(--text);}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
+.step{display:grid; grid-template-columns:28px 130px 1fr; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
+.step:last-child{border-bottom:none;}
+.step .n{font-family:'JetBrains Mono',monospace; color:var(--text-faint); font-size:12px;}
+.step .h{color:var(--text-dim);}
+.step .b{color:var(--text);}
+.step .b .a{color:var(--amber); font-family:'JetBrains Mono',monospace;}
+.step .b .t{color:var(--teal); font-family:'JetBrains Mono',monospace;}
+.step.final .b{font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--teal);}
+@media (max-width:600px){ .step{grid-template-columns:22px 1fr;} .step .b{grid-column:2;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nomenklatur organischer Verbindungen</h1>
+  <span class="tag">Alkane, Alkene, Alkine und Alkohole nach IUPAC benennen</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Die Simulation zeigt die Strukturformel einer Verbindung. Gib den <strong>systematischen Namen nach IUPAC</strong> ein. Links wählst du die Stoffklasse (Alkane, Alkene, Alkine oder Alkohole) und die Schwierigkeit. Jede Aufgabe wird zufällig erzeugt.</p>
+
+      <h3>Vorgehen in vier Schritten</h3>
+      <ol>
+        <li><strong>Hauptkette suchen.</strong> Sie ist die längste durchgehende Kette aus C-Atomen, auch über Knicke und Verzweigungen hinweg. Bei Alkenen und Alkinen muss sie die Mehrfachbindung(en) enthalten, bei Alkoholen alle C-Atome mit OH-Gruppe. Gibt es mehrere gleich lange Ketten, wird die mit den meisten Seitenketten gewählt.</li>
+        <li><strong>Hauptkette nummerieren</strong>, sodass die kleinstmöglichen Nummern (Lokanten) entstehen. Reihenfolge: zuerst die OH-Gruppe, dann die Mehrfachbindungen, dann die Seitenketten. Bei Gleichstand bekommt der im Alphabet zuerst genannte Substituent die kleinere Nummer.</li>
+        <li><strong>Seitenketten benennen</strong> (Methyl-, Ethyl-, Propyl- …), gleiche zusammenfassen (di-, tri-, tetra-) und <strong>alphabetisch</strong> ordnen. Die Zahlwörter zählen beim Alphabet nicht mit: Ethyl vor Dimethyl.</li>
+        <li><strong>Name zusammensetzen:</strong> Seitenketten + Stammname + Endung.</li>
+      </ol>
+      <div class="formula-box">3-Ethyl-2-methylhexan<br>4-Methylpent-2-en<br>Buta-1,3-dien · Hex-1-en-4-in<br>2-Methylbutan-2-ol · Propan-1,2,3-triol</div>
+
+      <h3>Schreibweise</h3>
+      <p>Zahlen werden untereinander durch <strong>Kommas</strong> getrennt, Zahlen und Wörter durch <strong>Bindestriche</strong>. Der Name wird zusammengeschrieben. Groß- und Kleinschreibung spielt bei der Prüfung keine Rolle.</p>
+      <p>Die Lokanten der Mehrfachbindung bzw. der OH-Gruppe stehen nach aktueller IUPAC-Regel <strong>direkt vor der Endung</strong>: But-2-en, Propan-2-ol. Die ältere Schreibweise (2-Buten, 2-Propanol) wird akzeptiert, wenn das Häkchen „Ältere Schreibweise akzeptieren“ gesetzt ist. Bei Ethen, Ethin, Ethanol, Propen und Propin darf der Lokant fehlen.</p>
+
+      <h3>Hinweise zu den Aufgaben</h3>
+      <p>Die Aufgaben sind so gewählt, dass die längste Kette immer auch die Mehrfachbindung enthält. Damit führen die in Schulbüchern verbreitete Regel und die IUPAC-Empfehlung von 2013 zum selben Namen. Cis/trans- bzw. E/Z-Angaben werden nicht abgefragt.</p>
+      <p><strong>Darstellung:</strong> Strukturformel (alle Atome und alle Bindungen einzeln gezeichnet, auch die C–H-Bindungen), Skelettformel (jede Ecke und jedes Linienende ist ein C-Atom, H-Atome am Kohlenstoff werden nicht gezeichnet) oder Halbstrukturformel (CH<sub>3</sub>-, CH<sub>2</sub>-Gruppen ausgeschrieben). Die Hauptkette ist nicht unbedingt waagerecht gezeichnet.</p>
+      <p><strong>Antwort:</strong> „Freitext“ verlangt die Eingabe des Namens, „Auswahl“ zeigt vier Namen, von denen genau einer stimmt.</p>
+
+      <h3>Tipp, Lösung, Auswertung</h3>
+      <p>„Tipp“ hilft in vier Stufen: Regel zur Hauptkette, Markierung der Hauptkette, Nummerierung, Seitenketten und Endung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+      <p>Bei falschen Antworten erkennt die Prüfung typische Fehler, zum Beispiel eine zu kurze Hauptkette, falsche Nummerierungsrichtung, fehlende alphabetische Ordnung oder fehlende Zahlwörter.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Stoffklasse</p>
+      <div class="mode-toggle big" id="classToggle">
+        <button data-cls="alkan" class="active">Alkane</button>
+        <button data-cls="alken">Alkene</button>
+        <button data-cls="alkin">Alkine</button>
+        <button data-cls="alkohol">Alkohole</button>
+      </div>
+      <p class="sub-label">Schwierigkeit</p>
+      <div class="mode-toggle" id="levelToggle">
+        <button data-level="1">Leicht</button>
+        <button data-level="2">Mittel</button>
+        <button data-level="3">Schwer</button>
+        <button data-level="0" class="active">Gemischt</button>
+      </div>
+      <p class="sub-label">Darstellung (Formeltyp)</p>
+      <div class="mode-toggle" id="styleToggle">
+        <button data-style="full" title="Strukturformel: alle Atome und Bindungen">Struktur</button>
+        <button data-style="grid" title="Halbstrukturformel: CH₃-, CH₂-Gruppen">Halbstruktur</button>
+        <button data-style="zig" class="active" title="Skelettformel: nur das C-Gerüst">Skelett</button>
+      </div>
+      <p class="sub-label">Antwort</p>
+      <div class="mode-toggle" id="answerToggle">
+        <button data-ans="text" class="active">Freitext</button>
+        <button data-ans="mc">Auswahl</button>
+      </div>
+      <label class="check-row" for="chkOld"><input type="checkbox" id="chkOld" checked><span>Ältere Schreibweise akzeptieren (z. B. 2-Buten, 2-Propanol)</span></label>
+      <label class="check-row" for="chkFormula"><input type="checkbox" id="chkFormula" checked><span>Summenformel anzeigen</span></label>
+    </section>
+
+    <section class="block">
+      <h2>Nomenklatur-Bausteine</h2>
+      <div class="lib-wrap">
+        <table class="lib-table">
+          <tbody>
+            <tr class="grp"><td colspan="4">Stammnamen (Anzahl C-Atome)</td></tr>
+            <tr><td class="k">1</td><td class="v">Meth-</td><td class="k">7</td><td class="v">Hept-</td></tr>
+            <tr><td class="k">2</td><td class="v">Eth-</td><td class="k">8</td><td class="v">Oct-</td></tr>
+            <tr><td class="k">3</td><td class="v">Prop-</td><td class="k">9</td><td class="v">Non-</td></tr>
+            <tr><td class="k">4</td><td class="v">But-</td><td class="k">10</td><td class="v">Dec-</td></tr>
+            <tr><td class="k">5</td><td class="v">Pent-</td><td class="k">11</td><td class="v">Undec-</td></tr>
+            <tr><td class="k">6</td><td class="v">Hex-</td><td class="k">12</td><td class="v">Dodec-</td></tr>
+            <tr class="grp"><td colspan="4">Endungen</td></tr>
+            <tr><td class="k">C–C</td><td class="v">-an</td><td colspan="2">Alkan</td></tr>
+            <tr><td class="k">C=C</td><td class="v">-en</td><td colspan="2">Alken</td></tr>
+            <tr><td class="k">C≡C</td><td class="v">-in</td><td colspan="2">Alkin</td></tr>
+            <tr><td class="k">–OH</td><td class="v">-ol</td><td colspan="2">Alkohol (Alkanol)</td></tr>
+            <tr class="grp"><td colspan="4">Seitenketten (Alkylreste)</td></tr>
+            <tr><td class="k">–CH<sub>3</sub></td><td class="v" colspan="3">Methyl-</td></tr>
+            <tr><td class="k">–C<sub>2</sub>H<sub>5</sub></td><td class="v" colspan="3">Ethyl-</td></tr>
+            <tr><td class="k">–C<sub>3</sub>H<sub>7</sub></td><td class="v" colspan="3">Propyl-</td></tr>
+            <tr class="grp"><td colspan="4">Zahlwörter</td></tr>
+            <tr><td class="k">2×</td><td class="v">di-</td><td class="k">3×</td><td class="v">tri-</td></tr>
+            <tr><td class="k">4×</td><td class="v">tetra-</td><td class="k">5×</td><td class="v">penta-</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Mehrere Mehrfachbindungen oder OH-Gruppen: Buta-1,3-dien, Ethan-1,2-diol.</p>
+    </section>
+  </div>
+
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn" id="btnCheck">Prüfen</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskLevel">leicht</span>
+        <span class="task-ctx" id="taskCtx"></span>
+      </div>
+
+      <div class="stage" id="stage">
+        <span class="stylelbl" id="styleLbl">Skelettformel</span>
+        <div id="molBox"></div>
+        <span class="formula mono" id="formula"></span>
+      </div>
+
+      <div id="answerText" class="answer-row">
+        <label for="nameIn">Name der Verbindung</label>
+        <input type="text" id="nameIn" class="name-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. 3-Ethyl-2-methylhexan">
+      </div>
+      <div id="answerMc" class="mc-grid" hidden></div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Stoffklasse</th><th>Name</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="4" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Benennung nach den IUPAC-Regeln für acyclische Kohlenwasserstoffe und Alkohole. Die Strukturen werden zufällig erzeugt und automatisch benannt.</p>
+  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V1.0 (erstellt mit Claude Pro)</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  // ---------- Nomenklatur-Daten ----------
+  const STEM = ["","Meth","Eth","Prop","But","Pent","Hex","Hept","Oct","Non","Dec","Undec","Dodec","Tridec","Tetradec"];
+  const ALKYL = ["","Methyl","Ethyl","Propyl","Butyl","Pentyl"];
+  const MULT = ["","","di","tri","tetra","penta","hexa"];
+  const CLS_NAME = {alkan:"Alkane", alken:"Alkene", alkin:"Alkine", alkohol:"Alkohole"};
+  const CLS_ONE = {alkan:"Alkan", alken:"Alken", alkin:"Alkin", alkohol:"Alkohol"};
+  const LEVEL_NAMES = ["gemischt","leicht","mittel","schwer"];
+  const CFG = {
+    1:{len:{alkan:[1,6], alken:[2,6], alkin:[2,6], alkohol:[1,5]}, subs:[0,1], sw:[1], fg:[1,1]},
+    2:{len:{alkan:[4,8], alken:[4,8], alkin:[4,8], alkohol:[3,7]}, subs:[1,3], sw:[1,1,1,2], fg:[1,1]},
+    3:{len:{alkan:[5,10], alken:[5,9], alkin:[5,9], alkohol:[4,8]}, subs:[2,4], sw:[1,1,2,2,3], fg:[1,2]}
+  };
+  const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const shuffle = arr => { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; };
+
+  // ---------- Molekül-Graph ----------
+  function newMol(){ return {el:[], nb:[]}; }
+  function addAtom(m, el){ m.el.push(el); m.nb.push([]); return m.el.length-1; }
+  function addBond(m,a,b,o){ m.nb[a].push({to:b,o}); m.nb[b].push({to:a,o}); }
+  function bo(m,a,b){ const x = m.nb[a].find(e=>e.to===b); return x ? x.o : 0; }
+  function setBo(m,a,b,o){ m.nb[a].find(e=>e.to===b).o = o; m.nb[b].find(e=>e.to===a).o = o; }
+  function val(m,a){ return m.nb[a].reduce((s,e)=>s+e.o,0); }
+  function cNb(m,a){ return m.nb[a].filter(e=>m.el[e.to]==="C").map(e=>e.to); }
+  function hasOH(m,a){ return m.nb[a].some(e=>m.el[e.to]==="O"); }
+  function hasMult(m,a){ return m.nb[a].some(e=>e.o>1); }
+  function isSp(m,a){ return m.nb[a].some(e=>e.o===3); }
+  function carbons(m){ return m.el.map((e,i)=>e==="C"?i:-1).filter(i=>i>=0); }
+
+  // ---------- Hauptkette & Name bestimmen ----------
+  function pathBetween(m, s, t){
+    const par = new Map([[s,-1]]), q=[s];
+    while(q.length){ const a=q.shift(); if(a===t) break; cNb(m,a).forEach(b=>{ if(!par.has(b)){ par.set(b,a); q.push(b); } }); }
+    const p=[]; let c=t; while(c!==-1){ p.push(c); c=par.get(c); } return p.reverse();
+  }
+  function branch(m, root, from){
+    let prev=from, cur=root, len=1, ok=!hasOH(m,cur) && bo(m,prev,cur)===1;
+    while(true){
+      const nx = cNb(m,cur).filter(b=>b!==prev);
+      if(nx.length>1){ ok=false; break; }
+      if(nx.length===0) break;
+      if(bo(m,cur,nx[0])!==1) ok=false;
+      prev=cur; cur=nx[0]; len++;
+      if(hasOH(m,cur)) ok=false;
+    }
+    if(len>5) ok=false;
+    return {len, ok};
+  }
+  function analyze(m, P){
+    const inC = new Set(P);
+    const ohL=[], multL=[], dblL=[], subs=[];
+    let valid = true;
+    P.forEach((a,i)=>{
+      if(hasOH(m,a)) ohL.push(i+1);
+      if(i<P.length-1){ const o=bo(m,a,P[i+1]); if(o>1){ multL.push(i+1); if(o===2) dblL.push(i+1); } }
+      cNb(m,a).forEach(b=>{ if(!inC.has(b)){ const br=branch(m,b,a); if(!br.ok) valid=false; subs.push({pos:i+1, len:br.len}); } });
+    });
+    const triL = multL.filter(l=>!dblL.includes(l));
+    const subLoc = subs.map(s=>s.pos).sort((x,y)=>x-y);
+    const an = l => ALKYL[l] || ("zz"+l);
+    const alpha = subs.slice().sort((x,y)=> an(x.len).localeCompare(an(y.len)) || x.pos-y.pos).map(s=>s.pos);
+    const key = [[-ohL.length, -multL.length, -P.length, -subs.length], ohL, multL, dblL, subLoc, alpha];
+    return {P, len:P.length, ohL, multL, dblL, triL, subs, valid, key};
+  }
+  function cmpKey(a,b){
+    for(let s=0;s<a.length;s++){
+      const n = Math.max(a[s].length, b[s].length);
+      for(let j=0;j<n;j++){
+        const x=a[s][j], y=b[s][j];
+        if(x!==y){ if(x===undefined) return {d:-1,s,j}; if(y===undefined) return {d:1,s,j}; return {d:x-y,s,j}; }
+      }
+    }
+    return {d:0,s:-1,j:-1};
+  }
+  function nameMol(m){
+    const C = carbons(m);
+    let paths = [];
+    if(C.length===1) paths=[[C[0]]];
+    else {
+      const leaves = C.filter(c=>cNb(m,c).length<=1);
+      for(let i=0;i<leaves.length;i++) for(let j=0;j<leaves.length;j++) if(i!==j) paths.push(pathBetween(m,leaves[i],leaves[j]));
+    }
+    const cands = paths.map(P=>analyze(m,P));
+    let best = cands[0];
+    cands.forEach(c=>{ if(cmpKey(c.key,best.key).d<0) best=c; });
+    const maxLen = Math.max(...cands.map(c=>c.len));
+    if(!best.valid) return null;
+    if(best.len < maxLen) return null;          // Schulregel und IUPAC 2013 würden abweichen
+    if(best.len > 14) return null;
+    const totOH = m.el.filter(e=>e==="O").length;
+    if(best.ohL.length !== totOH) return null;
+    const rev = cands.find(c=>c.P.length===best.P.length && c.P.every((a,i)=>a===best.P[best.P.length-1-i])) || null;
+    return {best, cands, rev};
+  }
+
+  // ---------- Namen zusammensetzen ----------
+  function cap(s){ return s.replace(/[a-zäöü]/, ch=>ch.toUpperCase()); }
+  function omittable(c){
+    const nm = c.multL.length;
+    if(c.len===1) return true;
+    if(c.len===2) return c.ohL.length<=1;
+    if(c.len===3) return c.ohL.length===0 && nm===1;
+    return false;
+  }
+  function buildName(c, o){
+    o = o || {};
+    const groups = {};
+    c.subs.forEach(s=>{ (groups[s.len] = groups[s.len] || []).push(s.pos); });
+    let g = Object.keys(groups).map(k=>({len:+k, locs:groups[k].sort((x,y)=>x-y)}));
+    if(o.alpha===false) g.sort((x,y)=>x.locs[0]-y.locs[0] || x.len-y.len);
+    else if(o.alphaMult) g.sort((x,y)=>(MULT[x.locs.length]+ALKYL[x.len].toLowerCase()).localeCompare(MULT[y.locs.length]+ALKYL[y.len].toLowerCase()));
+    else g.sort((x,y)=>ALKYL[x.len].localeCompare(ALKYL[y.len]));
+    let parts;
+    if(o.noMulti) parts = [].concat(...g.map(x=>x.locs.map(l=>l+"-"+ALKYL[x.len].toLowerCase())));
+    else parts = g.map(x=>x.locs.join(",")+"-"+MULT[x.locs.length]+ALKYL[x.len].toLowerCase());
+    const prefix = parts.join("-");
+    const stem = STEM[c.len].toLowerCase();
+    const dbl=c.dblL, tri=c.triL, oh=c.ohL;
+    const canOmit = omittable(c) && (o.omit==="always" || (o.omit!=="never" && !c.subs.length));
+    let core;
+    if(o.old && !(dbl.length && tri.length) && (dbl.length||tri.length||oh.length)){
+      let L, word;
+      if(oh.length){ L=oh; word = stem+"an"+MULT[oh.length]+"ol"; }
+      else { L = dbl.length?dbl:tri; word = stem+(L.length>1?"a":"")+MULT[L.length]+(dbl.length?"en":"in"); }
+      core = canOmit ? word : L.join(",")+"-"+word;
+      const nm = prefix ? prefix+"-"+core : core;
+      return cap(nm);
+    }
+    if(oh.length){
+      core = stem+"an"+(canOmit ? "ol" : "-"+oh.join(",")+"-"+MULT[oh.length]+"ol");
+    } else if(!dbl.length && !tri.length){
+      core = stem+"an";
+    } else if(canOmit){
+      core = stem + (dbl.length ? "en" : "in");
+    } else {
+      const first = dbl.length?dbl:tri;
+      core = stem + (first.length>1?"a":"");
+      if(dbl.length) core += "-"+dbl.join(",")+"-"+MULT[dbl.length]+"en";
+      if(tri.length) core += "-"+tri.join(",")+"-"+MULT[tri.length]+"in";
+    }
+    return cap(prefix + core);
+  }
+  const norm = s => String(s||"").toLowerCase().replace(/[‐-―−]/g,"-").replace(/\s+/g,"");
+  const strip = s => norm(s).replace(/[-,]/g,"");
+
+  function acceptedNames(res){
+    const b = res.best, map = new Map();
+    const add = (n,kind)=>{ const k=norm(n); if(!map.has(k)) map.set(k,{name:n,kind}); };
+    add(buildName(b),"canon");
+    add(buildName(b,{omit:"never"}),"alt");
+    if(omittable(b)) add(buildName(b,{omit:"always"}),"alt");
+    add(buildName(b,{old:true}),"old");
+    add(buildName(b,{old:true,omit:"never"}),"old");
+    if(omittable(b)) add(buildName(b,{old:true,omit:"always"}),"old");
+    return map;
+  }
+
+  // ---------- Struktur erzeugen ----------
+  function gen(cls, lvl){
+    const cfg = CFG[lvl];
+    for(let t=0;t<1500;t++){
+      const m = newMol();
+      const [a,b] = cfg.len[cls];
+      const n = ri(a,b);
+      const ch = [];
+      for(let i=0;i<n;i++){ ch.push(addAtom(m,"C")); if(i) addBond(m,ch[i-1],ch[i],1); }
+      // Mehrfachbindungen
+      let fg = cls==="alkan" ? 0 : ri(cfg.fg[0], cfg.fg[1]);
+      if(cls==="alken" || cls==="alkin"){
+        if(n<2) continue;
+        let okAll = true;
+        for(let k=0;k<fg;k++){
+          let o = cls==="alken" ? 2 : 3;
+          if(cls==="alkin" && k>0 && Math.random()<.5) o = 2;
+          const opts = [];
+          for(let i=0;i<n-1;i++) if(!hasMult(m,ch[i]) && !hasMult(m,ch[i+1])) opts.push(i);
+          if(!opts.length){ okAll=false; break; }
+          const i = pick(opts); setBo(m,ch[i],ch[i+1],o);
+        }
+        if(!okAll) continue;
+      }
+      if(cls==="alkohol"){
+        if(fg===2 && n<2) fg=1;
+        if(lvl===3 && fg===2 && Math.random()<.2 && n>=3) fg=3;
+        const opts = shuffle(ch.slice());
+        for(let k=0;k<fg;k++){ const c=opts[k]; const O=addAtom(m,"O"); addBond(m,c,O,1); }
+      }
+      // Seitenketten
+      let ns = ri(cfg.subs[0], cfg.subs[1]);
+      if(lvl===1 && Math.random()<.45) ns = 0;
+      for(let k=0;k<ns;k++){
+        const opts = [];
+        for(let i=1;i<n-1;i++) if(val(m,ch[i])<4) opts.push(ch[i]);
+        if(!opts.length) break;
+        const at = pick(opts);
+        let L = pick(cfg.sw);
+        let prev = at;
+        for(let j=0;j<L;j++){ const c=addAtom(m,"C"); addBond(m,prev,c,1); prev=c; }
+      }
+      const res = nameMol(m);
+      if(!res) continue;
+      const nb = res.best;
+      if(cls==="alken" && !nb.dblL.length) continue;
+      if(cls==="alkin" && !nb.triL.length) continue;
+      if(cls==="alkohol" && !nb.ohL.length) continue;
+      const canon = buildName(nb);
+      if(task && task.canon===canon && t<1400) continue;
+      if(lvl>=2 && nb.subs.length===0) continue;
+      const lz = findLayout(m,res,"zig",lvl), lg = findLayout(m,res,"grid",lvl), lf = findLayout(m,res,"full",lvl);
+      if(!lz || !lg || !lf) continue;
+      return {m, res, canon, lay:{zig:lz, grid:lg, full:lf}};
+    }
+    return null;
+  }
+
+  // ---------- Layout ----------
+  function subtreeSize(m,a,p){ let s=1; m.nb[a].forEach(e=>{ if(e.to!==p) s+=subtreeSize(m,e.to,a); }); return s; }
+  function layoutMol(m, backbone, style){
+    const pos = new Array(m.el.length);
+    const nextBB = new Map();
+    backbone.forEach((a,i)=>{ if(i<backbone.length-1) nextBB.set(a,backbone[i+1]); });
+    const R = Math.PI/180;
+    const root = backbone[0];
+    pos[root] = {x:0,y:0};
+    const turn0 = Math.random()<.5?1:-1;
+    function kidsOf(a,p){
+      const ks = m.nb[a].map(e=>e.to).filter(t=>t!==p);
+      const nb = nextBB.get(a);
+      return ks.sort((x,y)=>{
+        if(x===nb) return -1; if(y===nb) return 1;
+        const ox = m.el[x]==="O", oy = m.el[y]==="O";
+        if(ox!==oy) return ox?1:-1;
+        return subtreeSize(m,y,a)-subtreeSize(m,x,a);
+      });
+    }
+    function put(a, k, dir, turn){
+      pos[k] = {x:pos[a].x+Math.cos(dir*R), y:pos[a].y+Math.sin(dir*R)};
+      place(k, a, dir, turn);
+    }
+    function place(a, p, dirIn, turn){
+      const ks = kidsOf(a,p);
+      if(!ks.length) return;
+      if(style==="zig"){
+        if(p===-1){
+          const ds = [turn*30, 180-turn*30, -turn*90+ (turn>0?0:180)];
+          ks.forEach((k,i)=>put(a,k,ds[i]??(90*i), i===0?-turn:turn));
+          return;
+        }
+        if(isSp(m,a) && ks.length===1){ put(a,ks[0],dirIn,turn); return; }
+        if(ks.length===1){ put(a,ks[0],dirIn+turn*60,-turn); return; }
+        if(ks.length===2){ put(a,ks[0],dirIn+turn*60,-turn); put(a,ks[1],dirIn-turn*60,turn); return; }
+        put(a,ks[0],dirIn+turn*60,-turn); put(a,ks[1],dirIn-turn*20,turn); put(a,ks[2],dirIn-turn*100,-turn);
+      } else {
+        if(p===-1){
+          const ds=[0,180,90,-90];
+          ks.forEach((k,i)=>put(a,k,ds[i],turn));
+          return;
+        }
+        if(ks.length===1){ put(a,ks[0],dirIn,turn); return; }
+        const side = Math.random()<.5?1:-1;
+        if(ks.length===2){ put(a,ks[0],dirIn,turn); put(a,ks[1],dirIn+side*90,turn); return; }
+        put(a,ks[0],dirIn,turn); put(a,ks[1],dirIn+90,turn); put(a,ks[2],dirIn-90,turn);
+      }
+    }
+    place(root,-1,0,turn0);
+    return pos;
+  }
+  function segX(p1,p2,p3,p4){
+    const d=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+    const d1=d(p3,p4,p1), d2=d(p3,p4,p2), d3=d(p1,p2,p3), d4=d(p1,p2,p4);
+    return ((d1>1e-6&&d2<-1e-6)||(d1<-1e-6&&d2>1e-6)) && ((d3>1e-6&&d4<-1e-6)||(d3<-1e-6&&d4>1e-6));
+  }
+  function layoutOk(m,pos,style){
+    const n = m.el.length, thr = style==="zig" ? 0.95 : 1.3;
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+      if(bo(m,i,j)) continue;
+      if(Math.hypot(pos[i].x-pos[j].x, pos[i].y-pos[j].y) < thr) return false;
+    }
+    const bonds=[];
+    for(let i=0;i<n;i++) m.nb[i].forEach(e=>{ if(e.to>i) bonds.push([i,e.to]); });
+    for(let i=0;i<bonds.length;i++) for(let j=i+1;j<bonds.length;j++){
+      const [a,b]=bonds[i],[c,d]=bonds[j];
+      if(a===c||a===d||b===c||b===d) continue;
+      if(segX(pos[a],pos[b],pos[c],pos[d])) return false;
+    }
+    return true;
+  }
+  // H-Atome für die Strukturformel: freie Richtungen im 90°-Raster
+  const HL = 0.62;
+  function angDiff(a,b){ const d=Math.abs(((a-b)%360+540)%360-180); return d; }
+  function hPositions(m,pos){
+    const out = [];
+    for(let a=0;a<m.el.length;a++){
+      const h = hCount(m,a); if(!h) continue;
+      const occ = m.nb[a].map(e=>Math.round(Math.atan2(pos[e.to].y-pos[a].y, pos[e.to].x-pos[a].x)*180/Math.PI));
+      let free = [180,0,270,90].filter(d=>!occ.some(o=>angDiff(o,d)<45));
+      if(occ.length) free.sort((x,y)=>Math.min(...occ.map(o=>angDiff(o,y)))-Math.min(...occ.map(o=>angDiff(o,x))));
+      if(free.length<h) return null;
+      free.slice(0,h).forEach(d=>out.push({from:a, x:pos[a].x+HL*Math.cos(d*Math.PI/180), y:pos[a].y+HL*Math.sin(d*Math.PI/180)}));
+    }
+    return out;
+  }
+  function hOk(m,pos){
+    const Hs = hPositions(m,pos);
+    if(!Hs) return false;
+    for(let i=0;i<Hs.length;i++){
+      for(let a=0;a<m.el.length;a++){ if(a!==Hs[i].from && Math.hypot(Hs[i].x-pos[a].x, Hs[i].y-pos[a].y)<0.6) return false; }
+      for(let j=i+1;j<Hs.length;j++){ if(Math.hypot(Hs[i].x-Hs[j].x, Hs[i].y-Hs[j].y)<0.5) return false; }
+    }
+    return true;
+  }
+  function findLayout(m,res,style,lvl){
+    const C = carbons(m);
+    const leaves = C.filter(c=>cNb(m,c).length<=1);
+    for(let t=0;t<80;t++){
+      let bb = res.best.P;
+      if(lvl>=2 && leaves.length>2 && Math.random()<(lvl===3?.6:.4)){
+        const a=pick(leaves), b=pick(leaves.filter(x=>x!==a));
+        bb = pathBetween(m,a,b);
+      }
+      if(Math.random()<.5) bb = bb.slice().reverse();
+      if(cNb(m,bb[0]).length>1) bb = bb.slice().reverse();
+      const base = style==="full" ? "grid" : style;
+      const pos = layoutMol(m,bb,base);
+      if(!layoutOk(m,pos,base)) continue;
+      if(style==="full" && !hOk(m,pos)) continue;
+      return pos;
+    }
+    return null;
+  }
+
+  // ---------- Zeichnen ----------
+  function hCount(m,a){ return m.el[a]==="O" ? 1 : 4-val(m,a); }
+  function formulaHTML(m){
+    const C = carbons(m).length;
+    let H=0; m.el.forEach((e,i)=>H+=hCount(m,i));
+    const O = m.el.filter(e=>e==="O").length;
+    const s = (n)=> n>1?`<sub>${n}</sub>`:"";
+    return `C${s(C)}H${s(H)}${O?"O"+s(O):""}`;
+  }
+  function labelParts(m,a,pos){
+    const nbs = m.nb[a].map(e=>e.to);
+    const allRight = nbs.length>0 && nbs.every(b=>pos[b].x-pos[a].x > 0.3);
+    if(m.el[a]==="O"){
+      const c = nbs[0];
+      const left = pos[a].x < pos[c].x - 0.3;
+      return left ? [{t:"HO"}] : [{t:"OH"}];
+    }
+    const h = hCount(m,a);
+    const hp = h===0 ? [] : (h===1 ? [{t:"H"}] : [{t:"H"},{t:String(h),sub:true}]);
+    return (allRight && h>0) ? hp.concat([{t:"C"}]) : [{t:"C"}].concat(hp);
+  }
+  function labelWidth(parts){ return parts.reduce((s,p)=>s+(p.sub?6.5:9),0); }
+  function labelSVG(parts,x,y,cls){
+    let s = `<text class="lbl ${cls}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central">`;
+    let down=false;
+    parts.forEach(p=>{
+      if(p.sub){ s += `<tspan font-size="11" dy="4">${p.t}</tspan>`; down=true; }
+      else { s += `<tspan${down?' dy="-4"':''}>${p.t}</tspan>`; down=false; }
+    });
+    return s+"</text>";
+  }
+  function drawMol(){
+    const t = task, m = t.m, st = style;
+    const pos = t.lay[st];
+    const U = st==="zig" ? 54 : st==="grid" ? 66 : 70;
+    const nC = carbons(m).length;
+    const P = pos.map(p=>({x:p.x*U, y:p.y*U}));
+    const full = st==="full";
+    const labeled = a => m.el[a]==="O" || st!=="zig" || nC===1;
+    const parts = m.el.map((e,a)=> !labeled(a) ? null : full ? [{t:m.el[a]}] : labelParts(m,a,pos));
+    const Hs = full ? hPositions(m,pos).map(h=>({from:h.from, x:h.x*U, y:h.y*U})) : [];
+    const xs=P.map(p=>p.x).concat(Hs.map(h=>h.x)), ys=P.map(p=>p.y).concat(Hs.map(h=>h.y));
+    const pad = 38;
+    const minX=Math.min(...xs)-pad, maxX=Math.max(...xs)+pad, minY=Math.min(...ys)-pad, maxY=Math.max(...ys)+pad;
+    const W=maxX-minX, H=maxY-minY;
+    const shorten = (a,ux,uy)=>{
+      if(!labeled(a)) return 0;
+      const hw = labelWidth(parts[a])/2 + 3;
+      return Math.min(Math.abs(ux)*hw + Math.abs(uy)*11, hw+2) + 2;
+    };
+    let hl="", bonds="", labels="", nums="";
+    const showChain = t.showChain || t.done;
+    const showNums = t.showNums || t.done;
+    const chain = t.res.best.P;
+    if(showChain && chain.length>1){
+      hl = `<polyline class="hl" points="${chain.map(a=>P[a].x.toFixed(1)+","+P[a].y.toFixed(1)).join(" ")}"/>`;
+    } else if(showChain){
+      hl = `<circle cx="${P[chain[0]].x}" cy="${P[chain[0]].y}" r="20" fill="var(--teal)" opacity=".22"/>`;
+    }
+    const line = (x1,y1,x2,y2)=>`<line class="bond" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+    for(let a=0;a<m.el.length;a++) m.nb[a].forEach(e=>{
+      const b=e.to; if(b<a) return;
+      const dx=P[b].x-P[a].x, dy=P[b].y-P[a].y, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L;
+      const s1=shorten(a,ux,uy), s2=shorten(b,ux,uy);
+      const x1=P[a].x+ux*s1, y1=P[a].y+uy*s1, x2=P[b].x-ux*s2, y2=P[b].y-uy*s2;
+      const nx=-uy, ny=ux;
+      if(e.o===1){ bonds += line(x1,y1,x2,y2); return; }
+      if(e.o===3){
+        const k1 = labeled(a)?0:6, k2 = labeled(b)?0:6;
+        bonds += line(x1,y1,x2,y2);
+        [-5,5].forEach(off=> bonds += line(x1+nx*off+ux*k1, y1+ny*off+uy*k1, x2+nx*off-ux*k2, y2+ny*off-uy*k2));
+        return;
+      }
+      // Doppelbindung
+      let side = 0;
+      if(st==="zig"){
+        const mx=(P[a].x+P[b].x)/2, my=(P[a].y+P[b].y)/2;
+        [a,b].forEach(z=> m.nb[z].forEach(f=>{ if(f.to!==a && f.to!==b){ side += (P[f.to].x-mx)*nx + (P[f.to].y-my)*ny; } }));
+      }
+      if(Math.abs(side)<1e-3){
+        [-3.3,3.3].forEach(off=> bonds += line(x1+nx*off,y1+ny*off,x2+nx*off,y2+ny*off));
+      } else {
+        const sg = side>0?1:-1, off = 6.5*sg;
+        const k1 = labeled(a)?0:7, k2 = labeled(b)?0:7;
+        bonds += line(x1,y1,x2,y2);
+        bonds += line(x1+nx*off+ux*k1, y1+ny*off+uy*k1, x2+nx*off-ux*k2, y2+ny*off-uy*k2);
+      }
+    });
+    Hs.forEach(h=>{
+      const a=h.from, dx=h.x-P[a].x, dy=h.y-P[a].y, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L;
+      const s1=shorten(a,ux,uy), s2=9;
+      bonds += line(P[a].x+ux*s1, P[a].y+uy*s1, h.x-ux*s2, h.y-uy*s2);
+      labels += labelSVG([{t:"H"}], h.x, h.y, "h");
+    });
+    for(let a=0;a<m.el.length;a++){
+      if(!labeled(a)) continue;
+      labels += labelSVG(parts[a], P[a].x, P[a].y, m.el[a]==="O"?"o":"");
+    }
+    if(showNums){
+      chain.forEach((a,i)=>{
+        let vx=0, vy=0;
+        m.nb[a].forEach(e=>{ const dx=P[e.to].x-P[a].x, dy=P[e.to].y-P[a].y, L=Math.hypot(dx,dy); vx+=dx/L; vy+=dy/L; });
+        let L = Math.hypot(vx,vy);
+        if(L<0.2){
+          const nbA = m.nb[a][0];
+          if(nbA){ const dx=P[nbA.to].x-P[a].x, dy=P[nbA.to].y-P[a].y, l=Math.hypot(dx,dy); vx=dy/l; vy=-dx/l; if(vy>0){vx=-vx;vy=-vy;} }
+          else { vx=0; vy=1; }
+          L=1; vx=-vx; vy=-vy;
+        }
+        const off = labeled(a) ? 25 : 17;
+        let x = P[a].x - vx/L*off, y = P[a].y - vy/L*off;
+        if(full){ x = P[a].x + 17; y = P[a].y - 17; }
+        nums += `<text class="num" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central">${i+1}</text>`;
+      });
+    }
+    $("molBox").innerHTML = `<svg viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}" role="img" aria-label="Strukturformel">${hl}${bonds}${labels}${nums}</svg>`;
+    $("styleLbl").textContent = {zig:"Skelettformel", grid:"Halbstrukturformel", full:"Strukturformel"}[st];
+    $("formula").innerHTML = showFormula ? "Summenformel " + formulaHTML(m) : "";
+  }
+
+  // ---------- Zustand ----------
+  let klass = "alkan", level = 0, style = "zig", answer = "text", allowOld = true, showFormula = true;
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+
+  function newTask(){
+    if(task && !task.done && task.touched) logHistory(task,"open");
+    const lvl = level || ri(1,3);
+    let g = gen(klass,lvl);
+    if(!g) g = gen(klass,1);
+    task = {num:++taskCounter, cls:klass, lvl, m:g.m, res:g.res, canon:g.canon, lay:g.lay,
+      acc:acceptedNames(g.res), hint:0, wrong:false, done:false, shown:false, touched:false,
+      showChain:false, showNums:false, mc:null, mcBad:new Set()};
+    task.mc = buildChoices(task);
+    $("nameIn").value = "";
+    $("nameIn").readOnly = false;
+    $("nameIn").classList.remove("ok","bad");
+    $("feedback").innerHTML = "";
+    renderTask();
+    renderWay();
+  }
+
+  function renderTask(){
+    const t = task;
+    $("taskNum").textContent = "Aufgabe " + t.num;
+    $("taskLevel").textContent = LEVEL_NAMES[t.lvl];
+    $("taskLevel").className = "chip l"+t.lvl;
+    $("taskCtx").textContent = CLS_ONE[t.cls] + " · Benenne die Verbindung.";
+    drawMol();
+    $("answerText").hidden = answer!=="text";
+    $("answerMc").hidden = answer!=="mc";
+    renderMc();
+    $("btnCheck").disabled = t.done || answer==="mc";
+    $("btnHint").disabled = t.done;
+    $("btnSolve").disabled = t.done;
+    setStatus();
+  }
+  function setStatus(){
+    const b = $("statusBadge");
+    b.classList.remove("running","done");
+    if(!task.done){ b.classList.add("running"); $("statusText").textContent = "Aufgabe offen"; }
+    else if(task.shown){ $("statusText").textContent = "Lösung angezeigt"; }
+    else { b.classList.add("done"); $("statusText").textContent = "gelöst"; }
+  }
+
+  // ---------- Auswahl-Antworten ----------
+  function buildChoices(t){
+    const res = t.res, b = res.best;
+    const bad = new Set(), out = [];
+    const accKeys = new Set(t.acc.keys());
+    const push = n => { const k=norm(n); if(!accKeys.has(k) && !bad.has(k)){ bad.add(k); out.push(n); } };
+    const variants = [];
+    if(res.rev && res.rev.valid) variants.push(buildName(res.rev));
+    res.cands.forEach(c=>{ if(c.valid && c!==b) variants.push(buildName(c)); });
+    variants.push(buildName(b,{alpha:false}));
+    variants.push(buildName(b,{alphaMult:true}));
+    shuffle(variants).forEach(push);
+    const fake = (mod)=>{ const c = Object.assign({}, b, mod); c.triL = c.multL.filter(l=>!c.dblL.includes(l)); return buildName(c); };
+    const tries = [];
+    if(b.len>1) tries.push(fake({len:b.len-1, subs:b.subs.filter(s=>s.pos<b.len-1), ohL:b.ohL.filter(l=>l<b.len-1), multL:b.multL.filter(l=>l<b.len-2), dblL:b.dblL.filter(l=>l<b.len-2)}));
+    tries.push(fake({len:b.len+1}));
+    if(b.subs.length) tries.push(fake({subs:b.subs.map((s,i)=>i===0?{pos:Math.min(s.pos+1,b.len-1),len:s.len}:s)}));
+    if(b.subs.length) tries.push(fake({subs:b.subs.map((s,i)=>i===b.subs.length-1?{pos:Math.max(2,s.pos-1),len:s.len}:s)}));
+    if(b.multL.length) tries.push(fake({multL:b.multL.map(l=>Math.min(l+1,b.len-1)), dblL:b.dblL.map(l=>Math.min(l+1,b.len-1))}));
+    if(b.ohL.length) tries.push(fake({ohL:b.ohL.map(l=>Math.min(l+1,b.len))}));
+    if(b.subs.length) tries.push(buildName(b,{noMulti:true}));
+    shuffle(tries).forEach(push);
+    tries.push(fake({len:b.len+2}));
+    tries.forEach(push);
+    const opts = out.slice(0,3).concat([t.canon]);
+    return shuffle(opts);
+  }
+  function renderMc(){
+    if(answer!=="mc") return;
+    const t = task;
+    $("answerMc").innerHTML = t.mc.map((n,i)=>{
+      const k = norm(n), right = t.acc.has(k);
+      let cls = "";
+      if(t.done && right) cls = "ok";
+      else if(t.mcBad.has(k)) cls = "bad";
+      return `<button class="mc-opt ${cls}" data-i="${i}" ${t.done||t.mcBad.has(k)?"disabled":""}>${n}</button>`;
+    }).join("");
+    $("answerMc").querySelectorAll(".mc-opt").forEach(btn=>btn.addEventListener("click",()=>{
+      evaluate(t.mc[+btn.dataset.i], true);
+    }));
+  }
+
+  // ---------- Prüfen ----------
+  function fb(type, html){ return `<div class="fb ${type}">${html}</div>`; }
+  const nmSpan = n => `<span class="nm">${n}</span>`;
+  const NUM_REASON = {
+    1:"Die OH-Gruppe muss die kleinstmögliche Nummer bekommen.",
+    2:"Die Mehrfachbindung muss die kleinstmögliche Nummer bekommen.",
+    3:"Liegen Doppel- und Dreifachbindung gleich weit vom Ende entfernt, bekommt die Doppelbindung die kleinere Nummer.",
+    4:"Die Seitenketten müssen möglichst kleine Nummern bekommen. Vergleiche die Nummern der Reihe nach, der erste Unterschied entscheidet.",
+    5:"Bei gleichen Nummern von beiden Seiten bekommt die Seitenkette, die im Alphabet zuerst kommt, die kleinere Nummer."
+  };
+  const CHAIN_REASON = [
+    "Die Hauptkette muss alle C-Atome mit OH-Gruppe enthalten.",
+    "Die Hauptkette muss alle Mehrfachbindungen enthalten.",
+    "Die gewählte Kette ist nicht die längste. Die Hauptkette kann auch um Ecken und über Verzweigungen hinweg verlaufen.",
+    "Es gibt mehrere gleich lange Ketten. Als Hauptkette wird die mit den meisten Seitenketten gewählt."
+  ];
+  function diagnose(input){
+    const t = task, res = t.res, b = res.best, u = norm(input);
+    if(!u) return [];
+    const out = [];
+    for(const [k,v] of t.acc){ if(strip(k)===strip(u) && (v.kind!=="old" || allowOld)) return ["Die Bausteine stimmen, aber die Schreibweise nicht. Zahlen werden untereinander durch Kommas getrennt, Zahlen und Wörter durch Bindestriche. Der Name wird zusammengeschrieben."]; }
+    for(const [k,v] of t.acc){ if(k===u && v.kind==="old" && !allowOld) return [`Das ist die ältere Schreibweise. Nach aktueller IUPAC-Regel stehen die Lokanten direkt vor der Endung: ${nmSpan(t.canon)}`]; }
+    for(const c of res.cands){
+      if(!c.valid || c===b) continue;
+      const names = [buildName(c), buildName(c,{omit:"never"}), buildName(c,{old:true})].map(norm);
+      if(names.includes(u)){
+        const r = cmpKey(b.key, c.key);
+        if(r.s===0) return [CHAIN_REASON[r.j]];
+        if(r.s>0){
+          const same = c.P.length===b.P.length && new Set(c.P).size===new Set([...c.P,...b.P]).size;
+          return [(same ? "Die Hauptkette stimmt, aber sie wurde von der falschen Seite nummeriert. " : "Es gibt mehrere gleichwertige Hauptketten, gewählt wird die mit den kleineren Nummern. ") + NUM_REASON[r.s]];
+        }
+      }
+    }
+    if(b.subs.length>1){
+      if(norm(buildName(b,{alpha:false}))===u || norm(buildName(b,{alphaMult:true}))===u)
+        return ["Nummern und Seitenketten stimmen. Die Seitenketten werden aber alphabetisch geordnet (z. B. Ethyl vor Methyl). Zahlwörter wie di- oder tri- zählen dabei nicht mit."];
+      if(norm(buildName(b,{noMulti:true}))===u)
+        return ["Gleiche Seitenketten werden mit Zahlwörtern zusammengefasst: 2,3-Dimethyl statt 2-Methyl-3-methyl."];
+    }
+    const ending = b.ohL.length ? "ol" : b.triL.length ? "in" : b.dblL.length ? "en" : "an";
+    const endName = {an:"-an (Alkan)", en:"-en (Alken)", in:"-in (Alkin)", ol:"-ol (Alkohol)"}[ending];
+    if(!u.endsWith(ending)) out.push(`Die Endung passt nicht zur Stoffklasse. Diese Verbindung endet auf ${endName}.`);
+    const stem = STEM[b.len].toLowerCase();
+    const stemRe = new RegExp("(^|[-\\d,a-z])"+stem+"(a?-|an|en|in|a\\d|$)");
+    if(!stemRe.test(u.replace(/(methyl|ethyl|propyl|butyl|pentyl)/g,"#")) ) out.push("Die Anzahl der C-Atome in der Hauptkette stimmt nicht. Suche die längste durchgehende Kette und zähle ihre C-Atome.");
+    else if(u.replace(/\d/g,"")===norm(t.canon).replace(/\d/g,"")) out.push("Die Bausteine stimmen, aber mindestens eine Nummer (Lokant) ist falsch. Prüfe die Nummerierungsrichtung und die Positionen.");
+    if(!out.length) out.push("Vergleiche Seitenketten, Nummern und Endung noch einmal mit der Formel.");
+    return out;
+  }
+
+  function evaluate(input, fromMc){
+    const t = task;
+    if(!t || t.done) return;
+    const u = norm(input);
+    if(!u){ $("feedback").innerHTML = fb("info","Gib zuerst einen Namen ein."); return; }
+    t.touched = true;
+    const hit = t.acc.get(u);
+    const ok = hit && (hit.kind!=="old" || allowOld);
+    if(ok){
+      t.done = true;
+      stats.solved++;
+      const firstTry = !t.wrong && t.hint===0;
+      if(firstTry) stats.first++;
+      stats.streak++;
+      logHistory(t, firstTry?"first":"ok");
+      let msg = `Richtig! ${nmSpan(t.canon)}`;
+      let extra = "";
+      if(hit.kind==="old") extra = fb("info", `Du hast die ältere Schreibweise verwendet. Nach aktueller IUPAC-Regel: ${nmSpan(t.canon)}`);
+      else if(hit.kind==="alt") extra = fb("info", `Ebenfalls richtig. Üblich ist die Kurzform ${nmSpan(t.canon)}`);
+      $("feedback").innerHTML = fb("good", msg) + extra;
+      if(!fromMc){ $("nameIn").classList.remove("bad"); $("nameIn").classList.add("ok"); $("nameIn").readOnly = true; }
+      renderTask(); renderWay(); renderStats();
+      return;
+    }
+    t.wrong = true;
+    stats.streak = 0;
+    if(fromMc) t.mcBad.add(u);
+    else { $("nameIn").classList.remove("ok"); $("nameIn").classList.add("bad"); }
+    const d = diagnose(input);
+    $("feedback").innerHTML = fb("bad", `${nmSpan(input)} ist nicht richtig.`) + d.map(x=>fb("hint",x)).join("");
+    renderMc(); renderStats();
+  }
+
+  // ---------- Tipps ----------
+  function fgRule(cls){
+    return {
+      alkan:"Sie ist die längste durchgehende Kette aus C-Atomen, auch über Knicke und Verzweigungen hinweg.",
+      alken:"Sie muss die C=C-Doppelbindung(en) enthalten und so lang wie möglich sein.",
+      alkin:"Sie muss die Mehrfachbindung(en) enthalten und so lang wie möglich sein.",
+      alkohol:"Sie muss das C-Atom mit der OH-Gruppe enthalten und so lang wie möglich sein."
+    }[cls];
+  }
+  function numReason(res){
+    if(!res.rev || res.best.len===1) return "Bei einem C-Atom gibt es nichts zu nummerieren.";
+    const r = cmpKey(res.best.key, res.rev.key);
+    if(r.d===0) return "Von beiden Enden ergeben sich dieselben Nummern.";
+    return NUM_REASON[r.s];
+  }
+  function subText(b){
+    if(!b.subs.length) return "keine Seitenketten";
+    const g = {};
+    b.subs.forEach(s=>{ (g[s.len]=g[s.len]||[]).push(s.pos); });
+    return Object.keys(g).sort((x,y)=>ALKYL[x].localeCompare(ALKYL[y])).map(k=>{
+      const L = g[k].sort((x,y)=>x-y);
+      return `${L.length>1?L.length+"× ":""}${ALKYL[k]} an C${L.join(", C")}`;
+    }).join("; ");
+  }
+  function hint(){
+    const t = task; if(!t || t.done) return;
+    t.hint++; t.touched = true;
+    const b = t.res.best;
+    let msg;
+    if(t.hint===1) msg = `Suche zuerst die Hauptkette. ${fgRule(t.cls)}`;
+    else if(t.hint===2){ t.showChain = true; msg = `Die Hauptkette hat ${b.len} C-Atom${b.len>1?"e":""} (Stammname ${STEM[b.len]}-). Sie ist in der Formel markiert.`; }
+    else if(t.hint===3){ t.showChain = t.showNums = true; msg = `Nummerierung: ${numReason(t.res)} Die Nummern stehen jetzt an der Kette.`; }
+    else { t.showChain = t.showNums = true; t.hint = 4;
+      const fgs = [];
+      if(b.dblL.length) fgs.push(`Doppelbindung ab C${b.dblL.join(", C")}`);
+      if(b.triL.length) fgs.push(`Dreifachbindung ab C${b.triL.join(", C")}`);
+      if(b.ohL.length) fgs.push(`OH-Gruppe an C${b.ohL.join(", C")}`);
+      msg = `Seitenketten: ${subText(b)}.${fgs.length?" "+fgs.join(", ")+".":""} Jetzt nur noch alphabetisch ordnen und zusammensetzen.`;
+    }
+    $("feedback").innerHTML = fb("hint", msg);
+    drawMol();
+  }
+  function showSolution(){
+    const t = task; if(!t || t.done) return;
+    t.done = true; t.shown = true; t.touched = true;
+    stats.shown++; stats.streak = 0;
+    logHistory(t,"shown");
+    $("nameIn").value = t.canon; $("nameIn").readOnly = true; $("nameIn").classList.remove("bad","ok");
+    $("feedback").innerHTML = fb("info", `Lösung: ${nmSpan(t.canon)}. Der Lösungsweg steht unten.`);
+    renderTask(); renderWay(); renderStats();
+  }
+
+  // ---------- Lösungsweg ----------
+  function renderWay(){
+    const box = $("wayBox"), t = task;
+    if(!t || !t.done){ box.innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
+    const b = t.res.best;
+    const contains = [];
+    if(b.dblL.length) contains.push(b.dblL.length>1?`${b.dblL.length} Doppelbindungen`:"die Doppelbindung");
+    if(b.triL.length) contains.push(b.triL.length>1?`${b.triL.length} Dreifachbindungen`:"die Dreifachbindung");
+    if(b.ohL.length) contains.push(b.ohL.length>1?`alle ${b.ohL.length} OH-Gruppen`:"die OH-Gruppe");
+    const locs = [];
+    if(b.ohL.length) locs.push(`OH an C<span class="a">${b.ohL.join(", ")}</span>`);
+    if(b.dblL.length) locs.push(`C=C ab C<span class="a">${b.dblL.join(", ")}</span>`);
+    if(b.triL.length) locs.push(`C≡C ab C<span class="a">${b.triL.join(", ")}</span>`);
+    if(b.subs.length) locs.push(`Seitenketten an C<span class="a">${b.subs.map(s=>s.pos).sort((x,y)=>x-y).join(", ")}</span>`);
+    const groups = {};
+    b.subs.forEach(s=>{ (groups[s.len]=groups[s.len]||[]).push(s.pos); });
+    const gk = Object.keys(groups).sort((x,y)=>ALKYL[x].localeCompare(ALKYL[y]));
+    const subStr = gk.length ? gk.map(k=>{ const L=groups[k].sort((x,y)=>x-y); return `<span class="t">${L.join(",")}-${MULT[L.length]}${ALKYL[k].toLowerCase()}</span>`; }).join(" · ") + (gk.length>1?" (alphabetisch geordnet)":"") : "keine";
+    let endung;
+    if(b.ohL.length) endung = `Alkohol: Endung <span class="t">-${b.ohL.join(",")}-${MULT[b.ohL.length]}ol</span> an den Stammnamen ${STEM[b.len]}an`;
+    else if(!b.multL.length) endung = `Alkan: Endung <span class="t">-an</span>`;
+    else endung = `${b.dblL.length?"Doppelbindung: Endung <span class=\"t\">-"+b.dblL.join(",")+"-"+MULT[b.dblL.length]+"en</span>":""}${b.dblL.length&&b.triL.length?", ":""}${b.triL.length?"Dreifachbindung: Endung <span class=\"t\">-"+b.triL.join(",")+"-"+MULT[b.triL.length]+"in</span>":""}`;
+    const alts = [...t.acc.values()].filter(v=>v.kind!=="canon" && norm(v.name)!==norm(t.canon) && (v.kind!=="old"||allowOld)).map(v=>v.name);
+    box.innerHTML = `<div class="steps">
+      <div class="step"><span class="n">1</span><span class="h">Hauptkette</span><span class="b"><span class="a">${b.len}</span> C-Atom${b.len>1?"e":""} → Stammname <span class="t">${STEM[b.len]}-</span>${contains.length?". Sie enthält "+contains.join(" und ")+".":""}</span></div>
+      <div class="step"><span class="n">2</span><span class="h">Nummerierung</span><span class="b">${numReason(t.res)}${locs.length?"<br>"+locs.join(" · "):""}</span></div>
+      <div class="step"><span class="n">3</span><span class="h">Seitenketten</span><span class="b">${subStr}</span></div>
+      <div class="step"><span class="n">4</span><span class="h">Endung</span><span class="b">${endung}</span></div>
+      <div class="step final"><span class="n">=</span><span class="h" style="font-family:Inter,sans-serif;font-size:13.5px">Name</span><span class="b">${t.canon}</span></div>
+      ${alts.length?`<div class="step"><span class="n"></span><span class="h">auch akzeptiert</span><span class="b" style="color:var(--text-dim)">${alts.join(" · ")}</span></div>`:""}
+    </div>`;
+  }
+
+  // ---------- Verlauf & Statistik ----------
+  function logHistory(t, status){
+    const ex = history.find(h=>h.num===t.num);
+    if(ex) ex.status = status; else history.push({num:t.num, cls:t.cls, name:t.canon, status});
+    const label = {first:["gelöst im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    $("histBody").innerHTML = history.slice().reverse().map(h=>
+      `<tr><td class="mono">${h.num}</td><td>${CLS_ONE[h.cls]}</td><td class="mono">${h.status==="open"?"–":h.name}</td><td class="${label[h.status][1]}">${label[h.status][0]}</td></tr>`).join("");
+  }
+  function renderStats(){
+    $("roSolved").textContent = stats.solved;
+    $("roFirst").textContent = stats.first;
+    $("roStreak").textContent = stats.streak;
+    $("roShown").textContent = stats.shown;
+  }
+
+  // ---------- Bedienung ----------
+  function setupToggle(id, attr, cb){
+    $(id).querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>{
+      $(id).querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      bt.classList.add("active"); cb(bt.dataset[attr]);
+    }));
+  }
+  setupToggle("classToggle","cls", v=>{ klass=v; newTask(); });
+  setupToggle("levelToggle","level", v=>{ level=+v; newTask(); });
+  setupToggle("styleToggle","style", v=>{ style=v; drawMol(); });
+  setupToggle("answerToggle","ans", v=>{ answer=v; renderTask(); });
+  $("chkOld").addEventListener("change", e=>{ allowOld=e.target.checked; if(task && task.done) renderWay(); });
+  $("chkFormula").addEventListener("change", e=>{ showFormula=e.target.checked; drawMol(); });
+  $("btnNew").addEventListener("click", ()=>newTask());
+  $("btnCheck").addEventListener("click", ()=>evaluate($("nameIn").value,false));
+  $("btnHint").addEventListener("click", hint);
+  $("btnSolve").addEventListener("click", showSolution);
+  $("nameIn").addEventListener("input", ()=>{ $("nameIn").classList.remove("ok","bad"); if(task) task.touched = true; });
+  document.addEventListener("keydown", e=>{
+    if(e.key==="Enter" && e.target.id==="nameIn" && !$("guideBackdrop").classList.contains("open")){ e.preventDefault(); evaluate($("nameIn").value,false); }
+    if(e.key==="Escape") $("guideBackdrop").classList.remove("open");
+  });
+  document.querySelectorAll(".tabbtn").forEach(bt=>bt.addEventListener("click",()=>{
+    document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===bt));
+    document.querySelectorAll(".tabpanel").forEach(x=>x.classList.toggle("active", x.id==="tab-"+bt.dataset.tab));
+  }));
+  $("btnGuide").addEventListener("click", e=>{ e.preventDefault(); $("guideBackdrop").classList.add("open"); });
+  $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
+  $("guideBackdrop").addEventListener("click", e=>{ if(e.target.id==="guideBackdrop") $("guideBackdrop").classList.remove("open"); });
+
+
+  renderStats();
+  level = 2; newTask(); level = 0;
+})();
+</script>
+
+</body>
+</html>
