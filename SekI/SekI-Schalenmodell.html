@@ -169,6 +169,7 @@ input.num-in[readonly]{color:var(--teal);}
 .stp .c .v{min-width:26px; text-align:center; font-size:16px; color:var(--teal);}
 .check-btn{width:100%; padding:10px 14px; font-size:13.5px; border-color:var(--teal-dim); color:var(--teal);}
 .check-btn:hover:not(:disabled){border-color:var(--teal);}
+.mode-toggle button.mix{flex:2;}
 .stp-note{font-size:11.5px; color:var(--text-faint); line-height:1.45;}
 
 .feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
@@ -226,7 +227,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <header>
   <h1>Schalenmodell nach Bohr</h1>
-  <span class="tag">Atombau der Hauptgruppenelemente der 1. bis 3. Periode</span>
+  <span class="tag" id="tagLine">Atombau der Hauptgruppenelemente der 1. bis 3. Periode</span>
   <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
   <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
 </header>
@@ -239,14 +240,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     </div>
     <div class="modal-body">
       <h3>Worum es geht</h3>
-      <p>Zu einem Atom sollst du das <strong>Schalenmodell nach Bohr</strong> aufstellen: Wie viele Protonen und Neutronen sitzen im Kern, und wie verteilen sich die Elektronen auf die Schalen K, L und M? Die nötigen Angaben entnimmst du dem <strong>Periodensystem</strong> links. Ein Klick auf ein Element zeigt seinen Namen und seine Daten.</p>
+      <p>Zu einem Atom sollst du das <strong>Schalenmodell nach Bohr</strong> aufstellen: Wie viele Protonen und Neutronen sitzen im Kern, und wie verteilen sich die Elektronen auf die Schalen K, L und M (auf Wunsch auch N)? Die nötigen Angaben entnimmst du dem <strong>Periodensystem</strong> links. Ein Klick auf ein Element zeigt seinen Namen und seine Daten.</p>
 
       <h3>Vorgehen in vier Schritten</h3>
       <ol>
         <li><strong>Element im PSE suchen.</strong> Die Aufgabe nennt das Elementsymbol, bei Isotopen zusätzlich die Massenzahl oben links (z. B. <sup>37</sup>Cl).</li>
         <li><strong>Protonen bestimmen.</strong> Die Ordnungszahl (oben links in der Zelle) gibt die Zahl der Protonen an.</li>
         <li><strong>Neutronen berechnen.</strong> Die Massenzahl ist die gerundete Atommasse (unten in der Zelle). Bei einem Isotop ist die Massenzahl in der Aufgabe angegeben. Es gilt: Neutronen = Massenzahl − Protonen.</li>
-        <li><strong>Elektronen verteilen.</strong> Ein Atom ist elektrisch neutral und hat so viele Elektronen wie Protonen. Die Schalen werden von innen nach außen besetzt: K höchstens 2, L höchstens 8, M (bis Periode 3) höchstens 8.</li>
+        <li><strong>Elektronen verteilen.</strong> Ein Atom ist elektrisch neutral und hat so viele Elektronen wie Protonen. Die Schalen werden von innen nach außen besetzt: K höchstens 2, L höchstens 8, M (bis Periode 3) höchstens 8. Ab der 4. Periode gilt: Die n-te Schale fasst höchstens 2n² Elektronen (M: 18, N: 32), die äußerste Schale aber höchstens 8. Ab der III. Hauptgruppe der 4. Periode ist die M-Schale mit 18 Elektronen besetzt.</li>
       </ol>
       <div class="formula-box">Chlor: Z = 17, Atommasse 35,45 u → A = 35<br>17 p⁺ · 35 − 17 = 18 n · 17 e⁻<br>K: 2 · L: 8 · M: 7</div>
 
@@ -255,7 +256,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <p>Die Elektronen auf L- und M-Schale werden zuerst einzeln auf vier Plätze gesetzt, danach paarweise. So siehst du gleich, wie viele ungepaarte Außenelektronen das Atom hat.</p>
 
       <h3>Einstellungen</h3>
-      <p><strong>Periode</strong> legt fest, aus welcher Zeile des PSE die Elemente stammen. Mit <strong>Isotope einbeziehen</strong> kommen auch seltenere Isotope wie Chlor-37 oder Kohlenstoff-14 vor. Dann ist die Massenzahl vorgegeben und weicht von der gerundeten Atommasse ab.</p>
+      <p><strong>Periode</strong> legt fest, aus welcher Zeile des PSE die Elemente stammen. Mit <strong>4. Schale (N)</strong> kommen die Hauptgruppenelemente der 4. Periode (K, Ca, Ga bis Kr) dazu. Die Option ist beim Aufruf der Seite ausgeschaltet. Mit <strong>Isotope einbeziehen</strong> kommen auch seltenere Isotope wie Chlor-37 oder Kohlenstoff-14 vor. Dann ist die Massenzahl vorgegeben und weicht von der gerundeten Atommasse ab.</p>
 
       <h3>Tipp, Lösung, Auswertung</h3>
       <p>„Tipp“ hilft in vier Stufen: Element finden, Element im PSE markieren, Neutronenzahl, Schalenbesetzung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
@@ -273,14 +274,16 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <button data-per="1">1.</button>
         <button data-per="2">2.</button>
         <button data-per="3">3.</button>
-        <button data-per="0" class="active">Gemischt</button>
+        <button data-per="4" hidden>4.</button>
+        <button data-per="0" class="active mix">Gemischt</button>
       </div>
       <label class="check-row" for="chkIso"><input type="checkbox" id="chkIso"><span>Isotope einbeziehen (z. B. Chlor-37, Kohlenstoff-14)</span></label>
+      <label class="check-row" for="chkN"><input type="checkbox" id="chkN" autocomplete="off"><span>4. Schale (N) einbeziehen: Hauptgruppen der 4. Periode (K bis Kr)</span></label>
       <label class="check-row" for="chkSum"><input type="checkbox" id="chkSum" checked><span>Summe der Elektronen anzeigen</span></label>
     </section>
 
     <section class="block">
-      <h2>Periodensystem (Hauptgruppen, Periode 1–3)</h2>
+      <h2 id="pseTitle">Periodensystem (Hauptgruppen, Periode 1–3)</h2>
       <div class="pse" id="pse"></div>
       <div class="pse-info" id="pseInfo">Klicke auf ein Element, um Namen und Daten zu sehen.</div>
     </section>
@@ -298,14 +301,21 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
             <tr><td class="k">e⁻</td><td>Elektronen = Protonen (Atom ist neutral)</td></tr>
             <tr><td class="k">K</td><td>1. Schale, höchstens 2 e⁻</td></tr>
             <tr><td class="k">L</td><td>2. Schale, höchstens 8 e⁻</td></tr>
-            <tr><td class="k">M</td><td>3. Schale, bis Periode 3 höchstens 8 e⁻</td></tr>
+            <tr><td class="k">M</td><td>3. Schale, höchstens 18 e⁻; als Außenschale (Periode 3) höchstens 8 e⁻</td></tr>
+            <tr class="grp"><td colspan="2">Schale N (4. Periode)</td></tr>
+            <tr><td class="k">N</td><td>4. Schale, höchstens 32 e⁻</td></tr>
+            <tr><td class="k">2n²</td><td>Höchstzahl der Elektronen auf der n-ten Schale (K: 2, L: 8, M: 18, N: 32)</td></tr>
+            <tr><td class="k">außen</td><td>Die äußerste Schale fasst höchstens 8 e⁻</td></tr>
+            <tr><td class="k">I, II</td><td>Neue Schale beginnt, sobald die vorherige 8 e⁻ hat: K 2·8·8·1, Ca 2·8·8·2</td></tr>
+            <tr><td class="k">III–VIII</td><td>M-Schale mit 18 e⁻ besetzt: Ga 2·8·18·3, Br 2·8·18·7</td></tr>
+            <tr><td class="k">NG</td><td>Die Nebengruppenelemente (Sc bis Zn) füllen die M-Schale von 8 auf 18 e⁻ auf</td></tr>
             <tr class="grp"><td colspan="2">Zusammenhang mit dem PSE</td></tr>
             <tr><td class="k">Periode</td><td>Anzahl der besetzten Schalen</td></tr>
             <tr><td class="k">Gruppe</td><td>Anzahl der Außenelektronen (Ausnahme He: 2)</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="note">Die Massenzahl des häufigsten Isotops erhältst du, indem du die Atommasse auf eine ganze Zahl rundest.</p>
+      <p class="note">Als Massenzahl verwendest du die auf eine ganze Zahl gerundete Atommasse. Bei den leichten Elementen ist das die Massenzahl des häufigsten Isotops.</p>
     </details>
   </div>
 
@@ -368,7 +378,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     <div class="tabpanel" id="tab-hist">
       <div class="table-wrap">
         <table class="hist">
-          <thead><tr><th>#</th><th>Atom</th><th>Kern</th><th>Schalen K · L · M</th><th>Status</th></tr></thead>
+          <thead><tr><th>#</th><th>Atom</th><th>Kern</th><th>Schalen</th><th>Status</th></tr></thead>
           <tbody id="histBody"><tr><td colspan="5" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
         </table>
       </div>
@@ -377,8 +387,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 </div>
 
 <footer>
-  <p class="footer-note">Vereinfachtes Atommodell nach Niels Bohr (1913) für die Hauptgruppenelemente der ersten drei Perioden. Atommassen gerundet nach IUPAC-Standardwerten.</p>
-  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-note">Vereinfachtes Atommodell nach Niels Bohr (1913) für die Hauptgruppenelemente der ersten drei Perioden, wahlweise mit der 4. Periode. Atommassen gerundet nach IUPAC-Standardwerten.</p>
+  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.1 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -386,7 +396,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   "use strict";
   const $ = id => document.getElementById(id);
 
-  // ---------- Elementdaten ----------
+  // ---------- Elementdaten (Hauptgruppen, Periode 1–4) ----------
   const EL = [
     {z:1, s:"H",  n:"Wasserstoff", m:"1,008", g:1, p:1},
     {z:2, s:"He", n:"Helium",      m:"4,003", g:8, p:1},
@@ -405,24 +415,53 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     {z:15,s:"P",  n:"Phosphor",    m:"30,97", g:5, p:3},
     {z:16,s:"S",  n:"Schwefel",    m:"32,06", g:6, p:3},
     {z:17,s:"Cl", n:"Chlor",       m:"35,45", g:7, p:3},
-    {z:18,s:"Ar", n:"Argon",       m:"39,95", g:8, p:3}
+    {z:18,s:"Ar", n:"Argon",       m:"39,95", g:8, p:3},
+    {z:19,s:"K",  n:"Kalium",      m:"39,10", g:1, p:4},
+    {z:20,s:"Ca", n:"Calcium",     m:"40,08", g:2, p:4},
+    {z:31,s:"Ga", n:"Gallium",     m:"69,72", g:3, p:4},
+    {z:32,s:"Ge", n:"Germanium",   m:"72,63", g:4, p:4},
+    {z:33,s:"As", n:"Arsen",       m:"74,92", g:5, p:4},
+    {z:34,s:"Se", n:"Selen",       m:"78,97", g:6, p:4},
+    {z:35,s:"Br", n:"Brom",        m:"79,90", g:7, p:4},
+    {z:36,s:"Kr", n:"Krypton",     m:"83,80", g:8, p:4}
   ];
   EL.forEach(e=>{ e.A = Math.round(parseFloat(e.m.replace(",","."))); });
-  const ISO = {1:[2,3], 2:[3], 3:[6], 5:[10], 6:[13,14], 7:[15], 8:[17,18], 10:[22], 12:[25,26], 14:[29,30], 16:[34], 17:[37], 18:[36]};
+  const byZ = z => EL.find(e=>e.z===z);
+  const ISO = {1:[2,3], 2:[3], 3:[6], 5:[10], 6:[13,14], 7:[15], 8:[17,18], 10:[22], 12:[25,26], 14:[29,30], 16:[34], 17:[37], 18:[36],
+               19:[41], 20:[44], 31:[69,71], 32:[74], 34:[80], 35:[79,81], 36:[86]};
   const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII"];
-  const SHELL = ["K","L","M"];
-  const R_SHELL = [72, 112, 152];
-  const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  const SHELL = ["K","L","M","N"];
+  const CAP = [2,8,18,32];
+  const RADII = {3:[72,112,152], 4:[64,94,124,154]};
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const config = z => [Math.min(z,2), Math.min(Math.max(z-2,0),8), Math.max(z-10,0)];
   const sup = n => `<sup>${n}</sup>`;
+  const sum5 = a => a.reduce((x,y)=>x+y,0);
+  const shellList = sol => sol.filter((x,i)=>x||i===0);
+
+  function config(e){
+    const z = e.z, g = e.g;
+    switch(e.p){
+      case 1: return [z,0,0,0,0];
+      case 2: return [2,z-2,0,0,0];
+      case 3: return [2,8,z-10,0,0];
+      default: return g<=2 ? [2,8,8,g,0] : [2,8,18,g,0];
+    }
+  }
+
+  // ---------- Zustand ----------
+  let per = 0, useIso = false, showSum = true, useN = false;
+  let task = null, taskCounter = 0;
+  const stats = {solved:0, first:0, streak:0, shown:0};
+  const history = [];
+  const nShells = () => 3 + (useN?1:0);
+  const maxPer = () => nShells();
 
   // ---------- PSE aufbauen ----------
   function buildPSE(){
     let h = `<div></div>`;
     for(let g=1; g<=8; g++) h += `<div class="hd">${ROMAN[g]}</div>`;
-    for(let p=1; p<=3; p++){
-      h += `<div class="rh">${p}</div>`;
+    for(let p=1; p<=4; p++){
+      h += `<div class="rh" data-row="${p}">${p}</div>`;
       if(p===1){
         h += cellHTML(EL[0]) + `<div class="legend">Ordnungszahl oben links,<br>Atommasse in u unten</div>` + cellHTML(EL[1]);
       } else {
@@ -432,10 +471,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     $("pse").innerHTML = h;
   }
   function cellHTML(e){
-    return `<button class="cell${e.g===8?' noble':''}" data-z="${e.z}" title="${e.n}" aria-label="${e.n}, Ordnungszahl ${e.z}"><span class="z">${e.z}</span><span class="sy">${e.s}</span><span class="ms">${e.m}</span></button>`;
+    return `<button class="cell${e.g===8?' noble':''}" data-z="${e.z}" data-row="${e.p}" title="${e.n}" aria-label="${e.n}, Ordnungszahl ${e.z}"><span class="z">${e.z}</span><span class="sy">${e.s}</span><span class="ms">${e.m}</span></button>`;
   }
   function showInfo(z){
-    const e = EL[z-1];
+    const e = byZ(z);
     document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("sel", +c.dataset.z===z));
     $("pseInfo").innerHTML = `<b>${e.n}</b> (${e.s}) · Ordnungszahl <span class="a">${e.z}</span> · Atommasse <span class="a">${e.m} u</span><br>${e.p}. Periode · ${ROMAN[e.g]}. Hauptgruppe${e.g===8?" (Edelgase)":""}`;
   }
@@ -443,23 +482,33 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("hint", z!=null && +c.dataset.z===z));
   }
 
-  // ---------- Zustand ----------
-  let per = 0, useIso = false, showSum = true;
-  let task = null, taskCounter = 0;
-  const stats = {solved:0, first:0, streak:0, shown:0};
-  const history = [];
+  // ---------- Erweiterung 4. Schale ----------
+  function applyExt(){
+    const mp = maxPer();
+    document.querySelectorAll("#pse [data-row]").forEach(el=>{ el.hidden = +el.dataset.row > mp; });
+    document.querySelectorAll("#perToggle button[data-per]").forEach(b=>{ const v = +b.dataset.per; b.hidden = v > mp; });
+    if(per > mp){
+      per = 0;
+      document.querySelectorAll("#perToggle button").forEach(b=>b.classList.toggle("active", b.dataset.per==="0"));
+    }
+    document.querySelectorAll("[data-ext]").forEach(el=>{ el.hidden = +el.dataset.ext > mp; });
+    
+    $("tagLine").textContent = `Atombau der Hauptgruppenelemente der 1. bis ${mp}. Periode`;
+    $("pseTitle").textContent = `Periodensystem (Hauptgruppen, Periode 1–${mp})`;
+  }
 
   function nuclideHTML(t){ return sup(t.A) + t.el.s; }
   function nuclideName(t){ return t.el.n + "-" + t.A; }
 
   function newTask(){
     if(task && !task.done && task.touched) logHistory(task, "open");
-    let pool = EL.filter(e=> !per || e.p===per);
+    const mp = maxPer();
+    let pool = EL.filter(e=> e.p<=mp && (!per || e.p===per));
     let el;
     for(let i=0;i<20;i++){ el = pick(pool); if(!task || el!==task.el || pool.length===1) break; }
     let A = el.A, iso = false;
     if(useIso && ISO[el.z] && Math.random()<.5){ A = pick(ISO[el.z]); iso = true; }
-    task = {num:++taskCounter, el, A, iso, hint:0, wrong:false, done:false, shown:false, touched:false, e:[0,0,0], sol:config(el.z)};
+    task = {num:++taskCounter, el, A, iso, hint:0, wrong:false, done:false, shown:false, touched:false, e:[0,0,0,0,0], sol:config(el)};
     $("pIn").value = ""; $("nIn").value = "";
     ["pIn","nIn"].forEach(id=>{ $(id).readOnly=false; $(id).classList.remove("ok","bad"); });
     $("feedback").innerHTML = "";
@@ -499,17 +548,18 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   function renderSteppers(){
     const t = task;
     let h = "";
-    SHELL.forEach((s,i)=>{
+    for(let i=0;i<nShells();i++){
+      const s = SHELL[i];
       h += `<div class="stp" id="stp${i}"><span class="l"><b>${s}</b>${i+1}. Schale</span><span class="c">`+
            `<button data-sh="${i}" data-d="-1" aria-label="Elektron von ${s}-Schale entfernen" ${t.done||t.e[i]===0?"disabled":""}>−</button>`+
            `<span class="v mono">${t.e[i]}</span>`+
-           `<button data-sh="${i}" data-d="1" aria-label="Elektron auf ${s}-Schale setzen" ${t.done||t.e[i]>=18?"disabled":""}>+</button></span></div>`;
-    });
+           `<button data-sh="${i}" data-d="1" aria-label="Elektron auf ${s}-Schale setzen" ${t.done||t.e[i]>=32?"disabled":""}>+</button></span></div>`;
+    }
     $("stpWrap").innerHTML = h;
   }
   function changeE(i, d){
-    const t = task; if(t.done) return;
-    const v = t.e[i] + d; if(v<0 || v>18) return;
+    const t = task; if(t.done || i>=nShells()) return;
+    const v = t.e[i] + d; if(v<0 || v>32) return;
     t.e[i] = v; t.touched = true; t._badShell = null;
     document.querySelectorAll(".stp").forEach(s=>s.classList.remove("ok","bad"));
     renderSteppers(); drawAtom();
@@ -518,49 +568,85 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   // ---------- Zeichnen ----------
   function electronPos(i, n, r){
     const pts = [];
-    if(i===0){
-      const ang = n===1 ? [-90] : [-90, 90];
-      ang.slice(0,n).forEach(a=>pts.push(a));
-    } else {
-      const base = [-90, 0, 90, 180];
-      const perSlot = Math.ceil(n/4);   // bei >8 Elektronen (Fehleingabe) mehr pro Platz
-      const counts = [0,0,0,0];
+    if(i===0 && n<=2){
+      [-90, 90].slice(0,n).forEach(a=>pts.push(a));
+    } else if(n<=8){
+      // vier Plätze: erst einzeln, dann paarweise
+      const base = [-90, 0, 90, 180], counts = [0,0,0,0];
       for(let k=0;k<n;k++) counts[k%4]++;
-      const spread = perSlot<=2 ? 12 : 30/perSlot;
-      base.forEach((a,s)=>{
-        const c = counts[s];
-        for(let k=0;k<c;k++) pts.push(a + (k-(c-1)/2)*spread*(c>1?1:0));
-      });
+      const spread = r<80 ? 16 : 12;
+      base.forEach((a,s)=>{ const c = counts[s]; for(let k=0;k<c;k++) pts.push(a + (c>1 ? (k-.5)*spread : 0)); });
+    } else {
+      for(let k=0;k<n;k++) pts.push(-90 + k*360/n);
     }
     return pts.map(a=>({x:r*Math.cos(a*Math.PI/180), y:r*Math.sin(a*Math.PI/180)}));
   }
   function drawAtom(){
-    const t = task;
+    const t = task, S = nShells(), R = RADII[S];
+    const step = R[1]-R[0];
+    const er = S===4 ? 5.8 : 6.2;
     const pv = $("pIn").value.trim(), nv = $("nIn").value.trim();
     let s = "";
     const badShell = t._badShell || new Set();
-    R_SHELL.forEach((r,i)=>{
+    R.forEach((r,i)=>{
       const cls = "shell" + (t.e[i]===0 ? " empty" : "") + (badShell.has(i) ? " bad" : "");
-      s += `<g class="sg"><circle class="hit" data-shell="${i}" cx="0" cy="0" r="${r}"/><circle class="${cls}" cx="0" cy="0" r="${r}"/></g>`;
+      s += `<g class="sg"><circle class="hit" data-shell="${i}" cx="0" cy="0" r="${r}" style="stroke-width:${Math.min(30,step)}px"/><circle class="${cls}" cx="0" cy="0" r="${r}"/></g>`;
       const la = -38*Math.PI/180;
       s += `<text class="slbl" x="${((r+2)*Math.cos(la)+6).toFixed(1)}" y="${((r+2)*Math.sin(la)-6).toFixed(1)}">${SHELL[i]}</text>`;
     });
-    R_SHELL.forEach((r,i)=>{
-      electronPos(i, t.e[i], r).forEach(p=>{ s += `<circle class="el" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6.2" pointer-events="none"/>`; });
+    R.forEach((r,i)=>{
+      electronPos(i, t.e[i], r).forEach(p=>{ s += `<circle class="el" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${er}" pointer-events="none"/>`; });
     });
     const nucOk = t.done && !t.shown;
-    s += `<circle class="nuc${nucOk?" ok":""}" cx="0" cy="0" r="40"/>`;
+    const nr = S===3 ? 40 : 38;
+    s += `<circle class="nuc${nucOk?" ok":""}" cx="0" cy="0" r="${nr}"/>`;
     s += `<text class="nt1" x="0" y="-7" text-anchor="middle" dominant-baseline="central">${pv===""?"?":esc(pv)} p⁺</text>`;
     s += `<text class="nt2" x="0" y="13" text-anchor="middle" dominant-baseline="central">${nv===""?"?":esc(nv)} n</text>`;
-    $("atomBox").innerHTML = `<svg viewBox="-172 -172 344 344" role="img" aria-label="Schalenmodell mit Kern und Schalen K, L, M">${s}</svg>`;
-    const sum = t.e[0]+t.e[1]+t.e[2];
-    $("sumLbl").textContent = showSum ? `Σ e⁻ = ${sum}` : "";
+    $("atomBox").innerHTML = `<svg viewBox="-172 -172 344 344" role="img" aria-label="Schalenmodell mit Kern und Schalen ${SHELL.slice(0,S).join(", ")}">${s}</svg>`;
+    $("sumLbl").textContent = showSum ? `Σ e⁻ = ${sum5(t.e)}` : "";
   }
   function esc(v){ return String(v).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])).slice(0,4); }
 
   // ---------- Prüfen ----------
   function readInt(id){ const v = $(id).value.trim(); if(v==="") return null; const n = Number(v); return Number.isInteger(n) ? n : NaN; }
   function fb(cls, html){ return `<div class="fb ${cls}">${html}</div>`; }
+
+  function shellMsgs(t, msgs, bad){
+    const e = t.e, sol = t.sol, el = t.el, S = nShells(), Z = el.z;
+    const sum = sum5(e);
+    // Höchstbesetzung je Schale (2n²)
+    for(let i=0;i<S;i++){
+      if(e[i]>CAP[i]){ bad.add(i); msgs.push(`Die ${SHELL[i]}-Schale fasst höchstens ${CAP[i]} Elektronen.`); }
+    }
+    if(bad.size) return;
+    // Außenschale höchstens 8
+    let outer = -1; for(let i=S-1;i>=0;i--) if(e[i]>0){ outer = i; break; }
+    if(outer>=1 && e[outer]>8){
+      bad.add(outer);
+      msgs.push(S===3 && outer===2 ? "In den ersten drei Perioden fasst die M-Schale höchstens 8 Elektronen."
+                                   : `Die äußerste besetzte Schale (hier die ${SHELL[outer]}-Schale) fasst höchstens 8 Elektronen.`);
+      return;
+    }
+    // von innen nach außen
+    const minFull = [2,8,8,8];
+    for(let j=0;j<outer;j++){
+      if(e[j] < minFull[j]){
+        bad.add(j);
+        msgs.push("Die Schalen werden von innen nach außen besetzt. Eine äußere Schale kommt erst dran, wenn die innere voll ist (K: 2, L: 8, ab M mindestens 8).");
+        break;
+      }
+    }
+    if(sum!==Z){ msgs.push(`Du hast ${sum} Elektronen gesetzt. Ein Atom ist elektrisch neutral: Es hat genauso viele Elektronen wie Protonen.`); return; }
+    if(msgs.length) return;
+    // Sonderfälle in Periode 4
+    if(el.p>=4){
+      for(let i=0;i<S;i++) if(e[i]!==sol[i]) bad.add(i);
+      if(el.g<=2) msgs.push(`In der ${ROMAN[el.g]}. Hauptgruppe kommen in der 4. Periode die Außenelektronen schon auf die N-Schale, sobald die M-Schale 8 Elektronen hat.`);
+      else msgs.push("Ab der III. Hauptgruppe ist in der 4. Periode die M-Schale mit 18 Elektronen besetzt. Diese Elektronen kommen bei den Nebengruppenelementen (Sc bis Zn) dazu.");
+      return;
+    }
+    msgs.push("Die Verteilung der Elektronen stimmt noch nicht. Die Zahl der besetzten Schalen entspricht der Periode.");
+  }
 
   function check(){
     const t = task; if(t.done) return;
@@ -584,36 +670,23 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     else if(n===Z) msgs.push("Die Neutronenzahl ist nicht automatisch gleich der Protonenzahl. Rechne: Neutronen = Massenzahl − Protonen.");
     else msgs.push("Die Neutronenzahl stimmt nicht. Die Massenzahl ist die gerundete Atommasse; davon ziehst du die Protonen ab.");
 
-    const sum = e[0]+e[1]+e[2];
+    const sum = sum5(e);
     const bad = new Set();
-    if(e[0]===sol[0] && e[1]===sol[1] && e[2]===sol[2]) okE = true;
+    if(e.every((x,i)=>x===sol[i])) okE = true;
     else if(sum===0) msgs.push("Verteile die Elektronen auf die Schalen.");
-    else {
-      if(e[0]>2){ bad.add(0); msgs.push("Die K-Schale fasst höchstens 2 Elektronen."); }
-      if(e[1]>8){ bad.add(1); msgs.push("Die L-Schale fasst höchstens 8 Elektronen."); }
-      if(e[2]>8){ bad.add(2); msgs.push("In den ersten drei Perioden fasst die M-Schale höchstens 8 Elektronen."); }
-      if(!bad.size){
-        if((e[1]>0 && e[0]<2) || (e[2]>0 && e[1]<8)){
-          if(e[1]>0 && e[0]<2) bad.add(0); else bad.add(1);
-          msgs.push("Die Schalen werden von innen nach außen besetzt. Eine äußere Schale kommt erst dran, wenn die innere voll ist.");
-        }
-        if(sum!==Z) msgs.push(`Du hast ${sum} Elektronen gesetzt. Ein Atom ist elektrisch neutral: Es hat genauso viele Elektronen wie Protonen.`);
-      }
-      if(!msgs.length) msgs.push("Die Verteilung der Elektronen stimmt noch nicht.");
-    }
+    else shellMsgs(t, msgs, bad);
     t._badShell = bad;
 
     $("pIn").classList.toggle("ok", okP); $("pIn").classList.toggle("bad", !okP && p!==null);
     $("nIn").classList.toggle("ok", okN); $("nIn").classList.toggle("bad", !okN && n!==null);
-    const stp = document.querySelectorAll(".stp");
-    stp.forEach((s,i)=>{ s.classList.remove("ok","bad"); if(okE) s.classList.add("ok"); else if(sum>0 && e[i]!==sol[i]) s.classList.add("bad"); });
+    document.querySelectorAll(".stp").forEach((s,i)=>{ s.classList.remove("ok","bad"); if(okE) s.classList.add("ok"); else if(sum>0 && e[i]!==sol[i]) s.classList.add("bad"); });
 
     if(okP && okN && okE){
       t.done = true;
       const firstTry = !t.wrong && t.hint===0;
       stats.solved++; if(firstTry) stats.first++; stats.streak++;
       $("pIn").readOnly = true; $("nIn").readOnly = true;
-      $("feedback").innerHTML = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${nuclideHTML(t)}</span>: ${Z} Protonen, ${N} Neutronen, Elektronen ${sol.filter((x,i)=>x||i===0).join(" · ")}.`) + fb("info", summaryLine(t));
+      $("feedback").innerHTML = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${nuclideHTML(t)}</span>: ${Z} Protonen, ${N} Neutronen, Elektronen ${shellList(sol).join(" · ")}.`) + fb("info", summaryLine(t));
       logHistory(t, firstTry ? "first" : "ok");
       renderTask(); renderWay(); updateStats();
       document.querySelectorAll(".stp").forEach(x=>x.classList.add("ok"));
@@ -629,7 +702,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   function summaryLine(t){
     const e = t.el, sol = t.sol, shells = sol.filter(x=>x>0).length, outer = sol[shells-1];
     if(e.z===2) return "Helium hat nur die K-Schale, und die ist mit 2 Elektronen voll. Deshalb steht es trotz 2 Außenelektronen bei den Edelgasen (VIII. Hauptgruppe).";
-    const full = (outer===8) ? " Die Außenschale ist voll besetzt (Edelgaskonfiguration)." : "";
+    const full = (outer===8) ? " Die Außenschale ist mit 8 Elektronen besetzt (Edelgaskonfiguration)." : "";
     return `${shells} besetzte Schale${shells>1?"n":""} → ${e.p}. Periode · ${outer} Außenelektron${outer>1?"en":""} → ${ROMAN[e.g]}. Hauptgruppe.${full}`;
   }
 
@@ -642,8 +715,12 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     if(t.hint>=2){ out.push(`Tipp 2: Das Element ist markiert: ${e.n}, Ordnungszahl ${e.z}. Ordnungszahl = Protonenzahl = Elektronenzahl im Atom.`); markHint(e.z); showInfo(e.z); }
     if(t.hint>=3) out.push(t.iso ? `Tipp 3: Die Massenzahl ${t.A} ist vorgegeben. Neutronen = Massenzahl − Protonen.` :
                                    `Tipp 3: Atommasse ${e.m} u, gerundet ergibt das die Massenzahl ${e.A}. Neutronen = Massenzahl − Protonen.`);
-    if(t.hint>=4) out.push(e.z===2 ? "Tipp 4: Helium steht in der 1. Periode, also ist nur die K-Schale besetzt." :
-                  `Tipp 4: Das Element steht in der ${e.p}. Periode, also sind ${e.p} Schalen besetzt. In der ${ROMAN[e.g]}. Hauptgruppe hat es ${e.g} Außenelektron${e.g>1?"en":""}. Innere Schalen sind voll (K: 2, L: 8).`);
+    if(t.hint>=4){
+      const base = `Tipp 4: Das Element steht in der ${e.p}. Periode, also sind ${e.p} Schalen besetzt. In der ${ROMAN[e.g]}. Hauptgruppe hat es ${e.g} Außenelektron${e.g>1?"en":""}.`;
+      if(e.z===2) out.push("Tipp 4: Helium steht in der 1. Periode, also ist nur die K-Schale besetzt.");
+      else if(e.p<=3) out.push(base + " Innere Schalen sind voll (K: 2, L: 8).");
+      else out.push(base + (e.g<=2 ? ` Die vorletzte Schale (${SHELL[e.p-2]}) hat 8 Elektronen, die Schalen davor sind voll.` : ` Die vorletzte Schale (${SHELL[e.p-2]}) ist mit 18 Elektronen besetzt, die Schalen davor sind voll.`));
+    }
     $("feedback").innerHTML = out.map(m=>fb("hint", m)).join("");
   }
 
@@ -654,7 +731,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     t.e = t.sol.slice(); t._badShell = new Set();
     $("pIn").value = t.el.z; $("nIn").value = t.A - t.el.z;
     ["pIn","nIn"].forEach(id=>{ $(id).readOnly = true; $(id).classList.remove("ok","bad"); });
-    $("feedback").innerHTML = fb("info", `Lösung: <span class="nm">${nuclideHTML(t)}</span> · ${t.el.z} p⁺ · ${t.A - t.el.z} n · Elektronen ${t.sol.filter((x,i)=>x||i===0).join(" · ")}. Der Lösungsweg steht unten.`);
+    $("feedback").innerHTML = fb("info", `Lösung: <span class="nm">${nuclideHTML(t)}</span> · ${t.el.z} p⁺ · ${t.A - t.el.z} n · Elektronen ${shellList(t.sol).join(" · ")}. Der Lösungsweg steht unten.`);
     markHint(t.el.z);
     logHistory(t, "shown");
     renderTask(); renderWay(); updateStats();
@@ -666,12 +743,20 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     if(!t.done){ $("wayBox").innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
     const e = t.el, Z = e.z, N = t.A - Z, sol = t.sol;
     const shellTxt = SHELL.map((s,i)=>sol[i]?`${s}: <span class="t">${sol[i]}</span>`:"").filter(Boolean).join(" · ");
-    const outerRule = e.z===2 ? "Die K-Schale ist mit 2 Elektronen voll." :
-      `Innere Schalen voll besetzen (K: 2${e.p===3?", L: 8":""}), der Rest kommt auf die ${SHELL[e.p-1]}-Schale.`;
+    let outerRule;
+    if(e.z===2) outerRule = "Die K-Schale ist mit 2 Elektronen voll.";
+    else if(e.p<=3) outerRule = `Innere Schalen voll besetzen (K: 2${e.p===3?", L: 8":""}), der Rest kommt auf die ${SHELL[e.p-1]}-Schale.`;
+    else {
+      const prev = SHELL[e.p-2], last = SHELL[e.p-1];
+      outerRule = (e.g<=2
+        ? `Die ${prev}-Schale hat erst 8 Elektronen. Weil die Außenschale höchstens 8 Elektronen fasst, kommen die nächsten Elektronen schon auf die ${last}-Schale.`
+        : `Die ${prev}-Schale ist mit 18 Elektronen besetzt; diese Elektronen kommen bei den Nebengruppenelementen davor dazu.`)
+        + ` Die ${e.g} Außenelektronen sitzen auf der ${last}-Schale.`;
+    }
     const rows = [
       ["Element im PSE", `<b>${e.n}</b> (${e.s}), ${e.p}. Periode, ${ROMAN[e.g]}. Hauptgruppe`],
       ["Protonen", `Ordnungszahl <span class="a">${Z}</span> → <span class="t">${Z}</span> Protonen`],
-      ["Massenzahl", t.iso ? `vorgegeben: <span class="a">${t.A}</span> (Isotop ${nuclideName(t)}; die gerundete Atommasse ${e.A} gilt für das häufigste Isotop)` :
+      ["Massenzahl", t.iso ? `vorgegeben: <span class="a">${t.A}</span> (Isotop ${nuclideName(t)}; die gerundete Atommasse wäre ${e.A})` :
                              `Atommasse <span class="a">${e.m} u</span> → gerundet <span class="t">${t.A}</span>`],
       ["Neutronen", `<span class="a">${t.A}</span> − <span class="a">${Z}</span> = <span class="t">${N}</span>`],
       ["Elektronen", `Atom ist neutral → <span class="t">${Z}</span> Elektronen`],
@@ -680,14 +765,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     ];
     let h = `<div class="steps">`;
     rows.forEach((r,i)=>{ h += `<div class="step"><span class="n">${i+1}</span><span class="h">${r[0]}</span><span class="b">${r[1]}</span></div>`; });
-    h += `<div class="step final"><span class="n">=</span><span class="h">Ergebnis</span><span class="b">${nuclideHTML(t)} · ${Z} p⁺ · ${N} n · ${sol.filter((x,i)=>x||i===0).join(" | ")}</span></div></div>`;
+    h += `<div class="step final"><span class="n">=</span><span class="h">Ergebnis</span><span class="b">${nuclideHTML(t)} · ${Z} p⁺ · ${N} n · ${shellList(sol).join(" | ")}</span></div></div>`;
     $("wayBox").innerHTML = h;
   }
 
   // ---------- Verlauf & Statistik ----------
   function logHistory(t, status){
     if(t.logged) return; t.logged = true;
-    history.unshift({num:t.num, nuc:nuclideHTML(t) + " · " + t.el.n, kern:`${t.el.z} p⁺, ${t.A-t.el.z} n`, sh:t.sol.filter((x,i)=>x||i===0).join(" · "), status});
+    history.unshift({num:t.num, nuc:nuclideHTML(t) + " · " + t.el.n, kern:`${t.el.z} p⁺, ${t.A-t.el.z} n`, sh:shellList(t.sol).join(" · "), status});
     const lbl = {first:["im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
     $("histBody").innerHTML = history.map(r=>`<tr><td class="mono">${r.num}</td><td>${r.nuc}</td><td class="mono">${r.kern}</td><td class="mono">${r.sh}</td><td class="${lbl[r.status][1]}">${lbl[r.status][0]}</td></tr>`).join("");
   }
@@ -709,6 +794,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   bindToggle("perToggle","per", v=>{ per = +v; newTask(); });
   $("chkIso").addEventListener("change", ev=>{ useIso = ev.target.checked; newTask(); });
   $("chkSum").addEventListener("change", ev=>{ showSum = ev.target.checked; drawAtom(); });
+  $("chkN").addEventListener("change", ev=>{ useN = ev.target.checked; applyExt(); newTask(); });
 
   $("pse").addEventListener("click", ev=>{ const c = ev.target.closest(".cell"); if(c) showInfo(+c.dataset.z); });
   $("stpWrap").addEventListener("click", ev=>{ const b = ev.target.closest("button[data-sh]"); if(b) changeE(+b.dataset.sh, +b.dataset.d); });
@@ -732,7 +818,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   $("guideBackdrop").addEventListener("click", ev=>{ if(ev.target===$("guideBackdrop")) $("guideBackdrop").classList.remove("open"); });
   document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") $("guideBackdrop").classList.remove("open"); });
 
+  // Option beim Laden immer aus
+  $("chkN").checked = false;
   buildPSE();
+  applyExt();
   newTask();
   updateStats();
 })();
