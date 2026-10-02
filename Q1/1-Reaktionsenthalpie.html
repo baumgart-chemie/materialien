@@ -207,6 +207,11 @@ input.bad{border-color:var(--danger) !important; box-shadow:0 0 0 1px var(--dang
 .cls-toggle{margin:10px 0 0;}
 
 .feedback{display:flex; flex-direction:column; gap:6px; margin:14px 0 4px;}
+.feedback:empty{display:none;}
+.eq-check{margin:-6px 0 14px;}
+.eq-check[hidden]{display:none;}
+#eqFeedback{margin:0 0 14px;}
+.calc-check{margin-top:10px; display:flex; justify-content:flex-end;}
 .fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
 .fb.good{color:var(--good); border-color:#35573a;}
 .fb.bad{color:var(--danger); border-color:var(--danger-dim);}
@@ -283,13 +288,13 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Aufgabe einstellen</h3>
       <p><strong>Schwierigkeit:</strong> Leicht (Faktoren meist 1, wenige Stoffe), Mittel (stöchiometrische Faktoren), Schwer (viele Stoffe, große Faktoren, Aggregatzustände beachten) oder Gemischt.</p>
-      <p><strong>Reaktionsgleichung:</strong> Bei „Vorgegeben" stehen die stöchiometrischen Faktoren bereits in der Gleichung. Bei „Selbst ausgleichen" enthält die Gleichung leere Kästchen, in die die Koeffizienten eingetragen werden (auch die 1). Verlangt sind die kleinsten ganzzahligen Koeffizienten. Erst wenn die Gleichung stimmt, werden die Faktoren in die Rechentabelle übernommen und der Rest der Aufgabe wird geprüft. Bei Fehlern zeigt die Prüfung, welche Atomsorten links und rechts nicht übereinstimmen.</p>
+      <p><strong>Reaktionsgleichung:</strong> Bei „Vorgegeben" stehen die stöchiometrischen Faktoren bereits in der Gleichung. Bei „Selbst ausgleichen" enthält die Gleichung Kästchen für die Koeffizienten. Ein leeres Kästchen gilt als Koeffizient 1, die 1 muss also nicht eingetragen werden. Verlangt sind die kleinsten ganzzahligen Koeffizienten. Die Gleichung wird mit dem Button „Prüfen" direkt darunter überprüft. Erst wenn sie stimmt, werden die Faktoren in die Rechentabelle übernommen und der Rest der Aufgabe wird geprüft. Bei Fehlern zeigt die Prüfung, welche Atomsorten links und rechts nicht übereinstimmen.</p>
       <p><strong>Bearbeitung:</strong> „Schrittweise" fragt jeden Zwischenschritt ab: Tabellenwert, Produkt ν · Δ<sub>f</sub>H°, beide Summen und das Ergebnis. „Nur Ergebnis" fragt nur Δ<sub>r</sub>H° und die Einordnung ab.</p>
       <p><strong>Δ<sub>f</sub>H°-Werte vorgeben:</strong> Die Tabellenwerte stehen schon in der Aufgabe. Ohne diese Option müssen sie aus der Tabelle links herausgesucht werden. Ein Klick auf eine Tabellenzeile trägt den Wert in das zuletzt ausgewählte Eingabefeld ein.</p>
       <p>Über „Reaktion gezielt wählen" lässt sich jede Aufgabe direkt aufrufen, zum Beispiel für die gemeinsame Besprechung im Unterricht.</p>
 
       <h3>Eingabe &amp; Prüfung</h3>
-      <p>Zahlen mit Komma oder Punkt eingeben, negative Werte mit Minuszeichen. Einheit ist immer kJ/mol. „Prüfen" markiert richtige Felder türkis und falsche rot. Für das Endergebnis wird eine Abweichung von ±1 kJ/mol als Rundungsfehler akzeptiert.</p>
+      <p>Zahlen mit Komma oder Punkt eingeben, negative Werte mit Minuszeichen. Einheit ist immer kJ/mol. Der Button „Prüfen" unter dem Ergebnisfenster prüft die Rechnung und markiert richtige Felder türkis und falsche rot. Bei Verbrennungsreaktionen entsteht gasförmiges Wasser, H₂O(g). Für das Endergebnis wird eine Abweichung von ±1 kJ/mol als Rundungsfehler akzeptiert.</p>
       <p>„Tipp" gibt schrittweise Hinweise. „Lösung zeigen" füllt alle Felder aus, die Aufgabe zählt dann nicht als gelöst.</p>
 
       <h3>Auswertung</h3>
@@ -356,7 +361,6 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     <div class="screen-card">
       <div class="screen-top">
         <button class="btn primary" id="btnNew">Neue Aufgabe</button>
-        <button class="btn" id="btnCheck">Prüfen</button>
         <button class="btn ghost" id="btnHint">Tipp</button>
         <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
       </div>
@@ -367,6 +371,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <span class="task-ctx" id="taskCtx"></span>
       </div>
       <div class="equation" id="equation"></div>
+      <div class="eq-check" id="eqCheckRow">
+        <button class="btn" id="btnCheckEq">Prüfen</button>
+      </div>
+      <div class="feedback" id="eqFeedback"></div>
 
       <div class="table-wrap">
         <table class="calc">
@@ -392,6 +400,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
             <button data-cls="endo">endotherm</button>
           </div>
         </div>
+      </div>
+      <div class="calc-check">
+        <button class="btn" id="btnCheck">Prüfen</button>
       </div>
 
       <div class="feedback" id="feedback"></div>
@@ -433,7 +444,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Tabellenwerte für 25 °C und 1 bar nach gängigen Tabellenwerken (NIST, CRC Handbook), auf eine Nachkommastelle gerundet. Einzelne Schulbücher geben teilweise leicht abweichende Werte an.</p>
-  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.1 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -517,7 +528,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     {d:1, c:"Verdampfen von Wasser", e:[[1,"H2O_l"]], p:[[1,"H2O_g"]]},
     {d:1, c:"Wassergasreaktion (Kohlevergasung)", e:[[1,"C"],[1,"H2O_g"]], p:[[1,"CO"],[1,"H2"]]},
 
-    {d:2, c:"Verbrennung von Erdgas", e:[[1,"CH4"],[2,"O2"]], p:[[1,"CO2"],[2,"H2O_l"]]},
+    {d:2, c:"Verbrennung von Erdgas", e:[[1,"CH4"],[2,"O2"]], p:[[1,"CO2"],[2,"H2O_g"]]},
     {d:2, c:"Ammoniaksynthese (Haber-Bosch-Verfahren)", e:[[1,"N2"],[3,"H2"]], p:[[2,"NH3"]]},
     {d:2, c:"Kontaktverfahren (Schwefelsäureherstellung)", e:[[2,"SO2"],[1,"O2"]], p:[[2,"SO3"]]},
     {d:2, c:"Oxidation von Stickstoffmonooxid an der Luft", e:[[2,"NO"],[1,"O2"]], p:[[2,"NO2"]]},
@@ -531,19 +542,19 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     {d:2, c:"Zersetzung von Natron (Backpulver)", e:[[2,"NaHCO3"]], p:[[1,"Na2CO3"],[1,"CO2"],[1,"H2O_g"]]},
     {d:2, c:"Hydrazin als Raketentreibstoff", e:[[1,"N2H4"],[1,"O2"]], p:[[1,"N2"],[2,"H2O_g"]]},
 
-    {d:3, c:"Verbrennung von Ethanol", e:[[1,"C2H5OH"],[3,"O2"]], p:[[2,"CO2"],[3,"H2O_l"]]},
-    {d:3, c:"Verbrennung von Propan (Gasbrenner)", e:[[1,"C3H8"],[5,"O2"]], p:[[3,"CO2"],[4,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Ethanol", e:[[1,"C2H5OH"],[3,"O2"]], p:[[2,"CO2"],[3,"H2O_g"]]},
+    {d:3, c:"Verbrennung von Propan (Gasbrenner)", e:[[1,"C3H8"],[5,"O2"]], p:[[3,"CO2"],[4,"H2O_g"]]},
     {d:3, c:"Reduktion von Eisenoxid im Hochofen", e:[[1,"Fe2O3"],[3,"CO"]], p:[[2,"Fe"],[3,"CO2"]]},
-    {d:3, c:"Verbrennung von Methanol", e:[[2,"CH3OH"],[3,"O2"]], p:[[2,"CO2"],[4,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Methanol", e:[[2,"CH3OH"],[3,"O2"]], p:[[2,"CO2"],[4,"H2O_g"]]},
     {d:3, c:"Zellatmung (Oxidation von Glucose)", e:[[1,"C6H12O6"],[6,"O2"]], p:[[6,"CO2"],[6,"H2O_l"]]},
-    {d:3, c:"Verbrennung von Octan (Benzinbestandteil)", e:[[2,"C8H18"],[25,"O2"]], p:[[16,"CO2"],[18,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Octan (Benzinbestandteil)", e:[[2,"C8H18"],[25,"O2"]], p:[[16,"CO2"],[18,"H2O_g"]]},
     {d:3, c:"Ammoniakverbrennung (Ostwald-Verfahren)", e:[[4,"NH3"],[5,"O2"]], p:[[4,"NO"],[6,"H2O_g"]]},
     {d:3, c:"Bildung von Salpetersäure (Ostwald-Verfahren)", e:[[3,"NO2"],[1,"H2O_l"]], p:[[2,"HNO3"],[1,"NO"]]},
     {d:3, c:"Rösten von Zinkblende", e:[[2,"ZnS"],[3,"O2"]], p:[[2,"ZnO"],[2,"SO2"]]},
     {d:3, c:"Carbidlampe (Ethin aus Calciumcarbid)", e:[[1,"CaC2"],[2,"H2O_l"]], p:[[1,"C2H2"],[1,"CaOH2"]]},
-    {d:3, c:"Verbrennung von Ethin (Schweißbrenner)", e:[[2,"C2H2"],[5,"O2"]], p:[[4,"CO2"],[2,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Ethin (Schweißbrenner)", e:[[2,"C2H2"],[5,"O2"]], p:[[4,"CO2"],[2,"H2O_g"]]},
     {d:3, c:"Veresterung von Essigsäure mit Ethanol", e:[[1,"CH3COOH"],[1,"C2H5OH"]], p:[[1,"EtOAc"],[1,"H2O_l"]]},
-    {d:3, c:"Verbrennung von Benzol", e:[[2,"C6H6"],[15,"O2"]], p:[[12,"CO2"],[6,"H2O_l"]]},
+    {d:3, c:"Verbrennung von Benzol", e:[[2,"C6H6"],[15,"O2"]], p:[[12,"CO2"],[6,"H2O_g"]]},
     {d:3, c:"Verbrennung von Schwefelwasserstoff (Claus-Verfahren)", e:[[2,"H2S"],[3,"O2"]], p:[[2,"SO2"],[2,"H2O_g"]]}
   ];
   const LEVEL_NAMES = ["gemischt","leicht","mittel","schwer"];
@@ -553,7 +564,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   const r1 = x => Math.round(x*10)/10;
   function fmt(x){
     const v = r1(x);
-    const s = Math.abs(v).toLocaleString("de-DE",{minimumFractionDigits:1, maximumFractionDigits:1});
+    const s = Math.abs(v).toLocaleString("de-DE",{minimumFractionDigits:1, maximumFractionDigits:1, useGrouping:false});
     return (v < 0 ? "−" : "") + s;
   }
   function fmtSigned(x){ const v=r1(x); return (v>0?"+":"") + fmt(v); }
@@ -660,7 +671,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   setupToggle("levelToggle","level", v=>{ level=+v; newTask(); });
   setupToggle("modeToggle","mode", v=>{ mode=v; renderTask(); });
   $("chkGiven").addEventListener("change", e=>{ given=e.target.checked; renderTask(); });
-  setupToggle("balanceToggle","balance", v=>{ balance=v; renderTask(); });
+  setupToggle("balanceToggle","balance", v=>{ balance=v; $("eqFeedback").innerHTML = ""; renderTask(); });
   function isBalanced(){ return balance === "auto" || task.coefOk || task.done; }
   $("clsToggle").querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>{
@@ -689,6 +700,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     r.p.forEach(([nu,k])=>rows.push({side:"p",nu,k}));
     task = {idx, r, rows, vals:{}, cls:null, wrong:false, done:false, shown:false, hint:0, bhint:0, coefOk:false, touched:false, sol:sums(r), num:++taskCounter};
     $("feedback").innerHTML = "";
+    $("eqFeedback").innerHTML = "";
     renderTask();
     renderWay(); drawDiagram();
   }
@@ -748,6 +760,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     document.querySelectorAll("#equation input.coef").forEach(inp=> inp.addEventListener("input", onInput));
     if(task.marks) applyMarks(task.marks);
     $("btnCheck").disabled = task.done;
+    $("eqCheckRow").hidden = bal;
+    $("btnCheckEq").disabled = task.done;
     $("btnHint").disabled = task.done;
     $("btnSolve").disabled = task.done;
     setStatus();
@@ -804,17 +818,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const marks = {};
     const out = [];
     if(!isBalanced()){
-      const res = checkCoefficients();
-      if(!res.ok){
-        task.marks = res.marks; applyMarks(res.marks);
-        $("feedback").innerHTML = res.out.join("");
-        if(res.wrong){ task.wrong = true; stats.streak = 0; }
-        renderStats();
-        return;
-      }
-      task.coefOk = true; task.marks = null;
-      renderTask();
-      out.push(fb("good","Die Reaktionsgleichung ist richtig ausgeglichen. Die Faktoren stehen jetzt in der Tabelle."));
+      $("feedback").innerHTML = fb("info","Gleiche zuerst die Reaktionsgleichung aus und prüfe sie mit dem Button „Prüfen\" direkt unter der Gleichung.");
+      return;
     }
     let rowErrors = 0, rowEmpty = 0;
 
@@ -845,7 +850,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       out.push(fb("info","Trage das Ergebnis Δ<sub>r</sub>H° ein, um die Aufgabe abzuschließen."));
     } else if(isNaN(rv)){
       marks.inR = false;
-      out.push(fb("bad","Das Ergebnis ist keine gültige Zahl. Beispiel für eine richtige Eingabe: −890,3"));
+      out.push(fb("bad","Das Ergebnis ist keine gültige Zahl. Beispiel für eine richtige Eingabe: −802,3"));
     } else {
       finalOk = near(rv, task.sol.dr, 1.0);
       marks.inR = finalOk;
@@ -886,18 +891,31 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     renderStats();
   }
 
+  // ---------- Reaktionsgleichung prüfen ----------
+  function checkEquation(){
+    if(!task || task.done || isBalanced()) return;
+    task.touched = true;
+    const res = checkCoefficients();
+    if(!res.ok){
+      task.marks = res.marks; applyMarks(res.marks);
+      $("eqFeedback").innerHTML = res.out.join("");
+      if(res.wrong){ task.wrong = true; stats.streak = 0; }
+      renderStats();
+      return;
+    }
+    task.coefOk = true; task.marks = null;
+    renderTask();
+    $("eqFeedback").innerHTML = fb("good","Die Reaktionsgleichung ist richtig ausgeglichen. Die Faktoren stehen jetzt in der Tabelle.");
+  }
+
   // ---------- Koeffizienten prüfen ----------
   function checkCoefficients(){
     const rows = task.rows, marks = {}, out = [];
     const vals = rows.map((row,i)=>{
       const raw = String(task.vals["c"+i] ?? "").trim();
-      if(raw === "") return null;
+      if(raw === "") return 1;   // leeres Feld bedeutet Koeffizient 1
       return /^\d+$/.test(raw) ? +raw : NaN;
     });
-    if(vals.some(v=>v===null)){
-      rows.forEach((row,i)=>{ if(vals[i]!==null) marks["c"+i] = !isNaN(vals[i]) && vals[i]===row.nu; });
-      return {ok:false, wrong:false, marks:{}, out:[fb("info","Trage vor jedem Stoff einen Koeffizienten ein, auch die 1. Danach wird die Gleichung geprüft.")]};
-    }
     if(vals.some(v=>isNaN(v) || v<1)){
       rows.forEach((row,i)=>{ marks["c"+i] = !(isNaN(vals[i]) || vals[i]<1); });
       return {ok:false, wrong:true, marks, out:[fb("bad","Koeffizienten müssen ganze Zahlen ab 1 sein.")]};
@@ -939,14 +957,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         "Ist am Ende ein halbzahliger Koeffizient nötig (z. B. ½ O<sub>2</sub>), multipliziere alle Koeffizienten mit 2."
       ];
       if(task.bhint < bh.length){
-        $("feedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: ${bh[task.bhint]}`));
+        $("eqFeedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: ${bh[task.bhint]}`));
       } else {
         const k = task.bhint - bh.length;
         if(k < byNu.length - 1){
           const {row} = byNu[k];
-          $("feedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: Vor ${spHTML(row.k)} steht der Koeffizient ${row.nu}.`));
+          $("eqFeedback").insertAdjacentHTML("beforeend", fb("hint", `Tipp zum Ausgleichen: Vor ${spHTML(row.k)} steht der Koeffizient ${row.nu}.`));
         } else {
-          $("feedback").insertAdjacentHTML("beforeend", fb("info","Keine weiteren Tipps zum Ausgleichen. Mit „Lösung zeigen\" wird die ganze Aufgabe gelöst."));
+          $("eqFeedback").insertAdjacentHTML("beforeend", fb("info","Keine weiteren Tipps zum Ausgleichen. Mit „Lösung zeigen\" wird die ganze Aufgabe gelöst."));
           return;
         }
       }
@@ -993,6 +1011,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     task.done = true; task.shown = true; task.marks = null;
     stats.shown++; stats.streak = 0;
     logHistory(task, "shown");
+    $("eqFeedback").innerHTML = "";
     $("feedback").innerHTML = fb("info", "Die Lösung ist eingetragen. Im Tab „Lösungsweg\" steht die vollständige Rechnung.");
     renderTask(); renderWay(); drawDiagram(); renderStats();
     activateTab("way");
@@ -1151,10 +1170,11 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   // ---------- Buttons ----------
   $("btnNew").addEventListener("click", ()=>newTask());
   $("btnCheck").addEventListener("click", check);
+  $("btnCheckEq").addEventListener("click", checkEquation);
   $("btnHint").addEventListener("click", hint);
   $("btnSolve").addEventListener("click", showSolution);
   document.addEventListener("keydown", e=>{
-    if(e.key==="Enter" && e.target.tagName==="INPUT" && e.target.type==="text" && !$("guideBackdrop").classList.contains("open")){ e.preventDefault(); check(); }
+    if(e.key==="Enter" && e.target.tagName==="INPUT" && e.target.type==="text" && !$("guideBackdrop").classList.contains("open")){ e.preventDefault(); if(e.target.classList.contains("coef")) checkEquation(); else check(); }
     if(e.key==="Escape") $("guideBackdrop").classList.remove("open");
   });
 
