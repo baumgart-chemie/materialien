@@ -26,11 +26,11 @@
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
   -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;}
 h1,h2,h3{font-weight:600; margin:0;}
 
 /* header */
@@ -76,13 +76,12 @@ header .status.running{color:var(--amber); border-color:var(--amber-dim);}
 @media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
 
 .sidebar{
-  position:sticky; top:0; align-self:start;
-  padding:20px 20px 40px; max-height:100vh; overflow-y:auto; overscroll-behavior:contain;
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
 }
-@media (max-width:920px){ .sidebar{position:static; max-height:none; overflow:visible; border-bottom:1px solid var(--line);} }
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none;} }
 
-.main{padding:20px 24px 60px; min-width:0; border-left:1px solid var(--line); min-height:100vh;}
-@media (max-width:920px){ .main{border-left:none; min-height:0;} }
+.main{padding:20px 24px 60px; min-width:0;}
 
 section.block{margin-bottom:26px;}
 .block h2{
@@ -94,6 +93,10 @@ section.block{margin-bottom:26px;}
 .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
 .row label{font-size:13px; color:var(--text-dim);}
 .row .val{font-size:13px; color:var(--amber); min-width:64px; text-align:right;}
+/* Seitenleiste: Beschriftung und Regler eng zusammen, deutlicher Abstand zum nächsten Regler */
+.sidebar .row{margin-bottom:7px;}
+.sidebar input[type=range]{display:block; margin:0 0 20px;}
+.sidebar input[type=range]:last-child{margin-bottom:0;}
 input[type=range]{
   width:100%; accent-color: var(--teal); height:4px; background:transparent; cursor:pointer;
 }
@@ -149,7 +152,7 @@ select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;
 .speed-group{display:flex; gap:4px; margin-left:auto;}
 .speed-group button{
   background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
-  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
 }
 .speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
 canvas#chrom{width:100%; height:340px; display:block; border-radius:2px;}
@@ -195,11 +198,25 @@ tbody tr:hover{background:var(--panel-alt);}
 .res-item .rs-val{font-size:15px;}
 .res-good{color:#7fd68a;} .res-mid{color:var(--amber);} .res-bad{color:var(--danger);}
 
+.run-legend{display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; padding:10px 0 2px;}
+.legend-title{font-size:11.5px; color:var(--text-faint); margin-right:4px;}
+.run-chip{display:inline-flex; align-items:center; gap:7px; font-size:11.8px; color:var(--text-faint); background:none;
+  border:1px solid transparent; border-radius:3px; padding:4px 8px; cursor:pointer; font-family:inherit; text-align:left;}
+.run-chip:hover{color:var(--text-dim); border-color:var(--line);}
+.run-chip.selected{color:var(--text); border-color:var(--line); background:var(--panel-alt);}
+.run-chip i{display:inline-block; width:16px; height:3px; border-radius:2px; opacity:.7; flex:none;}
+.run-chip.selected i{opacity:1;}
+.eval-run{display:flex; align-items:center; gap:8px; margin-top:20px; font-size:12.8px; color:var(--text-dim);}
+.eval-run i{display:inline-block; width:16px; height:3px; border-radius:2px; flex:none;}
+.eval-run strong{color:var(--text); font-weight:500;}
+.eval-run + .tabs{margin-top:10px;}
+.chrom-hint{margin:0 4px 12px; padding:9px 12px; border:1px solid var(--amber-dim); border-radius:3px; background:rgba(255,180,84,.07); color:var(--amber); font-size:12.8px; line-height:1.5;}
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
-footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
-footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+footer .footer-links{margin-top:6px;}
+footer a{color:var(--teal); text-decoration:none; border-bottom:1px solid var(--teal-dim);}
+footer a:hover{border-bottom-color:var(--teal);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 </style>
@@ -246,7 +263,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <p><strong>Ideen zum Ausprobieren:</strong> Superbenzin und E10 unterscheiden sich im Oktanzahlverbesserer (MTBE bzw. Ethanol). Im Obstbrand-Vorlauf und im Handdesinfektionsmittel lässt sich giftiges Methanol nachweisen.</p>
 
       <h3>Lauf starten</h3>
-      <p>Mit <strong>„Injektion starten"</strong> beginnt die Aufzeichnung des Chromatogramms in Echtzeit. Über die Geschwindigkeitsstufen (×1/×4/×15) lässt sich der Lauf beschleunigen. „Stopp" hält den Lauf an, „Zurücksetzen" löscht die aktuellen Daten.</p>
+      <p>Mit <strong>„Injektion starten"</strong> beginnt die Aufzeichnung des Chromatogramms in Echtzeit. Über die Geschwindigkeitsstufen (×1/×4/×15) lässt sich der Lauf beschleunigen. „Stopp" hält den Lauf an.</p>
+      <p><strong>Mehrere Läufe vergleichen:</strong> Jeder neue Lauf wird über die bisherigen gelegt, jeweils in einer eigenen Farbe. So lassen sich zum Beispiel verschiedene Temperaturen, Flüsse oder Proben direkt vergleichen. Die Legende unter dem Chromatogramm zeigt Probe und Methode jedes Laufs; der aktuelle Lauf ist kräftiger gezeichnet. Es werden bis zu 8 Läufe angezeigt, danach verschwindet jeweils der älteste. <strong>„Zurücksetzen"</strong> löscht alle Läufe.</p>
+      <p><strong>Auswertung älterer Läufe:</strong> Nach jedem Lauf zeigen Peaktabelle, Quantifizierung und Auflösung zunächst den neuesten Lauf. Ein Klick auf einen Eintrag in der Legende zeigt stattdessen die Auswertung dieses Laufs; er wird dann im Chromatogramm hervorgehoben und mit Peaknummern versehen. Über den Reitern steht jeweils, welcher Lauf gerade ausgewertet angezeigt wird. Ein Lauf, der mit „Stopp" abgebrochen wurde, wird nicht ausgewertet. Der Schwellenwert und der CSV-Export beziehen sich immer auf den angezeigten Lauf.</p>
 
       <h3>Luftpeak (Totzeit)</h3>
       <p>Bei jeder Injektion gelangt mit der Spritze etwas Luft in die Säule. Luft wird von der Trennsäule nicht zurückgehalten und erscheint deshalb als erster Peak – beim Standardfluss von 1,5 mL/min nach <strong>10 Sekunden</strong>. Diese Zeit ist die <strong>Totzeit t₀</strong>: So lange braucht das Trägergas durch die Säule, und keine Substanz kann früher eluieren. Bei höherem Fluss erscheint der Luftpeak früher, bei geringerem später.</p>
@@ -350,14 +369,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         </div>
       </div>
       <canvas id="chrom" width="1100" height="340"></canvas>
+      <div class="run-legend" id="runLegend" style="display:none;"></div>
       <div class="readout-bar">
         <div class="readout"><span class="k">Laufzeit</span><span class="v mono" id="roTime">0.00 min</span></div>
         <div class="readout"><span class="k">Signal</span><span class="v mono" id="roSignal">0.0 pA</span></div>
         <div class="readout"><span class="k">Ofentemperatur</span><span class="v mono" id="roTemp">80 °C</span></div>
         <div class="readout"><span class="k">erkannte Peaks</span><span class="v mono" id="roPeaks">–</span></div>
       </div>
+      <p class="chrom-hint" id="peakHint" style="display:none;"></p>
     </div>
 
+    <div class="eval-run" id="evalRun" style="display:none;"></div>
     <div class="tabs">
       <button class="tabbtn active" data-tab="peaks">Peaktabelle</button>
       <button class="tabbtn" data-tab="quant">Quantifizierung</button>
@@ -378,7 +400,6 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
           <tbody id="peakBody"><tr><td colspan="7" class="empty-hint">Noch keine Peaks – Injektion starten und Lauf abwarten.</td></tr></tbody>
         </table>
       </div>
-      <p class="note" id="peakHint" style="display:none; color:var(--amber); max-width:none;"></p>
       <div class="btn-row" style="margin-top:12px;">
         <button class="btn ghost" id="btnExport">Peaktabelle als CSV exportieren</button>
       </div>
@@ -419,7 +440,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Retentionszeiten, Peakformen und Rauschen werden aus vereinfachten physikalischen Modellen berechnet und bilden kein reales Säulen-/Detektorverhalten exakt ab.</p>
-  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.1 (erstellt mit Claude Pro)</p>
+  <p class="footer-links"><a href="../impressum.html">Impressum &amp; Datenschutz</a></p>
 </footer>
 
 <script>
@@ -467,7 +489,15 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   let simData = null;      // {t:[], sig:[]}
   let truePeaks = [];      // ground truth per compound for current run
   let detectedPeaks = [];  // after evaluation
-  let activeRuntime = params.runtime; // Zeitachsen-Ende: aus Simulation oder importierten Daten
+  let activeRuntime = params.runtime; // Zeitachsen-Ende des aktuellen Laufs
+
+  // Lauf-Historie: ältere Läufe bleiben bis "Zurücksetzen" im Chromatogramm sichtbar
+  const RUN_COLORS = ["#ffb454","#4fd1c5","#9d8cf1","#f18cae","#7fd68a","#6fb7ff","#e4a85b","#e07a7a"];
+  const MAX_RUNS = 8;            // inkl. aktuellem Lauf
+  let runHistory = [];           // {t, sig, end, color, label, num}
+  let runCounter = 0;
+  let currentRun = null;         // {num, color, label, end, finished, t, sig, truePeaks, runtime, peaks, hint}
+  let selectedRun = null;        // Lauf, dessen Auswertung angezeigt wird
 
   const N_SAMPLES = 2600;
 
@@ -635,7 +665,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const labels=["aus","minimal","gering","gering","mäßig","mäßig","erhöht","erhöht","hoch","hoch","sehr hoch"];
     return labels[Math.round(v)] ?? v;
   }, v=>params.noise=v);
-  bind("rThresh","vThresh", v=>v.toFixed(1)+"%", v=>{ if(simData) evaluate(); });
+  bind("rThresh","vThresh", v=>v.toFixed(1)+"%", v=>{ if(selectedRun && selectedRun.finished){ evaluateRun(selectedRun); showRun(selectedRun); } });
 
   $("modeIso").addEventListener("click", ()=>setMode("iso"));
   $("modeProg").addEventListener("click", ()=>setMode("prog"));
@@ -753,110 +783,173 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     ctx.clearRect(0,0,w,h);
     ctx.fillStyle = "#0e1113"; ctx.fillRect(0,0,w,h);
 
-    const padL=46, padR=14, padT=14, padB=28;
+    const padL=46, padR=16, padT=14, padB=40;
     const plotW = w-padL-padR, plotH = h-padT-padB;
-    if(!simData){
+    const runs = allRuns();
+    if(!runs.length){
       ctx.strokeStyle="#233029"; ctx.lineWidth=1;
       for(let i=0;i<=8;i++){ const x=padL+plotW*i/8; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
-      ctx.fillStyle="#5f6870"; ctx.font="13px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.fillText("Bereit — Methode einstellen und Injektion starten klicken.", padL, padT+plotH/2);
+      ctx.fillStyle="#5f6870"; ctx.font='13px system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'; ctx.fillText("Bereit — Methode einstellen und Injektion starten klicken.", padL, padT+plotH/2);
       return;
     }
-    const rt = activeRuntime;
-    let maxSig = 2;
-    for(let i=0;i<simData.sig.length;i++){ if(simData.sig[i]>maxSig) maxSig=simData.sig[i]; }
-    const totalSamples = simData.t.length;
-    const visibleT = running ? Math.min(simTime, rt) : rt;
-    const nVisible = Math.max(2, Math.round(totalSamples*visibleT/rt));
+    // Wie weit ist jeder Lauf aufgezeichnet? (laufender Lauf bis jetzt, gestoppte bis zum Stopp)
+    const endOf = r => (r===currentRun && running) ? Math.min(simTime, r.runtime) : r.end;
+    const visibleCount = (r, end)=>{ let n=0; while(n<r.t.length && r.t[n]<=end) n++; return n; };
+
+    // Gemeinsame Achsen für alle Läufe (laufender Lauf mit voller geplanter Laufzeit)
+    let rt = 0.5, maxSig = 2;
+    runs.forEach(r=>{
+      const span = (r===currentRun && running) ? r.runtime : r.end;
+      if(span>rt) rt=span;
+      const n = (r===currentRun && running) ? r.sig.length : visibleCount(r, r.end);
+      for(let i=0;i<n;i++) if(r.sig[i]>maxSig) maxSig=r.sig[i];
+    });
+    const toX = t => padL + plotW*(t/rt);
+    const toY = s => padT + plotH - (s/maxSig)*plotH*0.92;
 
     // Gitter
-    ctx.strokeStyle="#233029"; ctx.lineWidth=1; ctx.font="10.5px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillStyle="#5f6870";
+    ctx.strokeStyle="#233029"; ctx.lineWidth=1; ctx.font='10.5px ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace'; ctx.fillStyle="#5f6870";
     for(let i=0;i<=10;i++){
       const x=padL+plotW*i/10;
       ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
-      ctx.fillText((rt*i/10).toFixed(1), x-8, padT+plotH+18);
+      ctx.textAlign = i===0 ? "left" : (i===10 ? "right" : "center"); ctx.fillText((rt*i/10).toFixed(1), x, padT+plotH+15); ctx.textAlign = "left";
     }
     for(let j=0;j<=4;j++){
       const y=padT+plotH*j/4;
       ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
     }
-    ctx.fillStyle="#9aa2a9"; ctx.font="11px system-ui, 'Segoe UI', Roboto, sans-serif"; ctx.fillText("Zeit (min)", padL+plotW/2-24, h-3);
+    ctx.fillStyle="#9aa2a9"; ctx.font='11px system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'; ctx.textAlign="center"; ctx.fillText("Zeit (min)", padL+plotW/2, h-5); ctx.textAlign="left";
     ctx.save(); ctx.translate(12,padT+plotH/2+18); ctx.rotate(-Math.PI/2); ctx.fillText("Signal (pA)",0,0); ctx.restore();
 
-    // Trace
-    ctx.beginPath();
-    ctx.strokeStyle = "#ffb454"; ctx.lineWidth = 1.6; ctx.lineJoin="round";
-    for(let i=0;i<nVisible;i++){
-      const x = padL + plotW*(simData.t[i]/rt);
-      const y = padT + plotH - (simData.sig[i]/maxSig)*plotH*0.92;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    ctx.shadowColor="#ffb454"; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+    // Hervorgehoben wird der ausgewählte Lauf (Standard: der aktuelle)
+    const focus = selectedRun || currentRun;
+    ctx.lineJoin="round";
+    const trace = (r, n)=>{ ctx.beginPath(); for(let i=0;i<n;i++){ const x=toX(r.t[i]), y=toY(r.sig[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } };
 
-    // Peak-Markierungen (nur nach Auswertung)
-    if(detectedPeaks.length){
-      detectedPeaks.forEach(p=>{
-        const x = padL + plotW*(p.tR/rt);
-        const y = padT + plotH - (p.height/maxSig)*plotH*0.92 - 6;
-        if(x <= padL+plotW*(nVisible/totalSamples)+2){
-          ctx.strokeStyle="#4fd1c5"; ctx.lineWidth=1;
+    // Übrige Läufe: dünn und etwas transparent
+    runs.forEach(r=>{
+      if(r===focus) return;
+      const n = visibleCount(r, endOf(r));
+      if(n<2) return;
+      trace(r, n); ctx.strokeStyle = r.color; ctx.lineWidth = 1.1; ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
+    });
+
+    // Ausgewählter Lauf: kräftig mit leichtem Leuchten und Peaknummern
+    if(focus){
+      const fEnd = endOf(focus);
+      const n = Math.max(2, visibleCount(focus, fEnd));
+      trace(focus, n); ctx.strokeStyle = focus.color; ctx.lineWidth = 1.8; ctx.stroke();
+      ctx.shadowColor=focus.color; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+      if(focus === selectedRun){
+        detectedPeaks.forEach(p=>{
+          if(p.tR > fEnd) return;
+          const x = toX(p.tR), y = toY(p.height) - 6;
+          ctx.strokeStyle="rgba(231,228,221,.35)"; ctx.lineWidth=1;
           ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.setLineDash([2,3]); ctx.stroke(); ctx.setLineDash([]);
-          ctx.fillStyle="#4fd1c5"; ctx.font="11px ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace"; ctx.fillText(String(p.num), x-3, Math.max(y,padT+10));
-        }
-      });
+          ctx.fillStyle=focus.color; ctx.font='11px ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace'; ctx.fillText(String(p.num), x-3, Math.max(y,padT+10));
+        });
+      }
     }
 
-    // Cursor
-    if(running){
-      const x = padL+plotW*(visibleT/rt);
+    // Cursor des laufenden Laufs
+    if(running && currentRun){
+      const x = toX(endOf(currentRun));
       ctx.strokeStyle="#e7e4dd"; ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
     }
   }
 
   // ---------- Ablauf / Animation ----------
+  // Kurzbeschreibung eines Laufs für die Legende (zum Startzeitpunkt festgehalten)
+  function runLabel(num){
+    let sample = compounds.map(c=>c.name).join(", ") || "ohne Probe";
+    if(sample.length > 45) sample = sample.slice(0,44) + "…";
+    const method = mode==="iso"
+      ? `isotherm ${params.temp} °C`
+      : `${params.tStart} → ${params.tEnd} °C, ${params.ramp} °C/min`;
+    return `Lauf ${num}: ${sample} · ${method} · ${params.flow.toFixed(1)} mL/min`;
+  }
+  function allRuns(){ return currentRun ? [...runHistory, currentRun] : [...runHistory]; }
+  function renderLegend(){
+    const el = $("runLegend");
+    const items = allRuns();
+    if(!items.length){ el.innerHTML = ""; el.style.display = "none"; return; }
+    el.style.display = "flex";
+    const title = items.length > 1 ? `<span class="legend-title">Zum Anzeigen der Auswertung anklicken:</span>` : "";
+    el.innerHTML = title + items.map(r=>{
+      const cls = "run-chip" + (r===currentRun ? " current" : "") + (r===selectedRun ? " selected" : "");
+      return `<button type="button" class="${cls}" data-num="${r.num}" title="Auswertung dieses Laufs anzeigen"><i style="background:${r.color}"></i>${r.label}${r===currentRun?' (aktuell)':''}</button>`;
+    }).join("");
+    el.querySelectorAll(".run-chip").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const run = allRuns().find(r=>r.num === +btn.dataset.num);
+        if(run) showRun(run);
+      });
+    });
+  }
+
   function startRun(){
-    buildRun(); detectedPeaks=[]; $("peakHint").style.display="none"; renderPeakTable(); renderQuant(); renderRes();
+    // bisherigen Lauf mitsamt seiner Auswertung in die Historie übernehmen
+    if(currentRun){
+      runHistory.push(currentRun);
+      while(runHistory.length > MAX_RUNS-1) runHistory.shift();
+    }
+    runCounter++;
+    currentRun = {num:runCounter, color:RUN_COLORS[(runCounter-1)%RUN_COLORS.length], label:runLabel(runCounter),
+                  end:0, finished:false, peaks:[], hint:""};
+    buildRun();
+    currentRun.t = simData.t; currentRun.sig = simData.sig;
+    currentRun.truePeaks = truePeaks; currentRun.runtime = activeRuntime;
     simTime = 0; running = true; startPerf = performance.now();
+    showRun(currentRun);
     $("btnRun").disabled = true; $("btnStop").disabled=false;
     $("statusBadge").classList.add("running"); $("statusText").textContent="Lauf aktiv";
     cancelAnimationFrame(animId); tick();
   }
   function stopRun(finished){
+    const wasRunning = running;
+    if(wasRunning && currentRun){
+      currentRun.end = finished ? activeRuntime : Math.min(simTime, activeRuntime);
+      currentRun.finished = !!finished;
+    }
     running=false; cancelAnimationFrame(animId);
     $("btnRun").disabled=false; $("btnStop").disabled=true;
     $("statusBadge").classList.remove("running");
     $("statusText").textContent = finished ? "Lauf beendet" : "gestoppt";
-    if(finished) evaluate();
-    draw();
+    if(wasRunning && currentRun){
+      if(finished){ evaluateRun(currentRun); showRun(currentRun); }   // neues Ergebnis anzeigen
+      else showRun(selectedRun);
+    } else draw();
   }
   function tick(){
     const now = performance.now();
     const elapsedSec = (now-startPerf)/1000;
     simTime = elapsedSec * speed / 60 * 10; // Kalibrierung: 1 reale Sek. × speed ≈ sinnvolles Lauftempo
-    const T = ovenTemp(Math.min(simTime,params.runtime));
-    $("roTime").textContent = Math.min(simTime,params.runtime).toFixed(2)+" min";
-    $("roTemp").textContent = T.toFixed(0)+" °C";
-    const idx = Math.min(N_SAMPLES-1, Math.round(N_SAMPLES*Math.min(simTime,params.runtime)/params.runtime));
+    const tNow = Math.min(simTime, activeRuntime);
+    $("roTime").textContent = tNow.toFixed(2)+" min";
+    $("roTemp").textContent = ovenTemp(tNow).toFixed(0)+" °C";
+    const idx = Math.min(N_SAMPLES-1, Math.round((N_SAMPLES-1)*tNow/activeRuntime));
     $("roSignal").textContent = (simData.sig[idx]).toFixed(1)+" pA";
     draw();
-    if(simTime >= params.runtime){ stopRun(true); return; }
+    if(simTime >= activeRuntime){ stopRun(true); return; }
     animId = requestAnimationFrame(tick);
   }
 
   $("btnRun").addEventListener("click", startRun);
   $("btnStop").addEventListener("click", ()=>stopRun(false));
   $("btnReset").addEventListener("click", ()=>{
-    stopRun(false); simData=null; detectedPeaks=[]; $("peakHint").style.display="none"; activeRuntime=params.runtime;
+    stopRun(false); simData=null; activeRuntime=params.runtime;
+    runHistory = []; runCounter = 0; currentRun = null;
     $("statusText").textContent="bereit";
-    $("roTime").textContent="0.00 min"; $("roSignal").textContent="0.0 pA"; $("roTemp").textContent=params.temp+" °C"; $("roPeaks").textContent="–";
-    renderPeakTable(); renderQuant(); renderRes(); draw();
+    $("roTime").textContent="0.00 min"; $("roSignal").textContent="0.0 pA"; $("roTemp").textContent=params.temp+" °C";
+    showRun(null);
   });
 
   // ---------- Peak-Erkennung & Integration ----------
-  function evaluate(){
-    if(!simData) return;
-    const {t, sig} = simData;
+  // Wertet einen beliebigen Lauf aus und speichert Peaks und Hinweise am Lauf selbst
+  function evaluateRun(run){
+    if(!run || !run.t) return;
+    const t = run.t, sig = run.sig;
     const n = sig.length;
 
     // gleitende Baseline (Minimum in breiten Fenstern, geglättet)
@@ -906,11 +999,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       }
     }
 
-    detectedPeaks = peaks.map((p,k)=>{
-      // Talgrenzen
-      let li=p.idx; while(li>0 && corrected[li-1]<=corrected[li] || (li>0 && corrected[li-1] < corrected[p.idx]*0.98 && corrected[li]>threshold*0.3)) { if(corrected[li-1] > corrected[li]) break; li--; if(li===0) break; }
-      // einfacher: Tal = lokales Minimum links/rechts
-      li = p.idx; while(li>1 && !(corrected[li-1]>corrected[li] && corrected[li]<=corrected[li+1]) && corrected[li]>threshold*0.15) li--;
+    const found = peaks.map(p=>{
+      // Talgrenzen = lokales Minimum links/rechts
+      let li = p.idx; while(li>1 && !(corrected[li-1]>corrected[li] && corrected[li]<=corrected[li+1]) && corrected[li]>threshold*0.15) li--;
       let ri = p.idx; while(ri<n-2 && !(corrected[ri+1]>corrected[ri] && corrected[ri]<=corrected[ri-1]) && corrected[ri]>threshold*0.15) ri++;
       li=Math.max(0,li); ri=Math.min(n-1,ri);
 
@@ -926,14 +1017,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       const tR = t[p.idx];
       const N = 5.54*Math.pow(tR/wHalf,2);
 
-      return {num:k+1, tR, height:p.h, area, wHalf, N, li, ri, idx:p.idx};
+      return {tR, height:p.h, area, wHalf, N, li, ri, idx:p.idx};
     }).sort((a,b)=>a.tR-b.tR).map((p,k)=>({...p, num:k+1}));
 
-    // Bibliotheks-Identifikation gegen aktuelle Methodensollwerte
+    // Bibliotheks-Identifikation gegen die Sollwerte dieses Laufs
     const tol = 0.05;
-    detectedPeaks.forEach(p=>{
+    found.forEach(p=>{
       let best=null, bestDiff=Infinity;
-      truePeaks.forEach(tp=>{
+      run.truePeaks.forEach(tp=>{
         const diff = Math.abs(tp.tR-p.tR)/tp.tR;
         if(diff<bestDiff){ bestDiff=diff; best=tp; }
       });
@@ -944,33 +1035,57 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     });
 
     // Flächenprozente nur über die Probe – der Luftpeak gehört nicht zur Probe
-    const totalArea = detectedPeaks.filter(p=>!p.isAir).reduce((s,p)=>s+p.area,0) || 1;
-    detectedPeaks.forEach(p=> p.areaPct = p.isAir ? null : 100*p.area/totalArea);
-
-    $("roPeaks").textContent = detectedPeaks.length;
+    const totalArea = found.filter(p=>!p.isAir).reduce((s,p)=>s+p.area,0) || 1;
+    found.forEach(p=> p.areaPct = p.isAir ? null : 100*p.area/totalArea);
 
     // Hinweis bei nicht getrennten oder nicht eluierten Substanzen
-    const hint = $("peakHint");
-    const inWindow = truePeaks.filter(p=>p.tR <= params.runtime);
-    const lateCount = truePeaks.length - inWindow.length;
+    const inWindow = run.truePeaks.filter(p=>p.tR <= run.runtime);
+    const lateCount = run.truePeaks.length - inWindow.length;
     const msgs = [];
-    if(detectedPeaks.length < inWindow.length){
-      msgs.push(`${inWindow.length} Substanzen im Messfenster, aber nur ${detectedPeaks.length} Peaks erkannt – einige Substanzen eluieren gemeinsam. Ofentemperatur senken, Trennstufen erhöhen oder ein Temperaturprogramm verwenden (für Gase wie Methan bis Butan: Start bei −60 °C).`);
+    if(found.length < inWindow.length){
+      msgs.push(`${inWindow.length} Substanzen im Messfenster, aber nur ${found.length} Peaks erkannt – einige Substanzen eluieren gemeinsam. Ofentemperatur senken, Trennstufen erhöhen oder ein Temperaturprogramm verwenden (für Gase wie Methan bis Butan: Start bei −60 °C).`);
     }
     if(lateCount > 0){
-      msgs.push(`${lateCount} Substanz(en) eluieren erst nach Ende der Laufzeit – Laufzeit verlängern oder Temperatur erhöhen.`);
+      msgs.push(`${lateCount} Substanz(en) eluieren erst nach Ende der Laufzeit (${run.runtime} min) und erscheinen deshalb nicht im Chromatogramm – Ofentemperatur erhöhen, ein Temperaturprogramm verwenden oder die Laufzeit verlängern.`);
     }
-    hint.textContent = msgs.join(" ");
-    hint.style.display = msgs.length ? "block" : "none";
+    run.peaks = found;
+    run.hint = msgs.join(" ");
+  }
+
+  // Zeigt die Auswertung eines Laufs in Peaktabelle, Quantifizierung und Auflösung an
+  function showRun(run){
+    selectedRun = run || null;
+    const done = !!(run && run.finished);
+    detectedPeaks = done ? run.peaks : [];
+    const hint = $("peakHint");
+    hint.textContent = done ? run.hint : "";
+    hint.style.display = (done && run.hint) ? "block" : "none";
+    $("roPeaks").textContent = done ? detectedPeaks.length : "–";
+    const lbl = $("evalRun");
+    if(run){
+      lbl.style.display = "flex";
+      lbl.innerHTML = `<i style="background:${run.color}"></i><span>Auswertung von <strong>${run.label}</strong></span>`;
+    } else {
+      lbl.style.display = "none"; lbl.innerHTML = "";
+    }
     renderPeakTable();
     renderQuantOptions();
+    $("quantBody").innerHTML = `<tr><td colspan="6" class="empty-hint">Noch keine Kalibrierung durchgeführt.</td></tr>`;
     renderRes();
+    renderLegend();
+    draw();
   }
 
   function renderPeakTable(){
     const body = $("peakBody");
     if(!detectedPeaks.length){
-      body.innerHTML = `<tr><td colspan="7" class="empty-hint">Noch keine Peaks erkannt – Lauf abwarten oder Schwellenwert anpassen.</td></tr>`;
+      let msg = "Noch keine Peaks – Injektion starten und Lauf abwarten.";
+      if(selectedRun){
+        if(selectedRun === currentRun && running) msg = "Lauf läuft – die Auswertung erscheint nach Ende des Laufs.";
+        else if(!selectedRun.finished) msg = "Dieser Lauf wurde vor dem Ende gestoppt und daher nicht ausgewertet.";
+        else msg = "Keine Peaks erkannt – Schwellenwert senken.";
+      }
+      body.innerHTML = `<tr><td colspan="7" class="empty-hint">${msg}</td></tr>`;
       return;
     }
     body.innerHTML = detectedPeaks.map(p=>`
@@ -1039,7 +1154,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href=url; a.download="gc_peaktabelle.csv"; a.click();
+    a.href=url; a.download = selectedRun ? `gc_peaktabelle_lauf${selectedRun.num}.csv` : "gc_peaktabelle.csv"; a.click();
     URL.revokeObjectURL(url);
   });
 
