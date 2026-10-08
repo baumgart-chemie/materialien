@@ -48,6 +48,10 @@ header .status.done{color:var(--teal); border-color:var(--teal-dim);}
 .modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
 .modal-body ol, .modal-body ul{padding-left:20px; margin:0 0 6px;}
 .modal-body strong{color:var(--text); font-weight:600;}
+.cl-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.cl-ver:first-child{margin-top:0;}
+.cl-ver h3{margin:0 !important;}
+.cl-ver .date{font-size:12px; color:var(--text-faint); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
 .formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
 .formula-box sub, .modal-body sub{font-size:.75em;}
 
@@ -300,11 +304,11 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <li>Trage beide EN-Werte ein.</li>
         <li>Berechne die Differenz: <strong>ΔEN = größere EN − kleinere EN</strong>. ΔEN ist nie negativ.</li>
       </ol>
-      <p>Dezimalzahlen kannst du mit Komma oder Punkt eingeben (1,4 oder 1.4).</p>
+      <p>Dezimalzahlen kannst du mit Komma oder Punkt eingeben (1,4 oder 1.4). Weil Periodensysteme leicht unterschiedliche EN-Werte angeben, wird bei den EN-Werten eine Abweichung von <strong>±0,1</strong> akzeptiert. ΔEN muss dann zu deinen EN-Werten passen.</p>
 
       <h3>Schritt 2: Bindungsart bestimmen</h3>
       <div class="formula-box">ΔEN &lt; 0,5          → unpolare Atombindung<br>0,5 ≤ ΔEN ≤ 1,7    → polare Atombindung<br>ΔEN &gt; 1,7          → Ionenbindung</div>
-      <p>Genau 0,5 und genau 1,7 zählen also noch zur <strong>polaren Atombindung</strong>.</p>
+      <p>Liegt ΔEN <strong>genau auf einer Grenze</strong> (0,5 oder 1,7), zählen beide angrenzenden Bindungsarten als richtig.</p>
 
       <h3>Schritt 3: Negative Ladung</h3>
       <p>Das Atom mit der <strong>größeren EN</strong> zieht die Bindungselektronen stärker an und ist negativ geladen. Du entscheidest außerdem, welche Art von Ladung es trägt:</p>
@@ -324,6 +328,32 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Tipp, Lösung, Auswertung</h3>
       <p>„Tipp“ hilft in vier Stufen: EN im PSE finden, Elemente markieren, ΔEN berechnen, mit den Grenzen vergleichen. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Änderungsprotokoll</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="cl-ver"><h3>Version 1.1</h3><span class="date">08.10.2026</span></div>
+      <ul>
+        <li><strong>Vollständige Strukturen:</strong> Verbindungen werden als Valenzstrichformel mit freien Elektronenpaaren gezeigt, Metallverbindungen zunächst als Atome einer Formeleinheit. Nach dem Lösen erscheinen Teilladungen (δ+/δ−) bzw. Ionenladungen.</li>
+        <li><strong>Schritt 3 erweitert:</strong> Neben dem negativen Partner wird auch die Art der Ladung bestimmt – Teilladung δ− oder Anion.</li>
+        <li><strong>Toleranz bei EN-Werten:</strong> Abweichungen von ±0,1 werden akzeptiert, damit unterschiedliche Periodensysteme genutzt werden können. ΔEN muss zu den eigenen Werten passen.</li>
+        <li><strong>Grenzfälle:</strong> Bei ΔEN von genau 0,5 oder 1,7 zählen beide angrenzenden Bindungsarten als richtig.</li>
+        <li><strong>Optionen:</strong> Periodensystem und ΔEN-Strahl lassen sich einblenden und sind standardmäßig ausgeblendet.</li>
+        <li><strong>Bedienung:</strong> Der Prüfen-Knopf steht direkt unter den Eingaben.</li>
+        <li>Stickstoffdioxid aus der Aufgabenliste entfernt (als Radikal nicht eindeutig als Strichformel darstellbar).</li>
+      </ul>
+      <div class="cl-ver"><h3>Version 1.0</h3><span class="date">28.09.2026</span></div>
+      <ul>
+        <li>Erste Version: Bindungsart über ΔEN bestimmen (unpolare Atombindung, polare Atombindung, Ionenbindung; Grenzen 0,5 und 1,7).</li>
+        <li>Aufgaben als Atompaar oder Verbindung, Periodensystem mit EN-Werten, ΔEN-Skala, negativer Partner, Sonderfälle, Tipps, Lösungsweg und Verlauf.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -368,7 +398,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
             <tr><td class="k">ΔEN</td><td>größere EN − kleinere EN (nie negativ)</td></tr>
             <tr class="grp"><td colspan="2">Bindungsart</td></tr>
             <tr><td class="k">&lt; 0,5</td><td>unpolare Atombindung</td></tr>
-            <tr><td class="k">0,5 – 1,7</td><td>polare Atombindung (Grenzwerte eingeschlossen)</td></tr>
+            <tr><td class="k">0,5 – 1,7</td><td>polare Atombindung</td></tr>
+            <tr><td class="k">= 0,5 / 1,7</td><td>Grenzfall: beide angrenzenden Bindungsarten zählen als richtig</td></tr>
             <tr><td class="k">&gt; 1,7</td><td>Ionenbindung</td></tr>
             <tr class="grp"><td colspan="2">Ladungen</td></tr>
             <tr><td class="k">δ− / δ+</td><td>polar: Atom mit größerer EN wird δ−, der Partner δ+</td></tr>
@@ -464,8 +495,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 </div>
 
 <footer>
-  <p class="footer-note">Elektronegativitätswerte nach Pauling, auf eine Nachkommastelle gerundet (Schulbuchwerte). Einteilung nach ΔEN: unter 0,5 unpolare Atombindung, 0,5 bis 1,7 polare Atombindung, über 1,7 Ionenbindung. Vereinfachtes Schulmodell: Die Grenzen sind Faustregeln, die Übergänge sind fließend.</p>
-  <p class="footer-credit">Bastian Baumgart · Bindungsart-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-note">Elektronegativitätswerte nach Pauling, auf eine Nachkommastelle gerundet (Schulbuchwerte). Einteilung nach ΔEN: unter 0,5 unpolare Atombindung, 0,5 bis 1,7 polare Atombindung, über 1,7 Ionenbindung; genau auf einer Grenze zählen beide Bindungsarten. EN-Werte werden mit ±0,1 Toleranz akzeptiert. Vereinfachtes Schulmodell: Die Grenzen sind Faustregeln, die Übergänge sind fließend.</p>
+  <p class="footer-credit">Bastian Baumgart · Bindungsart-Trainer <a href="#" id="btnChangelog" title="Änderungsprotokoll anzeigen">V1.1</a> (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -492,12 +523,15 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   const KNAME = {u:"unpolare Atombindung", p:"polare Atombindung", i:"Ionenbindung"};
   const KSHORT = {u:"unpolar", p:"polar", i:"Ionenbindung"};
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const fmt = v10 => (v10/10).toFixed(1).replace(".", ",");
+  const fmt = v10 => { let x = (v10/10).toFixed(2); if(x.endsWith("0")) x = x.slice(0, -1); return x.replace(".", ","); };
   const eq = (x, y) => typeof x==="number" && !isNaN(x) && Math.abs(x - y) < 1e-6;
   const sub = s => s.replace(/(\d+)/g, "<sub>$1</sub>");
 
   // Einteilung nach ΔEN (in Zehnteln): < 5 unpolar · 5 … 17 polar · > 17 Ionenbindung
   function cls(d10){ return d10 < 5 ? "u" : d10 <= 17 ? "p" : "i"; }
+  // erlaubte Bindungsarten: genau auf einer Grenze zählen beide angrenzenden Bereiche
+  function allowed(d10){ return eq(d10, 5) ? ["u","p"] : eq(d10, 17) ? ["p","i"] : [cls(d10)]; }
+  const EN_TOL = 1;   // Toleranz ±0,1 bei den EN-Werten (andere Periodensysteme)
 
   // ---------- Aufgabenpool ----------
   function mk(a, b, kind, name, formula){
@@ -614,6 +648,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   const chgTxt = q => (Math.abs(q)>1 ? Math.abs(q) : "") + (q>0 ? "+" : "−");
   const isHomo = c => c.a===c.b;
   const negSide = c => EL[c.a].en > EL[c.b].en ? "a" : "b";
+  // negative Seite einer gelösten Aufgabe (eigene EN-Werte, falls vorhanden)
+  const negSideOf = c => (c.enA!=null && c.enB!=null && !eq(c.enA, c.enB)) ? (c.enA > c.enB ? "a" : "b") : negSide(c);
   const negFor = (c, k) => k==="u" ? "none" : negSide(c) + (k==="i" ? ":i" : ":d");
   const bondTxt = c => `${c.a}–${c.b}`;
 
@@ -783,7 +819,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     s += `<text class="sym" x="${xA}" y="${yS}" text-anchor="middle">${c.a}</text>`;
     s += `<text class="sym" x="${xB}" y="${yS}" text-anchor="middle">${c.b}</text>`;
     if(done && kk!=="u"){
-      const neg = negSide(c);
+      const neg = negSideOf(c);
       if(ionic){
         [[xA + wA/2 + 2, c.a], [xB + wB/2 + 2, c.b]].forEach(([x, sy])=>{
           const q = ionCharge(sy, c);
@@ -890,7 +926,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         s += `<text class="chg s2" x="${P[i][0] + 4.3*len(i) + 2}" y="${P[i][1]-8}" style="fill:var(${q>0?"--amber":"--teal"})">${chgTxt(q)}</text>`;
       });
     } else if(done && c.k==="p"){
-      const negS = c[negSide(c)];
+      const negS = c[negSideOf(c)];
       at.forEach((a, i)=>{
         if(!a[0]) return;
         const g = freeAngles(1, occ[i].concat(near[i]), 22.5)[0];
@@ -958,9 +994,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     return "";
   }
   function boundaryNote(c){
-    if(!c.boundary) return "";
-    return c.d===5 ? "ΔEN = 0,5 liegt genau auf der unteren Grenze. Nach der Regel beginnt hier die polare Atombindung."
-                   : "ΔEN = 1,7 liegt genau auf der oberen Grenze. Nach der Regel ist das noch eine polare Atombindung, erst darüber beginnt die Ionenbindung.";
+    if(eq(c.d, 5)) return "ΔEN = 0,5 liegt genau auf der Grenze zwischen unpolarer und polarer Atombindung. Beide Antworten zählen als richtig.";
+    if(eq(c.d, 17)) return "ΔEN = 1,7 liegt genau auf der Grenze zwischen polarer Atombindung und Ionenbindung. Beide Antworten zählen als richtig.";
+    return "";
   }
 
   function check(){
@@ -973,7 +1009,8 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     const [ea, eb] = readEN();
     let okA = true, okB = true;
     if(!givenEN){
-      okA = eq(ea, A.en); okB = eq(eb, B.en);
+      const near = (v, e) => typeof v==="number" && !isNaN(v) && Math.abs(v - e) <= EN_TOL + 1e-6;
+      okA = near(ea, A.en); okB = near(eb, B.en);
       if(ea===null) msgs.push(["info", `Trage die EN von ${A.n} ein.`]);
       else if(!okA) msgs.push(["bad", enMsg(A, ea, B)]);
       if(eb===null) msgs.push(["info", `Trage die EN von ${B.n} ein.`]);
@@ -985,11 +1022,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
     // --- Teil 1: ΔEN ---
     const d = parseEN($("dEN").value);
-    t.okD = eq(d, c.d);
+    const ownD = t.okE && validEN(ea) && validEN(eb) ? Math.abs(ea - eb) : null;   // ΔEN aus den eigenen (tolerierten) EN-Werten
+    t.okD = ownD!==null ? eq(d, ownD) : eq(d, c.d);
+    const dEff = t.okD ? d : c.d;                                                     // maßgeblicher ΔEN-Wert für Schritt 2 und 3
     if(d===null) msgs.push(["info", "Trage ΔEN ein."]);
     else if(!t.okD){
       if(isNaN(d)) msgs.push(["bad", "Gib ΔEN als Zahl an, z. B. 1,4."]);
       else if(d<0) msgs.push(["bad", "ΔEN ist nie negativ. Rechne größere EN minus kleinere EN."]);
+      else if(ownD!==null && eq(d, c.d)) msgs.push(["bad", "ΔEN muss zu deinen eingetragenen EN-Werten passen. Rechne mit deinen Werten: größere EN − kleinere EN."]);
       else if(!t.okE && validEN(ea) && validEN(eb) && eq(d, Math.abs(ea - eb))) msgs.push(["bad", "Die Differenz passt zu deinen EN-Werten, das ist ein Folgefehler. Korrigiere zuerst die EN-Werte."]);
       else if(eq(d, A.en + B.en)) msgs.push(["bad", "Du hast die EN-Werte addiert. ΔEN ist die Differenz: größere EN − kleinere EN."]);
       else if(isHomo(c)) msgs.push(["bad", "Beide Atome sind gleich und haben dieselbe EN. Wie groß ist dann die Differenz?"]);
@@ -999,14 +1039,12 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
     // --- Teil 2: Bindungsart ---
     const k = t.choice;
-    t.okK = k===c.k; t.badK = false;
+    t.okK = k!==null && allowed(dEff).includes(k); t.badK = false;
     const dUsable = typeof d==="number" && !isNaN(d) && d>=0;
     if(k===null) msgs.push(["info", "Wähle die Bindungsart."]);
     else if(!t.okK){
       t.badK = true;
-      if(!t.okD && dUsable && cls(Math.round(d))===k) msgs.push(["bad", `Die Bindungsart passt zu deinem ΔEN-Wert (${fmt(Math.round(d))}), das ist ein Folgefehler. Korrigiere zuerst ΔEN.`]);
-      else if(c.d===5 && k==="u") msgs.push(["bad", "ΔEN = 0,5 liegt genau auf der Grenze. Unpolar ist eine Bindung nur bei ΔEN < 0,5, ab 0,5 gilt sie als polar."]);
-      else if(c.d===17 && k==="i") msgs.push(["bad", "ΔEN = 1,7 liegt genau auf der Grenze. Eine Ionenbindung liegt erst bei ΔEN > 1,7 vor."]);
+      if(!t.okD && dUsable && allowed(d).includes(k)) msgs.push(["bad", `Die Bindungsart passt zu deinem ΔEN-Wert (${fmt(d)}), das ist ein Folgefehler. Korrigiere zuerst ΔEN.`]);
       else if(c.special==="m" && k==="i") msgs.push(["bad", "Auch wenn ein Metall beteiligt ist: In dieser Übung entscheidet nur ΔEN. Vergleiche ΔEN mit der Grenze 1,7."]);
       else if(c.special==="n" && k==="p") msgs.push(["bad", "Auch wenn beide Partner Nichtmetalle sind: In dieser Übung entscheidet nur ΔEN. Vergleiche ΔEN mit der Grenze 1,7."]);
       else if(isHomo(c)) msgs.push(["bad", "Zwei gleiche Atome ziehen die Bindungselektronen gleich stark an (ΔEN = 0)."]);
@@ -1016,13 +1054,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     // --- Teil 3: negativer Partner ---
     t.okN = true; t.badN = false;
     if(useNeg){
-      const n = t.neg, sol = negFor(c, c.k);
+      // negative Seite nach den eigenen EN-Werten (bei Toleranz), sonst nach der Tabelle
+      const side = t.okE && validEN(ea) && validEN(eb) && !eq(ea, eb) ? (ea > eb ? "a" : "b") : negSide(c);
+      const solFor = kk => kk==="u" ? "none" : side + (kk==="i" ? ":i" : ":d");
+      const kSol = t.okK ? k : cls(dEff);
+      const n = t.neg, sol = solFor(kSol);
       t.okN = n===sol;
       if(n===null) msgs.push(["info", "Wähle die negative Ladung oder „keine Ladungen“."]);
       else if(!t.okN){
         t.badN = true;
         const nSide = n.split(":")[0], nType = n.split(":")[1], sSide = sol.split(":")[0], sType = sol.split(":")[1];
-        if(k && !t.okK && negFor(c, k)===n) msgs.push(["bad", "Die Ladung passt zu der von dir gewählten Bindungsart, das ist ein Folgefehler."]);
+        if(k && !t.okK && solFor(k)===n) msgs.push(["bad", "Die Ladung passt zu der von dir gewählten Bindungsart, das ist ein Folgefehler."]);
         else if(n==="none") msgs.push(["bad", "Hier gibt es eine negative Ladung. Nur bei einer unpolaren Atombindung entstehen keine Ladungen."]);
         else if(sol==="none") msgs.push(["bad", "Bei einer unpolaren Atombindung entstehen in diesem Modell keine Ladungen, also ist kein Partner negativ."]);
         else if(nSide!==sSide) msgs.push(["bad", "Negativ wird das Atom mit der größeren Elektronegativität, weil es die Bindungselektronen stärker anzieht."]);
@@ -1033,17 +1075,28 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
     if(t.okE && t.okD && t.okK && t.okN){
       t.done = true;
+      // gelöste Aufgabe mit den eigenen Werten (Toleranz) und der gewählten Bindungsart darstellen
+      const hasM = A.c==="m" || B.c==="m";
+      t.c = Object.assign({}, c, {d: dEff, k: k, enA: ea, enB: eb, boundary: eq(dEff, 5) || eq(dEff, 17),
+                                  special: hasM && k!=="i" ? "m" : (!hasM && k==="i" ? "n" : null)});
+      const tolMsgs = [];
+      if(!givenEN){
+        if(!eq(ea, A.en)) tolMsgs.push(`EN(${A.s}) = ${fmt(ea)} weicht leicht vom hier verwendeten Wert ${fmt(A.en)} ab und wird akzeptiert.`);
+        if(!eq(eb, B.en) && !isHomo(c)) tolMsgs.push(`EN(${B.s}) = ${fmt(eb)} weicht leicht vom hier verwendeten Wert ${fmt(B.en)} ab und wird akzeptiert.`);
+      }
       ["enA","enB","dEN"].forEach(id=>{ $(id).readOnly = true; });
       const firstTry = !t.wrong && t.hint===0;
       stats.solved++; if(firstTry) stats.first++; stats.streak++;
+      const cc = t.c;
       let extra = "";
-      if(useNeg && c.k!=="u"){
-        const nS = c[negSide(c)], pS = c[negSide(c)==="a" ? "b" : "a"];
-        extra = c.k==="i" ? ` ${nS} bildet das Anion, ${pS} das Kation.` : ` ${nS} ist δ−, ${pS} ist δ+.`;
+      if(useNeg && cc.k!=="u"){
+        const ns = negSideOf(cc), nS = cc[ns], pS = cc[ns==="a" ? "b" : "a"];
+        extra = cc.k==="i" ? ` ${nS} bildet das Anion, ${pS} das Kation.` : ` ${nS} ist δ−, ${pS} ist δ+.`;
       }
-      let html = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${bondTxt(c)}</span>: ΔEN = ${fmt(c.d)} → ${KNAME[c.k]}.${extra}`);
-      if(c.boundary) html += fb("info", boundaryNote(c));
-      if(c.special) html += fb("hint", specialNote(c));
+      let html = fb("good", `Richtig${firstTry?" im ersten Versuch":""}! <span class="nm">${bondTxt(cc)}</span>: ΔEN = ${fmt(cc.d)} → ${KNAME[cc.k]}.${extra}`);
+      tolMsgs.forEach(m => html += fb("info", m));
+      if(cc.boundary) html += fb("info", boundaryNote(cc));
+      if(cc.special) html += fb("hint", specialNote(cc));
       $("feedback").innerHTML = html;
       logHistory(t, firstTry ? "first" : "ok");
       renderTask(); renderWay(); updateStats();
@@ -1074,7 +1127,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       if(isHomo(c) && !$("chkPSE").checked) out[out.length-1] = out[out.length-1].replace("Das Element ist markiert. ", "");
     }
     if(t.hint>=3) out.push(`Tipp 3: ΔEN = größere EN − kleinere EN = ${fmt(hi.en)} − ${fmt(lo.en)} = ${fmt(c.d)}.`);
-    if(t.hint>=4) out.push("Tipp 4: Vergleiche mit den Grenzen: ΔEN < 0,5 unpolar · 0,5 ≤ ΔEN ≤ 1,7 polar · ΔEN > 1,7 Ionenbindung." +
+    if(t.hint>=4) out.push("Tipp 4: Vergleiche mit den Grenzen: ΔEN < 0,5 unpolar · 0,5 bis 1,7 polar · ΔEN > 1,7 Ionenbindung. Genau auf einer Grenze zählen beide Bindungsarten." +
                            (useNeg ? " Negativ ist das Atom mit der größeren EN: bei polarer Bindung als Teilladung δ−, bei Ionenbindung als Anion, bei unpolarer Bindung gibt es keine Ladungen." : ""));
     $("feedback").innerHTML = out.map(m=>fb("hint", m)).join("");
   }
@@ -1100,13 +1153,18 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   function renderWay(){
     const t = task;
     if(!t.done){ $("wayBox").innerHTML = `<div class="empty-hint">Der Lösungsweg erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`; return; }
-    const c = t.c, A = EL[c.a], B = EL[c.b];
-    const hi = A.en >= B.en ? A : B, lo = hi===A ? B : A;
-    const range = c.k==="u" ? `<span class="a">${fmt(c.d)}</span> &lt; 0,5` : c.k==="p" ? `0,5 ≤ <span class="a">${fmt(c.d)}</span> ≤ 1,7` : `<span class="a">${fmt(c.d)}</span> &gt; 1,7`;
+    const c = t.c;
+    const eA = c.enA!=null ? c.enA : EL[c.a].en, eB = c.enB!=null ? c.enB : EL[c.b].en;
+    const ns = negSideOf(c);
+    const hi = {s: c[ns], en: ns==="a" ? eA : eB}, lo = {s: c[ns==="a" ? "b" : "a"], en: ns==="a" ? eB : eA};
+    let range;
+    if(eq(c.d, 5)) range = `<span class="a">${fmt(c.d)}</span> = Grenzwert → Bereich <span class="t">unpolar oder polar</span> (beides richtig)`;
+    else if(eq(c.d, 17)) range = `<span class="a">${fmt(c.d)}</span> = Grenzwert → Bereich <span class="t">polar oder Ionenbindung</span> (beides richtig)`;
+    else range = (c.k==="u" ? `<span class="a">${fmt(c.d)}</span> &lt; 0,5` : c.k==="p" ? `0,5 &lt; <span class="a">${fmt(c.d)}</span> &lt; 1,7` : `<span class="a">${fmt(c.d)}</span> &gt; 1,7`) + ` → Bereich <span class="t">${KSHORT[c.k]}</span>`;
     const rows = [
-      ["EN aus dem PSE", isHomo(c) ? `EN(${A.s}) = <span class="a">${fmt(A.en)}</span> für beide Atome` : `EN(${A.s}) = <span class="a">${fmt(A.en)}</span> · EN(${B.s}) = <span class="a">${fmt(B.en)}</span>`],
+      ["EN aus dem PSE", isHomo(c) ? `EN(${c.a}) = <span class="a">${fmt(eA)}</span> für beide Atome` : `EN(${c.a}) = <span class="a">${fmt(eA)}</span> · EN(${c.b}) = <span class="a">${fmt(eB)}</span>`],
       ["ΔEN", `${fmt(hi.en)} − ${fmt(lo.en)} = <span class="t">${fmt(c.d)}</span>`],
-      ["Einordnung", `${range} → Bereich <span class="t">${KSHORT[c.k]}</span>`]
+      ["Einordnung", range]
     ];
     if(c.k==="u"){
       rows.push(["Ladungen", isHomo(c) ? "gleiche Atome ziehen die Bindungselektronen gleich stark an → keine Teilladungen"
@@ -1187,7 +1245,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   $("btnGuide").addEventListener("click", ev=>{ ev.preventDefault(); $("guideBackdrop").classList.add("open"); });
   $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
   $("guideBackdrop").addEventListener("click", ev=>{ if(ev.target===$("guideBackdrop")) $("guideBackdrop").classList.remove("open"); });
-  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") $("guideBackdrop").classList.remove("open"); });
+  $("btnChangelog").addEventListener("click", ev=>{ ev.preventDefault(); $("changelogBackdrop").classList.add("open"); });
+  $("closeChangelog").addEventListener("click", ()=>$("changelogBackdrop").classList.remove("open"));
+  $("changelogBackdrop").addEventListener("click", ev=>{ if(ev.target===$("changelogBackdrop")) $("changelogBackdrop").classList.remove("open"); });
+  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape"){ $("guideBackdrop").classList.remove("open"); $("changelogBackdrop").classList.remove("open"); } });
 
   buildPSE();
   newTask();
