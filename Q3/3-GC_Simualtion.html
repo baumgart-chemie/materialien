@@ -62,7 +62,7 @@ header .status.running{color:var(--amber); border-color:var(--amber-dim);}
   background:var(--panel); border:1px solid var(--line); border-radius:5px;
   width:100%; max-width:620px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
 }
-.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; position:sticky; top:0;}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin:-22px -26px 14px; padding:22px 26px 10px; position:sticky; top:-22px; background:var(--panel); z-index:1;}
 .modal-head h2{font-size:17px;}
 .modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
 .modal-close:hover{color:var(--text);}
@@ -70,6 +70,13 @@ header .status.running{color:var(--amber); border-color:var(--amber-dim);}
 .modal-body h3:first-child{margin-top:0;}
 .modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 4px;}
 .modal-body strong{color:var(--text); font-weight:600;}
+.changelog-box{max-width:560px;}
+.cl-version + .cl-version{margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft);}
+.cl-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:6px;}
+.cl-head h3{margin:0;}
+.cl-head time{font-size:12.5px; color:var(--text-faint);}
+.cl-version ul{margin:0; padding-left:18px;}
+.cl-version li{font-size:13.5px; line-height:1.55; color:var(--text-dim); margin-bottom:5px;}
 
 /* layout */
 .wrap{display:grid; grid-template-columns: 320px 1fr; gap:0; align-items:start;}
@@ -283,6 +290,37 @@ footer a:hover{border-bottom-color:var(--teal);}
   </div>
 </div>
 
+<div class="modal-backdrop" id="changelogBackdrop" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+  <div class="modal-box changelog-box">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionen &amp; Änderungen</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <section class="cl-version">
+        <div class="cl-head"><h3>Version 1.1</h3><time datetime="2026-10-03">03.10.2026</time></div>
+        <ul>
+          <li><strong>Luftpeak:</strong> Die mit der Spritze injizierte Luft erscheint als erster Peak bei der Totzeit (10 s bei 1,5 mL/min). Er ist in der Peaktabelle als „Luft (Totzeit)“ gekennzeichnet und zählt nicht zu den Flächenprozenten.</li>
+          <li><strong>Mehrere Läufe vergleichen:</strong> Neue Läufe werden in eigener Farbe über die bisherigen gelegt (bis zu 8). Erst „Zurücksetzen“ löscht alle Läufe.</li>
+          <li><strong>Auswertung früherer Läufe:</strong> Ein Klick auf einen Eintrag in der Legende zeigt Peaktabelle, Quantifizierung und Auflösung dieses Laufs.</li>
+          <li><strong>Hinweise unter dem Chromatogramm,</strong> wenn Substanzen gemeinsam eluieren oder erst nach Ende der Laufzeit erscheinen.</li>
+          <li>Schieberegler in der Seitenleiste stehen näher an ihrer Beschriftung.</li>
+          <li>Systemschriften statt Google Fonts: Die Seite lädt keine externen Inhalte mehr. Neuer Link zu Impressum &amp; Datenschutz.</li>
+        </ul>
+      </section>
+      <section class="cl-version">
+        <div class="cl-head"><h3>Version 1.0</h3><time datetime="2026-09-23">23.09.2026</time></div>
+        <ul>
+          <li>Erste Version der Simulation: isotherm oder mit Temperaturprogramm, einstellbar sind Trägergasfluss, Trennstufen, Laufzeit, Probenmenge und Detektorrauschen.</li>
+          <li>Bibliothek mit 24 Einzelsubstanzen und 15 Stoffgemischen, deren Komponenten erst in der Auswertung sichtbar werden.</li>
+          <li>Auswertung mit Peaktabelle und Bibliotheksabgleich, Einpunkt-Kalibrierung, Auflösung und CSV-Export.</li>
+          <li>Anleitung zur Bedienung.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
   <!-- SIDEBAR: Methode -->
   <div class="sidebar">
@@ -440,7 +478,7 @@ footer a:hover{border-bottom-color:var(--teal);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Retentionszeiten, Peakformen und Rauschen werden aus vereinfachten physikalischen Modellen berechnet und bilden kein reales Säulen-/Detektorverhalten exakt ab.</p>
-  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.1 (erstellt mit Claude Pro)</p>
+  <p class="footer-credit">Bastian Baumgart · GC-Simulator <a href="#changelog" id="btnChangelog" title="Änderungen der Versionen anzeigen">V1.1</a> (erstellt mit Claude Pro)</p>
   <p class="footer-links"><a href="../impressum.html">Impressum &amp; Datenschutz</a></p>
 </footer>
 
@@ -1163,7 +1201,15 @@ footer a:hover{border-bottom-color:var(--teal);}
   $("btnGuide").addEventListener("click", (e)=>{ e.preventDefault(); guideBackdrop.classList.add("open"); });
   $("closeGuide").addEventListener("click", ()=> guideBackdrop.classList.remove("open"));
   guideBackdrop.addEventListener("click", (e)=>{ if(e.target===guideBackdrop) guideBackdrop.classList.remove("open"); });
-  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") guideBackdrop.classList.remove("open"); });
+  // ---------- Changelog ----------
+  const changelogBackdrop = $("changelogBackdrop");
+  $("btnChangelog").addEventListener("click", (e)=>{ e.preventDefault(); changelogBackdrop.classList.add("open"); $("closeChangelog").focus(); });
+  $("closeChangelog").addEventListener("click", ()=> changelogBackdrop.classList.remove("open"));
+  changelogBackdrop.addEventListener("click", (e)=>{ if(e.target===changelogBackdrop) changelogBackdrop.classList.remove("open"); });
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key==="Escape"){ guideBackdrop.classList.remove("open"); changelogBackdrop.classList.remove("open"); }
+  });
 
   // ---------- Init ----------
   renderCompounds();
