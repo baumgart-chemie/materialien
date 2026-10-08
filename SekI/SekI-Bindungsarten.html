@@ -167,6 +167,7 @@ svg .bond{stroke:var(--text-dim); stroke-width:3; stroke-linecap:round;}
 svg .bond.pre{stroke:var(--line); stroke-dasharray:6 5;}
 svg .sym.s2{font-size:28px;}
 svg .bond.sb{stroke-width:2.2;}
+svg .bond.dash{stroke:var(--text-dim); stroke-width:2; stroke-dasharray:5 4; stroke-linecap:butt;}
 svg .lp{stroke:var(--text-dim); stroke-width:2; stroke-linecap:round;}
 svg .edot{fill:var(--text-dim);}
 svg .chg.s2{font-size:16px;}
@@ -320,7 +321,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <div class="formula-box">H–Cl: EN(H) = 2,1 · EN(Cl) = 3,0<br>ΔEN = 3,0 − 2,1 = 0,9 → polare Atombindung<br>Cl hat die größere EN → Cl ist δ−, H ist δ+</div>
 
       <h3>Darstellung</h3>
-      <p>Bei <strong>Verbindungen</strong> zeigt das Bild die vollständige Struktur: Moleküle als <strong>Valenzstrichformel</strong> mit freien Elektronenpaaren, Verbindungen mit Metall zunächst nur als Atome einer Formeleinheit. Nach dem Lösen erscheinen die Ladungen: <strong>δ+ / δ−</strong> (Teilladungen) bei polarer Atombindung, <strong>Ionenladungen</strong> wie Mg²⁺ und Cl⁻ bei Ionenbindung. Bei unpolarer Atombindung gibt es keine Ladungen.</p>
+      <p>Bei <strong>Verbindungen</strong> zeigt das Bild die vollständige Struktur: vor dem Prüfen alle möglichen Bindungen einheitlich <strong>gestrichelt</strong>, egal ob Atom- oder Ionenbindung. Nach dem Lösen werden Moleküle als <strong>Valenzstrichformel</strong> mit freien Elektronenpaaren gezeigt, Salze als Ionen einer Formeleinheit. Außerdem erscheinen die Ladungen: <strong>δ+ / δ−</strong> (Teilladungen) bei polarer Atombindung, <strong>Ionenladungen</strong> wie Mg²⁺ und Cl⁻ bei Ionenbindung. Bei unpolarer Atombindung gibt es keine Ladungen.</p>
 
       <h3>Einstellungen</h3>
       <p><strong>Atompaar</strong> fragt nach der Bindung zwischen zwei Elementen, <strong>Verbindung</strong> nennt einen Stoff mit Formel. Wenn die <strong>EN-Werte vorgegeben</strong> sind, entfällt das Ablesen. Der <strong>ΔEN-Strahl</strong> im Bild zeigt die drei Bereiche farbig und markiert deinen ΔEN-Wert. Ohne Strahl musst du die Grenzen selbst kennen. Das <strong>Periodensystem</strong> lässt sich ausblenden, dann liest du die EN in deinem eigenen PSE ab. Auch Schritt 3 lässt sich abschalten.</p>
@@ -346,6 +347,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <li><strong>Toleranz bei EN-Werten:</strong> Abweichungen von ±0,1 werden akzeptiert, damit unterschiedliche Periodensysteme genutzt werden können. ΔEN muss zu den eigenen Werten passen.</li>
         <li><strong>Grenzfälle:</strong> Bei ΔEN von genau 0,5 oder 1,7 zählen beide angrenzenden Bindungsarten als richtig.</li>
         <li><strong>Optionen:</strong> Periodensystem und ΔEN-Strahl lassen sich einblenden und sind standardmäßig ausgeblendet.</li>
+        <li><strong>Vor dem Prüfen</strong> werden alle möglichen Bindungen einheitlich gestrichelt gezeigt, damit das Bild die Bindungsart nicht verrät.</li>
         <li><strong>Bedienung:</strong> Der Prüfen-Knopf steht direkt unter den Eingaben.</li>
         <li>Stickstoffdioxid aus der Aufgabenliste entfernt (als Radikal nicht eindeutig als Strichformel darstellbar).</li>
       </ul>
@@ -815,7 +817,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       const shift = dir * Math.min(c.d, 20) / 20 * half * .75;
       s += `<ellipse class="cloud" cx="${mid+shift}" cy="${by}" rx="${half*.72}" ry="17"/>`;
     }
-    if(!ionic) s += `<line class="bond${done?"":" pre"}" x1="${bx1}" y1="${by}" x2="${bx2}" y2="${by}"/>`;
+    if(!ionic) s += `<line class="bond${done?"":" dash"}" x1="${bx1}" y1="${by}" x2="${bx2}" y2="${by}"/>`;
     s += `<text class="sym" x="${xA}" y="${yS}" text-anchor="middle">${c.a}</text>`;
     s += `<text class="sym" x="${xB}" y="${yS}" text-anchor="middle">${c.b}</text>`;
     if(done && kk!=="u"){
@@ -862,8 +864,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   // Verbindung: vollständige Struktur (Valenzstrichformel bzw. Ionen)
   function drawCompound(c, done, ea, eb, top){
     const metal = EL[c.a].c==="m" || EL[c.b].c==="m";
-    const mode = done ? (c.k==="i" ? "ion" : "mol") : (metal ? "neutral" : "mol");
-    const st = mode==="mol" ? STR[c.formula] : ionLayout(c);
+    // vor dem Prüfen: alle möglichen Bindungen gestrichelt, für Atom- und Ionenbindung gleich
+    const mode = done ? (c.k==="i" ? "ion" : "mol") : "pre";
+    const st = mode==="mol" || (mode==="pre" && !metal) ? STR[c.formula] : ionLayout(c);
+    let bondList = st.bonds;
+    if(mode==="pre" && !bondList.length){
+      const line = st.atoms.every(a => Math.abs(a[2]) < 1e-6);
+      bondList = line ? st.atoms.slice(1).map((a, i) => [i, i+1, 1]) : st.atoms.slice(1).map((a, i) => [0, i+1, 1]);
+    }
     const at = st.atoms;
     const xs = at.map(a=>a[1]), ys = at.map(a=>a[2]);
     const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
@@ -883,8 +891,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     }).filter(v=>v!==null));
 
     // Bindungsstriche
-    if(mode==="mol"){
-      st.bonds.forEach(([i, j, o])=>{
+    if(mode==="mol" || mode==="pre"){
+      bondList.forEach(([i, j, o])=>{
+        if(mode==="pre") o = 1;
         const [x1, y1] = P[i], [x2, y2] = P[j];
         const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), ux = dx/L, uy = dy/L;
         const deg = Math.atan2(dy, dx)*180/Math.PI;
@@ -893,12 +902,12 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         const offs = o===1 ? [0] : o===2 ? [-3.6, 3.6] : [-6, 0, 6];
         offs.forEach(off=>{
           const ox = -uy*off, oy = ux*off;
-          s += `<line class="bond sb" x1="${x1+ux*r1+ox}" y1="${y1+uy*r1+oy}" x2="${x2-ux*r2+ox}" y2="${y2-uy*r2+oy}"/>`;
+          s += `<line class="bond sb${mode==="pre" ? " dash" : ""}" x1="${x1+ux*r1+ox}" y1="${y1+uy*r1+oy}" x2="${x2-ux*r2+ox}" y2="${y2-uy*r2+oy}"/>`;
         });
       });
       // freie Elektronenpaare (Valenzstriche) und ungepaarte Elektronen
       at.forEach((a, i)=>{
-        if(!a[0]) return;
+        if(!a[0] || mode==="pre") return;
         const e = EL[a[0]], val = a[0]==="H" ? 1 : e.g;
         const usedE = st.bonds.reduce((q,b)=> q + (b[0]===i || b[1]===i ? b[2] : 0), 0);
         let n = Math.max(0, val - usedE), pairs = Math.floor(n/2), dot = n%2;
@@ -938,7 +947,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     }
 
     // Beschriftung
-    const cap = c.formula==="SiO2" && mode==="mol" ? "Ausschnitt aus dem Atomgitter" : mode==="mol" ? "Valenzstrichformel" : done ? "Ionen einer Formeleinheit" : "Atome einer Formeleinheit";
+    const cap = mode==="pre" ? "mögliche Bindungen (gestrichelt)" : c.formula==="SiO2" ? "Ausschnitt aus dem Atomgitter" : mode==="mol" ? "Valenzstrichformel" : "Ionen einer Formeleinheit";
     s += `<text class="axl" x="450" y="12" text-anchor="end">${cap}</text>`;
     s += isHomo(c) ? enLabels({a:c.a, b:c.b}, ea, eb, 150, 310, top-10) : enLabels(c, ea, eb, 150, 310, top-10);
     return s;
