@@ -259,6 +259,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
 </head>
 <body>
 
@@ -302,6 +313,32 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Typische Fehler</h3>
       <p>Edukte minus Produkte gerechnet (falsches Vorzeichen) · stöchiometrische Faktoren vergessen · Wert für H₂O(g) statt H₂O(l) verwendet oder umgekehrt · Elementen einen Wert ungleich 0 gegeben. Die Prüfung erkennt diese Fehler und weist gezielt darauf hin.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">02.10.2026</span></div>
+      <ul>
+        <li><strong>Gleichung prüfen:</strong> Beim Selbst-Ausgleichen hat die Reaktionsgleichung einen eigenen „Prüfen“-Button direkt darunter, mit eigener Rückmeldung.</li>
+        <li>Ein leeres Koeffizientenfeld gilt als 1, die 1 muss nicht mehr eingetragen werden.</li>
+        <li>Der „Prüfen“-Button für die Rechnung steht direkt unter dem Ergebnisfenster.</li>
+        <li>Bei Verbrennungsreaktionen entsteht jetzt gasförmiges Wasser, H<sub>2</sub>O(g).</li>
+        <li>Zahlen werden ohne Tausenderpunkt angezeigt.</li>
+        <li>Systemschriften statt Google Fonts, neue Links zu Impressum und Datenschutz.</li>
+      </ul>
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">28.09.2026</span></div>
+      <ul>
+        <li>Erste Version: Molare Standardreaktionsenthalpie aus Standardbildungsenthalpien berechnen.</li>
+        <li>Reaktionsgleichung vorgegeben oder selbst ausgleichen, Bearbeitung schrittweise oder nur Ergebnis, Δ<sub>f</sub>H°-Werte wahlweise vorgegeben.</li>
+        <li>Tabelle der Standardbildungsenthalpien mit Suche, Tipps, Lösungsweg, Enthalpiediagramm und Verlauf.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -444,7 +481,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Tabellenwerte für 25 °C und 1 bar nach gängigen Tabellenwerken (NIST, CRC Handbook), auf eine Nachkommastelle gerundet. Einzelne Schulbücher geben teilweise leicht abweichende Werte an.</p>
-  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.1 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Berechnung der Reaktionsenthalpie V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -1191,5 +1228,15 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 })();
 </script>
 
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
+})();
+</script>
 </body>
 </html>

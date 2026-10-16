@@ -186,6 +186,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
 </head>
 <body>
 
@@ -231,6 +242,24 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Hinweise</h3>
       <p>Ag₂SO₄ ist nur mäßig löslich, deshalb ist c(Ag⁺) auf höchstens 0,05 mol/L begrenzt. Bleisulfat ist schwer löslich und daher nicht auswählbar.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">28.09.2026</span></div>
+      <ul>
+        <li>Erste Version: Zwei Halbzellen aus Elektrodenmetall und Metallsulfat-Lösung kombinieren, Konzentration der Metall-Ionen von 0,0001 bis 2 mol/L einstellbar.</li>
+        <li>Automatische Zuordnung von Anode und Kathode, Spannungsmessung und animierter Stromkreis mit Elektronenfluss, Ionenwanderung durch das Diaphragma, Auflösung und Abscheidung.</li>
+        <li>Optionale Konzentrationsänderung im Betrieb, Standardbedingungen per Schalter.</li>
+        <li>Berechnung mit der Nernst-Gleichung, Reaktionsgleichungen und Spannungsreihe.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -339,7 +368,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · 25 °C, Aktivitäten durch Konzentrationen ersetzt, Nernst-Faktor 0,059 V. Standardpotentiale sind Tabellenwerte und können je nach Schulbuch um wenige Hundertstel Volt abweichen.</p>
-  <p class="footer-credit">Bastian Baumgart · Galvanische-Zelle-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Galvanische-Zelle-Simulator V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -998,6 +1027,16 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+})();
+</script>
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
 })();
 </script>
 </body>

@@ -89,6 +89,9 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
   nav{padding:0 16px;}
   nav a{margin-right:14px;}
 }
+.tile p.meta{margin-top:8px; display:flex; flex-wrap:wrap; gap:6px 8px; align-items:baseline; font-size:12px;}
+.tile .ver{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:0 6px;}
+.tile .neu{color:var(--teal);}
 </style>
 </head>
 <body>
@@ -111,6 +114,8 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
    schreiben. Die Nummerierung pro Rubrik ergibt sich automatisch
    aus der Reihenfolge im Array. Format:
    { titel: "…", beschreibung: "…", link: "Ordner/datei.html" }
+   Optional: version: "2.0" (Versionsnummer auf der Kachel)
+             neu: "…"       (kurzer Hinweis auf die letzte Änderung)
    ============================================================ */
 const rubriken = [
   { id: "sek1", kurz: "SI", titel: "Sekundarstufe I", eintraege: [
@@ -138,8 +143,10 @@ const rubriken = [
   { id: "ef", kurz: "EF", titel: "Einführungsphase", eintraege: [
       {
         titel: "Nomenklatur organischer Verbindungen",
-        beschreibung: "Alkane, Alkene, Alkine & Alkohole nach IUPAC benennen – Struktur-, Halbstruktur- & Skelettformel, Tipps und Lösungsweg.",
-        link: "EP/EP-Nomenklatur.html"
+        beschreibung: "Alkane, Alkene, Alkine & Alkohole nach IUPAC benennen oder zum Namen die Strukturformel zeichnen – mit Baukasten (automatische Prüfung) oder freihand mit dem Stift, Tipps und Lösungsweg.",
+        link: "EP/EP-Nomenklatur.html",
+        version: "2.0",
+        neu: "Formel zeichnen (iPad & Stift), Mehrfachauswahl der Stoffklassen"
       },
       {
         titel: "Verbrennungsenthalpie von Alkanen",
@@ -188,6 +195,7 @@ rubriken.forEach(r => {
         <a class="tile" href="${esc(e.link)}">
           <h3><span class="nr">${i + 1}</span>${esc(e.titel)}</h3>
           <p>${esc(e.beschreibung || "")}</p>
+          ${e.version || e.neu ? `<p class="meta">${e.version ? `<span class="ver">V${esc(e.version)}</span>` : ""}${e.neu ? `<span class="neu">Neu: ${esc(e.neu)}</span>` : ""}</p>` : ""}
           <span class="open">Öffnen →</span>
         </a>`).join("")}</div>`
     : `<div class="empty">Inhalte folgen.</div>`;

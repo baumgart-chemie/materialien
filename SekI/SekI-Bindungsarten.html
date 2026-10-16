@@ -279,6 +279,19 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+</style>
 </head>
 <body>
 
@@ -336,11 +349,11 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 <div class="modal-backdrop" id="changelogBackdrop">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
     <div class="modal-head">
-      <h2 id="changelogTitle">Änderungsprotokoll</h2>
+      <h2 id="changelogTitle">Versionshinweise</h2>
       <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
-      <div class="cl-ver"><h3>Version 1.1</h3><span class="date">08.10.2026</span></div>
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">08.10.2026</span></div>
       <ul>
         <li><strong>Vollständige Strukturen:</strong> Verbindungen werden als Valenzstrichformel mit freien Elektronenpaaren gezeigt, Metallverbindungen zunächst als Atome einer Formeleinheit. Nach dem Lösen erscheinen Teilladungen (δ+/δ−) bzw. Ionenladungen.</li>
         <li><strong>Schritt 3 erweitert:</strong> Neben dem negativen Partner wird auch die Art der Ladung bestimmt – Teilladung δ− oder Anion.</li>
@@ -351,7 +364,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <li><strong>Bedienung:</strong> Der Prüfen-Knopf steht direkt unter den Eingaben.</li>
         <li>Stickstoffdioxid aus der Aufgabenliste entfernt (als Radikal nicht eindeutig als Strichformel darstellbar).</li>
       </ul>
-      <div class="cl-ver"><h3>Version 1.0</h3><span class="date">28.09.2026</span></div>
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">28.09.2026</span></div>
       <ul>
         <li>Erste Version: Bindungsart über ΔEN bestimmen (unpolare Atombindung, polare Atombindung, Ionenbindung; Grenzen 0,5 und 1,7).</li>
         <li>Aufgaben als Atompaar oder Verbindung, Periodensystem mit EN-Werten, ΔEN-Skala, negativer Partner, Sonderfälle, Tipps, Lösungsweg und Verlauf.</li>
@@ -498,7 +511,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Elektronegativitätswerte nach Pauling, auf eine Nachkommastelle gerundet (Schulbuchwerte). Einteilung nach ΔEN: unter 0,5 unpolare Atombindung, 0,5 bis 1,7 polare Atombindung, über 1,7 Ionenbindung; genau auf einer Grenze zählen beide Bindungsarten. EN-Werte werden mit ±0,1 Toleranz akzeptiert. Vereinfachtes Schulmodell: Die Grenzen sind Faustregeln, die Übergänge sind fließend.</p>
-  <p class="footer-credit">Bastian Baumgart · Bindungsart-Trainer <a href="#" id="btnChangelog" title="Änderungsprotokoll anzeigen">V1.1</a> (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Bindungsart-Trainer V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>

@@ -223,6 +223,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
 </head>
 <body>
 
@@ -264,6 +275,23 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Ideen zum Ausprobieren</h3>
       <p>Ammoniak-Synthese: Welche Bedingungen liefern die höchste NH₃-Konzentration – und warum arbeitet die Technik trotzdem bei 450 °C? NO₂/N₂O₄: Farbänderung beim Erwärmen und beim Komprimieren beobachten. HI-Gleichgewicht: Warum verschiebt eine Druckänderung hier nichts?</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">28.09.2026</span></div>
+      <ul>
+        <li>Erste Version: Acht Gleichgewichtsreaktionen, fünf Gasreaktionen (z. B. Ammoniak-Synthese, NO<sub>2</sub>/N<sub>2</sub>O<sub>4</sub>) und drei Reaktionen in Lösung (Veresterung, Eisen-thiocyanat, Cobalt-Komplex).</li>
+        <li>Verschiebung des Gleichgewichts durch Temperatur, Druck (Kolben) und Konzentrationsänderungen, Katalysator.</li>
+        <li>Anzeige von K<sub>c</sub> und Q<sub>c</sub>, Protokoll und Temperaturabhängigkeit von K<sub>c</sub>.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -398,7 +426,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Gasreaktionen im Zylinder mit arretiertem Kolben (konstantes Volumen, ideales Gas); Temperaturabhängigkeit nach Van ’t Hoff mit konstantem ΔH<sub>r</sub>. K<sub>c</sub>- und ΔH<sub>r</sub>-Werte gerundet, bei Eisen-thiocyanat und Cobalt-Komplex Modellwerte. Die Geschwindigkeit der Gleichgewichtseinstellung ist rein illustrativ.</p>
-  <p class="footer-credit">Bastian Baumgart · Gleichgewichts-Simulator V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Gleichgewichts-Simulator V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -930,6 +958,16 @@ function frame(now){
 }
 load(0);
 requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
 })();
 </script>
 </body>

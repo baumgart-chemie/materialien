@@ -221,6 +221,17 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
 </head>
 <body>
 
@@ -261,6 +272,24 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <h3>Tipp, Lösung, Auswertung</h3>
       <p>„Tipp“ hilft in vier Stufen: Element finden, Element im PSE markieren, Neutronenzahl, Schalenbesetzung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
       <p>Die Prüfung erkennt typische Fehler, zum Beispiel Massenzahl statt Protonenzahl, fehlendes Abziehen der Protonen, eine überfüllte Schale oder eine äußere Schale, die besetzt wurde, bevor die innere voll ist.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">02.10.2026</span></div>
+      <ul>
+        <li>Funktionsumfang dieser Version: Schalenmodell nach Bohr für die Hauptgruppenelemente der 1. bis 3. Periode aufstellen, wahlweise auch der 4. Periode (Schale N).</li>
+        <li>Protonen und Neutronen aus dem Periodensystem bestimmen, Elektronen per Klick oder +/− auf die Schalen verteilen.</li>
+        <li>Optional Isotope (z. B. Chlor-37, Kohlenstoff-14) und Anzeige der Elektronensumme.</li>
+        <li>Gestufte Tipps, Erkennung typischer Fehler, Lösungsweg und Verlauf.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -388,7 +417,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Vereinfachtes Atommodell nach Niels Bohr (1913) für die Hauptgruppenelemente der ersten drei Perioden, wahlweise mit der 4. Periode. Atommassen gerundet nach IUPAC-Standardwerten.</p>
-  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.1 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Schalenmodell-Trainer V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -827,5 +856,15 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 })();
 </script>
 
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
+})();
+</script>
 </body>
 </html>

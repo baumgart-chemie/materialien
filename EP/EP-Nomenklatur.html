@@ -19,6 +19,7 @@
   color-scheme: dark;
 }
 *{box-sizing:border-box;}
+[hidden]{display:none !important;}
 html,body{height:100%;}
 body{
   margin:0; background:var(--bg); color:var(--text);
@@ -58,6 +59,11 @@ header .status.done{color:var(--teal); border-color:var(--teal-dim);}
 .modal-body h3:first-child{margin-top:0;}
 .modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
 .modal-body ol{padding-left:20px; margin:0 0 6px;}
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.cl-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.cl-ver:first-child{margin-top:0;}
+.cl-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.cl-ver .d{font-size:12px; color:var(--text-faint);}
 .modal-body strong{color:var(--text); font-weight:600;}
 .formula-box{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px; overflow-x:auto; white-space:nowrap; line-height:1.7;}
 
@@ -194,6 +200,30 @@ table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); f
 table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
 .s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
 
+/* Zeichnen */
+.name-card{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); margin:10px 0 12px;}
+.name-card .k{font-size:11px; color:var(--text-faint);}
+.name-card .nm{font-size:24px; color:var(--amber); overflow-wrap:anywhere; line-height:1.3;}
+.board-tools{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+.tool-group{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+.tool-group button{background:var(--panel-alt); color:var(--text-dim); border:none; padding:10px 14px; font-size:13px; font-family:inherit; cursor:pointer;}
+.tool-group button + button{border-left:1px solid var(--line);}
+.tool-group button.active{background:var(--teal-dim); color:var(--text);}
+.tool-group button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.board{position:relative; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen); touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; overflow:hidden;}
+.board.locked{opacity:.85;}
+#kitSvg, #sketch{display:block; width:100%; height:auto; aspect-ratio:900/440; touch-action:none; cursor:crosshair;}
+.board-info{position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--text-dim); pointer-events:none;}
+.board-info sub{font-size:.75em;}
+.self-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; font-size:13px; color:var(--text-dim);}
+svg .kdot{fill:var(--line);}
+svg .kal{fill:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:20px; font-weight:600;}
+svg .kal.o{fill:var(--oxy);}
+svg .kal.bad{fill:var(--danger); font-size:24px;}
+svg .khl{fill:var(--text-dim); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px;}
+svg .khbond{stroke:var(--text-dim); stroke-width:2; stroke-linecap:round;}
+svg .kbond{stroke:var(--text); stroke-width:3; stroke-linecap:round;}
+svg .kprev{stroke:var(--teal); stroke-width:2; stroke-dasharray:5 5; stroke-linecap:round;}
 footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
 footer p{margin:0;}
 footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
@@ -221,7 +251,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     </div>
     <div class="modal-body">
       <h3>Worum es geht</h3>
-      <p>Die Simulation zeigt die Strukturformel einer Verbindung. Gib den <strong>systematischen Namen nach IUPAC</strong> ein. Links wählst du die Stoffklasse (Alkane, Alkene, Alkine oder Alkohole) und die Schwierigkeit. Jede Aufgabe wird zufällig erzeugt.</p>
+      <p>Die Simulation zeigt die Strukturformel einer Verbindung. Gib den <strong>systematischen Namen nach IUPAC</strong> ein. Links wählst du die Stoffklasse (Alkane, Alkene, Alkine oder Alkohole) und die Schwierigkeit. Es können auch mehrere Stoffklassen gleichzeitig angetippt werden, dann wird jede Aufgabe zufällig aus einer der gewählten Klassen erzeugt. Mindestens eine Klasse bleibt immer ausgewählt. Jede Aufgabe wird zufällig erzeugt.</p>
 
       <h3>Vorgehen in vier Schritten</h3>
       <ol>
@@ -241,9 +271,42 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <p><strong>Darstellung:</strong> Strukturformel (alle Atome und alle Bindungen einzeln gezeichnet, auch die C–H-Bindungen), Skelettformel (jede Ecke und jedes Linienende ist ein C-Atom, H-Atome am Kohlenstoff werden nicht gezeichnet) oder Halbstrukturformel (CH<sub>3</sub>-, CH<sub>2</sub>-Gruppen ausgeschrieben). Die Hauptkette ist nicht unbedingt waagerecht gezeichnet.</p>
       <p><strong>Antwort:</strong> „Freitext“ verlangt die Eingabe des Namens, „Auswahl“ zeigt vier Namen, von denen genau einer stimmt.</p>
 
+      <h3>Formel zeichnen</h3>
+      <p>Beim Aufgabentyp <strong>„Formel zeichnen“</strong> ist der Name vorgegeben und die Formel wird gezeichnet. Die Simulation ist für Tablet und Stift (z. B. iPad mit Apple Pencil) ausgelegt, funktioniert aber auch mit Maus oder Finger. Sobald ein Stift erkannt wird, werden Berührungen mit der Hand ignoriert.</p>
+      <p><strong>Baukasten (automatische Prüfung):</strong> Mit „C-Atom hinzufügen“ zieht man den Stift von Punkt zu Punkt. Jede Linie ist eine C–C-Bindung, eine ganze Kette lässt sich in einem Zug zeichnen. Die Zeichnung erscheint als Strukturformel: Die C-Atome werden beschriftet, die freien Bindungen werden automatisch mit H-Atomen besetzt. Ein Tipp auf eine Bindung schaltet Einfach-, Doppel- und Dreifachbindung durch. Mit „OH-Gruppe“ tippt man auf ein C-Atom, um eine OH-Gruppe anzuhängen, mehrfaches Tippen hängt weitere an. Ein Tipp auf das O-Atom entfernt die OH-Gruppe wieder. Der Radierer löscht angetippte oder überstrichene Atome und Bindungen. Für Methan oder Methanol genügt ein Tipp auf einen Punkt. „Prüfen“ vergleicht die Zeichnung mit der gesuchten Verbindung, unabhängig davon, wie sie gedreht oder gezeichnet ist. Bei Fehlern wird angezeigt, welche Verbindung tatsächlich gezeichnet wurde.</p>
+      <p><strong>Freihand (Selbstkontrolle):</strong> Die Formel wird frei mit dem Stift gezeichnet, z. B. als vollständige Strukturformel mit allen H-Atomen. „Vergleichen“ zeigt die Lösung in dem links gewählten Formeltyp. Danach gibst du selbst an, ob deine Zeichnung stimmt.</p>
+
       <h3>Tipp, Lösung, Auswertung</h3>
       <p>„Tipp“ hilft in vier Stufen: Regel zur Hauptkette, Markierung der Hauptkette, Nummerierung, Seitenketten und Endung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
       <p>Bei falschen Antworten erkennt die Prüfung typische Fehler, zum Beispiel eine zu kurze Hauptkette, falsche Nummerierungsrichtung, fehlende alphabetische Ordnung oder fehlende Zahlwörter.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="clBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="clTitle">
+    <div class="modal-head">
+      <h2 id="clTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeCl" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="cl-ver"><span class="v">V2.0</span><span class="d">16.10.2026</span></div>
+      <ul>
+        <li><strong>Neuer Aufgabentyp „Formel zeichnen“:</strong> Der Name ist vorgegeben, die Formel wird gezeichnet. Ausgelegt für Tablet und Stift (z. B. iPad mit Apple Pencil). Sobald ein Stift erkannt wird, werden Berührungen mit der Hand ignoriert.</li>
+        <li><strong>Baukasten mit automatischer Prüfung:</strong> Bindungen werden auf einem quadratischen Raster von Punkt zu Punkt gezogen. Die Zeichnung erscheint als Strukturformel mit beschrifteten C- und O-Atomen, die Bindungen zu den H-Atomen werden automatisch ergänzt. Doppel- und Dreifachbindungen per Tipp, OH-Gruppen per Werkzeug (auch mehrere an einem C-Atom), Radierer, Rückgängig und Leeren.</li>
+        <li><strong>Prüfung der Zeichnung:</strong> Erkennt die richtige Struktur unabhängig von Lage und Drehung. Bei Fehlern wird der Name der tatsächlich gezeichneten Verbindung angezeigt, dazu Hinweise zu Anzahl der C-Atome, Mehrfachbindungen, OH-Gruppen, Positionen und zu C-Atomen mit mehr als vier Bindungen. Mehrere OH-Gruppen an einem C-Atom führen zu einem Hinweis auf die Erlenmeyer-Regel.</li>
+        <li><strong>Freihand mit Selbstkontrolle:</strong> Freies Zeichnen mit dem Stift (drucksensitiv), danach Vergleich mit der Lösung im gewählten Formeltyp und Selbsteinschätzung.</li>
+        <li><strong>Mehrfachauswahl der Stoffklassen:</strong> Alkane, Alkene, Alkine und Alkohole lassen sich beliebig kombinieren, die Aufgaben werden zufällig aus den gewählten Klassen erzeugt.</li>
+        <li>Rückmeldung benennt jetzt auch ungesättigte Alkohole korrekt (z. B. 4-Methylpent-3-en-1-ol).</li>
+        <li>Fehlerbehebung: Ausgeblendete Bedienelemente werden zuverlässig verborgen.</li>
+      </ul>
+      <div class="cl-ver"><span class="v">V1.0</span><span class="d">28.09.2026</span></div>
+      <ul>
+        <li>Benennen zufällig erzeugter Alkane, Alkene, Alkine und Alkohole nach IUPAC in drei Schwierigkeitsstufen.</li>
+        <li>Darstellung als Struktur-, Halbstruktur- oder Skelettformel, optional mit Summenformel.</li>
+        <li>Antwort als Freitext oder Auswahl, ältere Schreibweise (z. B. 2-Buten) wahlweise akzeptiert.</li>
+        <li>Gestufte Tipps mit Markierung und Nummerierung der Hauptkette, Diagnose typischer Fehler, Lösungsweg und Verlauf.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -252,7 +315,12 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   <div class="sidebar">
     <section class="block">
       <h2>Aufgabe</h2>
-      <p class="sub-label">Stoffklasse</p>
+      <p class="sub-label">Aufgabentyp</p>
+      <div class="mode-toggle big" id="typeToggle">
+        <button data-tt="name" class="active">Name finden</button>
+        <button data-tt="draw">Formel zeichnen</button>
+      </div>
+      <p class="sub-label">Stoffklasse <span style="color:var(--text-faint)">(Mehrfachauswahl möglich)</span></p>
       <div class="mode-toggle big" id="classToggle">
         <button data-cls="alkan" class="active">Alkane</button>
         <button data-cls="alken">Alkene</button>
@@ -266,16 +334,25 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <button data-level="3">Schwer</button>
         <button data-level="0" class="active">Gemischt</button>
       </div>
-      <p class="sub-label">Darstellung (Formeltyp)</p>
+      <p class="sub-label" id="styleLabel">Darstellung (Formeltyp)</p>
       <div class="mode-toggle" id="styleToggle">
         <button data-style="full" title="Strukturformel: alle Atome und Bindungen">Struktur</button>
         <button data-style="grid" title="Halbstrukturformel: CH₃-, CH₂-Gruppen">Halbstruktur</button>
         <button data-style="zig" class="active" title="Skelettformel: nur das C-Gerüst">Skelett</button>
       </div>
-      <p class="sub-label">Antwort</p>
-      <div class="mode-toggle" id="answerToggle">
-        <button data-ans="text" class="active">Freitext</button>
-        <button data-ans="mc">Auswahl</button>
+      <div id="answerOpts">
+        <p class="sub-label">Antwort</p>
+        <div class="mode-toggle" id="answerToggle">
+          <button data-ans="text" class="active">Freitext</button>
+          <button data-ans="mc">Auswahl</button>
+        </div>
+      </div>
+      <div id="drawOpts" hidden>
+        <p class="sub-label">Zeichnen mit</p>
+        <div class="mode-toggle" id="drawToggle">
+          <button data-dw="kit" class="active" title="Bindungen von Punkt zu Punkt ziehen, wird automatisch geprüft">Baukasten</button>
+          <button data-dw="free" title="Freihand mit dem Stift, Selbstkontrolle mit der Lösung">Freihand</button>
+        </div>
       </div>
       <label class="check-row" for="chkOld"><input type="checkbox" id="chkOld" checked><span>Ältere Schreibweise akzeptieren (z. B. 2-Buten, 2-Propanol)</span></label>
       <label class="check-row" for="chkFormula"><input type="checkbox" id="chkFormula" checked><span>Summenformel anzeigen</span></label>
@@ -327,6 +404,36 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <span class="task-ctx" id="taskCtx"></span>
       </div>
 
+      <div id="drawArea" hidden>
+        <div class="name-card"><span class="k">Gesuchte Verbindung</span><span class="mono nm" id="drawName"></span></div>
+        <div class="board-tools">
+          <div class="tool-group" id="kitTools">
+            <button data-kt="chain" class="active">C-Atom hinzufügen</button>
+            <button data-kt="oh">OH-Gruppe</button>
+            <button data-kt="erase">Radierer</button>
+          </div>
+          <div class="tool-group" id="freeTools" hidden>
+            <button data-ft="pen" class="active">Stift</button>
+            <button data-ft="erase">Radierer</button>
+          </div>
+          <div class="tool-group">
+            <button id="btnUndo">Rückgängig</button>
+            <button id="btnClear">Leeren</button>
+          </div>
+        </div>
+        <div class="board" id="board">
+          <svg id="kitSvg" viewBox="0 0 900 440" role="img" aria-label="Zeichenfläche Baukasten"></svg>
+          <canvas id="sketch" hidden aria-label="Zeichenfläche Freihand"></canvas>
+          <span class="board-info mono" id="boardInfo"></span>
+        </div>
+        <p class="note" id="boardNote"></p>
+        <div class="self-row" id="selfCheck" hidden>
+          <span>Stimmt deine Zeichnung mit der Lösung überein?</span>
+          <button class="btn" id="btnSelfOk">Ja, richtig</button>
+          <button class="btn ghost" id="btnSelfBad">Nein, Fehler</button>
+        </div>
+      </div>
+
       <div class="stage" id="stage">
         <span class="stylelbl" id="styleLbl">Skelettformel</span>
         <div id="molBox"></div>
@@ -369,7 +476,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Benennung nach den IUPAC-Regeln für acyclische Kohlenwasserstoffe und Alkohole. Die Strukturen werden zufällig erzeugt und automatisch benannt.</p>
-  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V2.0 (erstellt mit Claude Pro) · <a href="#" id="btnCl">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -505,7 +612,13 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       const nm = prefix ? prefix+"-"+core : core;
       return cap(nm);
     }
-    if(oh.length){
+    if(oh.length && (dbl.length || tri.length)){
+      const first = dbl.length?dbl:tri;
+      core = stem + (first.length>1?"a":"");
+      if(dbl.length) core += "-"+dbl.join(",")+"-"+MULT[dbl.length]+"en";
+      if(tri.length) core += "-"+tri.join(",")+"-"+MULT[tri.length]+"in";
+      core += "-"+oh.join(",")+"-"+MULT[oh.length]+"ol";
+    } else if(oh.length){
       core = stem+"an"+(canOmit ? "ol" : "-"+oh.join(",")+"-"+MULT[oh.length]+"ol");
     } else if(!dbl.length && !tri.length){
       core = stem+"an";
@@ -824,12 +937,13 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       });
     }
     $("molBox").innerHTML = `<svg viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}" role="img" aria-label="Strukturformel">${hl}${bonds}${labels}${nums}</svg>`;
-    $("styleLbl").textContent = {zig:"Skelettformel", grid:"Halbstrukturformel", full:"Strukturformel"}[st];
+    $("styleLbl").textContent = (t.type==="draw" ? "Lösung · " : "") + {zig:"Skelettformel", grid:"Halbstrukturformel", full:"Strukturformel"}[st];
     $("formula").innerHTML = showFormula ? "Summenformel " + formulaHTML(m) : "";
   }
 
   // ---------- Zustand ----------
-  let klass = "alkan", level = 0, style = "zig", answer = "text", allowOld = true, showFormula = true;
+  let klasses = new Set(["alkan"]), level = 0, style = "zig", answer = "text", allowOld = true, showFormula = true;
+  let taskType = "name", drawWith = "kit", kitTool = "chain", freeTool = "pen";
   let task = null, taskCounter = 0;
   const stats = {solved:0, first:0, streak:0, shown:0};
   const history = [];
@@ -837,11 +951,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   function newTask(){
     if(task && !task.done && task.touched) logHistory(task,"open");
     const lvl = level || ri(1,3);
+    const pool = [...klasses];
+    const klass = pool.length>1 && task ? pick(pool.filter(c=>c!==task.cls).concat(pool)) : pick(pool);
     let g = gen(klass,lvl);
     if(!g) g = gen(klass,1);
     task = {num:++taskCounter, cls:klass, lvl, m:g.m, res:g.res, canon:g.canon, lay:g.lay,
       acc:acceptedNames(g.res), hint:0, wrong:false, done:false, shown:false, touched:false,
-      showChain:false, showNums:false, mc:null, mcBad:new Set()};
+      showChain:false, showNums:false, mc:null, mcBad:new Set(), type:taskType, compared:false};
+    resetBoard();
     task.mc = buildChoices(task);
     $("nameIn").value = "";
     $("nameIn").readOnly = false;
@@ -856,12 +973,31 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     $("taskNum").textContent = "Aufgabe " + t.num;
     $("taskLevel").textContent = LEVEL_NAMES[t.lvl];
     $("taskLevel").className = "chip l"+t.lvl;
-    $("taskCtx").textContent = CLS_ONE[t.cls] + " · Benenne die Verbindung.";
+    const draw = t.type==="draw", free = draw && drawWith==="free";
+    $("taskCtx").textContent = CLS_ONE[t.cls] + (draw ? " · Zeichne die Formel zum Namen." : " · Benenne die Verbindung.");
     drawMol();
-    $("answerText").hidden = answer!=="text";
-    $("answerMc").hidden = answer!=="mc";
+    $("answerText").hidden = draw || answer!=="text";
+    $("answerMc").hidden = draw || answer!=="mc";
+    $("drawArea").hidden = !draw;
+    $("stage").hidden = draw && !(t.done || t.compared);
+    $("answerOpts").hidden = taskType==="draw";
+    $("drawOpts").hidden = taskType!=="draw";
+    $("styleLabel").textContent = taskType==="draw" ? "Darstellung der Lösung (Formeltyp)" : "Darstellung (Formeltyp)";
+    if(draw){
+      $("drawName").textContent = t.canon;
+      $("kitTools").hidden = free; $("freeTools").hidden = !free;
+      $("kitSvg").hidden = free; $("sketch").hidden = !free;
+      $("board").classList.toggle("locked", t.done);
+      $("boardInfo").hidden = free;
+      $("boardNote").textContent = free
+        ? "Zeichne frei mit dem Stift, z. B. die vollständige Strukturformel mit allen H-Atomen. „Vergleichen“ zeigt die Lösung zur Selbstkontrolle."
+        : "Ziehe den Stift von Punkt zu Punkt (waagerecht oder senkrecht), um C–C-Bindungen zu zeichnen. Tippe auf eine Bindung für Doppel- und Dreifachbindung. Die Bindungen zu den H-Atomen werden automatisch ergänzt.";
+      $("selfCheck").hidden = !(free && t.compared && !t.done);
+      if(free) sizeSketch(); else renderKit();
+    }
     renderMc();
-    $("btnCheck").disabled = t.done || answer==="mc";
+    $("btnCheck").textContent = free ? "Vergleichen" : "Prüfen";
+    $("btnCheck").disabled = t.done || (!draw && answer==="mc") || (free && t.compared);
     $("btnHint").disabled = t.done;
     $("btnSolve").disabled = t.done;
     setStatus();
@@ -1026,6 +1162,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   }
   function hint(){
     const t = task; if(!t || t.done) return;
+    if(t.type==="draw"){ drawHint(); return; }
     t.hint++; t.touched = true;
     const b = t.res.best;
     let msg;
@@ -1048,7 +1185,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     stats.shown++; stats.streak = 0;
     logHistory(t,"shown");
     $("nameIn").value = t.canon; $("nameIn").readOnly = true; $("nameIn").classList.remove("bad","ok");
-    $("feedback").innerHTML = fb("info", `Lösung: ${nmSpan(t.canon)}. Der Lösungsweg steht unten.`);
+    $("feedback").innerHTML = t.type==="draw"
+      ? fb("info", `Lösung: Die Formel von ${nmSpan(t.canon)} steht unter der Zeichenfläche.`)
+      : fb("info", `Lösung: ${nmSpan(t.canon)}. Der Lösungsweg steht unten.`);
     renderTask(); renderWay(); renderStats();
   }
 
@@ -1088,16 +1227,405 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   // ---------- Verlauf & Statistik ----------
   function logHistory(t, status){
     const ex = history.find(h=>h.num===t.num);
-    if(ex) ex.status = status; else history.push({num:t.num, cls:t.cls, name:t.canon, status});
-    const label = {first:["gelöst im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"]};
+    if(ex) ex.status = status; else history.push({num:t.num, cls:t.cls, name:t.canon, status, type:t.type});
+    const label = {first:["gelöst im 1. Versuch","s-first"], ok:["gelöst","s-ok"], shown:["Lösung angesehen","s-shown"], open:["abgebrochen","s-open"], selfbad:["mit Fehlern (Selbstkontrolle)","s-shown"]};
     $("histBody").innerHTML = history.slice().reverse().map(h=>
-      `<tr><td class="mono">${h.num}</td><td>${CLS_ONE[h.cls]}</td><td class="mono">${h.status==="open"?"–":h.name}</td><td class="${label[h.status][1]}">${label[h.status][0]}</td></tr>`).join("");
+      `<tr><td class="mono">${h.num}</td><td>${CLS_ONE[h.cls]}${h.type==="draw"?" · gezeichnet":""}</td><td class="mono">${h.status==="open" && h.type!=="draw"?"–":h.name}</td><td class="${label[h.status][1]}">${label[h.status][0]}</td></tr>`).join("");
   }
   function renderStats(){
     $("roSolved").textContent = stats.solved;
     $("roFirst").textContent = stats.first;
     $("roStreak").textContent = stats.streak;
     $("roShown").textContent = stats.shown;
+  }
+
+  // =====================================================================
+  // ---------- Zeichnen: Strukturformel zum vorgegebenen Namen ----------
+  // =====================================================================
+  const VBW = 900, VBH = 440, S = 60, OX = 45, OY = 40;
+  const COLS = Math.floor((VBW - 2*OX)/S) + 1, ROWS = Math.floor((VBH - 2*OY)/S) + 1;
+  const kitSvg = $("kitSvg"), sketch = $("sketch"), sctx = sketch.getContext("2d");
+  let kit = {atoms:[], bonds:[], next:1}, kitUndo = [], kitBad = new Set();
+  let strokes = [], sketchUndo = [];
+  let penSeen = false;
+
+  const lp = (i,j) => ({x: OX + i*S, y: OY + j*S});
+  function toBoard(e, el){
+    const r = el.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*VBW/r.width, y:(e.clientY-r.top)*VBH/r.height};
+  }
+  function nearestPoint(x,y){
+    let best=null, bd=1e9;
+    const j0 = Math.round((y-OY)/S);
+    for(let j=j0-1;j<=j0+1;j++){
+      if(j<0||j>=ROWS) continue;
+      const i0 = Math.round((x-OX)/S);
+      for(let i=i0-1;i<=i0+1;i++){
+        if(i<0||i>=COLS) continue;
+        const p = lp(i,j), d = Math.hypot(p.x-x,p.y-y);
+        if(d<bd){ bd=d; best={i,j}; }
+      }
+    }
+    return bd < 0.45*S ? best : null;
+  }
+  const isAdj = (p,q) => Math.abs(p.i-q.i) + Math.abs(p.j-q.j) === 1;
+  const atomAt = (i,j) => kit.atoms.find(a=>a.i===i && a.j===j);
+  const atomById = id => kit.atoms.find(a=>a.id===id);
+  const bondOf = (a,b) => kit.bonds.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));
+  function addKitAtom(i,j,el){ const a={id:kit.next++, i, j, el}; kit.atoms.push(a); return a; }
+  function kitNeighbors(id){ return kit.bonds.filter(b=>b.a===id||b.b===id).map(b=>atomById(b.a===id?b.b:b.a)); }
+  function removeAtom(id){
+    kit.bonds = kit.bonds.filter(b=>b.a!==id && b.b!==id);
+    kit.atoms = kit.atoms.filter(a=>a.id!==id);
+  }
+  function cleanupOrphans(){
+    const deg = new Map(kit.atoms.map(a=>[a.id,0]));
+    kit.bonds.forEach(b=>{ deg.set(b.a,deg.get(b.a)+1); deg.set(b.b,deg.get(b.b)+1); });
+    kit.atoms = kit.atoms.filter(a=>deg.get(a.id)>0);
+  }
+  function distSeg(px,py,a,b){
+    const dx=b.x-a.x, dy=b.y-a.y, L2=dx*dx+dy*dy;
+    let t = L2 ? ((px-a.x)*dx+(py-a.y)*dy)/L2 : 0; t=Math.max(0,Math.min(1,t));
+    return Math.hypot(px-(a.x+t*dx), py-(a.y+t*dy));
+  }
+  function bondNear(x,y){
+    let best=null, bd=13;
+    kit.bonds.forEach(b=>{
+      const A=atomById(b.a), B=atomById(b.b);
+      const d = distSeg(x,y,lp(A.i,A.j),lp(B.i,B.j));
+      if(d<bd){ bd=d; best=b; }
+    });
+    return best;
+  }
+  function atomNear(x,y){
+    let best=null, bd=0.4*S;
+    kit.atoms.forEach(a=>{ const p=lp(a.i,a.j), d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=a; } });
+    return best;
+  }
+  function neighborPoints(i,j){
+    const out=[];
+    for(let jj=j-1;jj<=j+1;jj++) for(let ii=i-1;ii<=i+1;ii++){
+      if(jj<0||jj>=ROWS||ii<0||ii>=COLS||(ii===i&&jj===j)) continue;
+      if(isAdj({i,j},{i:ii,j:jj})) out.push({i:ii,j:jj});
+    }
+    return out;
+  }
+  function toggleOH(a){
+    if(a.el==="O"){ removeAtom(a.id); return true; }
+    if(kitValence(a) >= 4){ $("feedback").innerHTML = fb("hint","Dieses C-Atom hat bereits vier Bindungen. Eine OH-Gruppe entfernst du durch Antippen des O-Atoms oder mit dem Radierer."); return false; }
+    const p = lp(a.i,a.j);
+    const dirs = kitNeighbors(a.id).map(n=>{ const q=lp(n.i,n.j); return Math.atan2(q.y-p.y,q.x-p.x); });
+    const free = neighborPoints(a.i,a.j).filter(q=>!atomAt(q.i,q.j));
+    if(!free.length){ $("feedback").innerHTML = fb("hint","Neben diesem C-Atom ist kein Platz für eine OH-Gruppe. Zeichne die Kette etwas weiter vom Rand entfernt."); return false; }
+    const score = q=>{ const P=lp(q.i,q.j), ang=Math.atan2(P.y-p.y,P.x-p.x);
+      if(!dirs.length) return (P.x>p.x?1:0);
+      return Math.min(...dirs.map(d=>{ let x=Math.abs(ang-d)%(2*Math.PI); return x>Math.PI?2*Math.PI-x:x; })); };
+    free.sort((u,v)=>score(v)-score(u));
+    const o = addKitAtom(free[0].i, free[0].j, "O");
+    kit.bonds.push({a:a.id, b:o.id, o:1});
+    return true;
+  }
+
+  // Zeichnung -> Molekül-Graph
+  function kitToMol(){
+    const m = newMol(), idx = new Map();
+    kit.atoms.forEach(a=>idx.set(a.id, addAtom(m,a.el)));
+    kit.bonds.forEach(b=>addBond(m, idx.get(b.a), idx.get(b.b), b.o));
+    return {m, idx};
+  }
+  // kanonische Form eines Baum-Graphen (für den Strukturvergleich)
+  function treeCanon(m){
+    const enc = (a,p) => m.el[a] + "(" + m.nb[a].filter(e=>e.to!==p).map(e=>e.o+enc(e.to,a)).sort().join(",") + ")";
+    let best = null;
+    for(let r=0;r<m.el.length;r++){ const s = enc(r,-1); if(best===null || s<best) best=s; }
+    return best;
+  }
+  function molCounts(m){
+    let dbl=0, tri=0;
+    m.nb.forEach((l,a)=>l.forEach(e=>{ if(e.to>a){ if(e.o===2) dbl++; if(e.o===3) tri++; } }));
+    return {C: carbons(m).length, O: m.el.filter(e=>e==="O").length, dbl, tri};
+  }
+  function kitFormula(){
+    if(!kit.atoms.length) return "Deine Zeichnung: leer";
+    const {m} = kitToMol();
+    let H=0, bad=false;
+    m.el.forEach((e,i)=>{ const h=hCount(m,i); if(h<0) bad=true; H+=Math.max(0,h); });
+    if(bad) return "Deine Zeichnung: Bindigkeit prüfen";
+    return "Deine Zeichnung: " + formulaHTML(m);
+  }
+
+  // ---------- Baukasten zeichnen ----------
+  let preview = null;
+  const DIRS = [[1,0],[-1,0],[0,-1],[0,1]];
+  function kitValence(a){ return kit.bonds.filter(b=>b.a===a.id||b.b===a.id).reduce((s,b)=>s+b.o,0); }
+  function kitHs(a){
+    const h = (a.el==="C"?4:2) - kitValence(a);
+    if(h<=0) return [];
+    const used = kitNeighbors(a.id).map(n=>[n.i-a.i, n.j-a.j]);
+    const free = DIRS.filter(d=>!used.some(u=>u[0]===d[0]&&u[1]===d[1]));
+    const score = d=>{
+      let sc = 0;
+      if(atomAt(a.i+d[0], a.j+d[1])) sc -= 10;                       // Platz frei halten
+      if(used.some(u=>u[0]===-d[0]&&u[1]===-d[1])) sc += 2;            // gegenüber einer Bindung
+      return sc;
+    };
+    return free.sort((x,y)=>score(y)-score(x)).slice(0,h);
+  }
+  function renderKit(){
+    let s = "";
+    for(let j=0;j<ROWS;j++) for(let i=0;i<COLS;i++){ const p=lp(i,j); s += `<circle class="kdot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2"/>`; }
+    const line=(x1,y1,x2,y2,cls)=>`<line class="${cls||"kbond"}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+    kit.bonds.forEach(b=>{
+      const A=atomById(b.a), B=atomById(b.b), P=lp(A.i,A.j), Q=lp(B.i,B.j);
+      const dx=Q.x-P.x, dy=Q.y-P.y, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, nx=-uy, ny=ux;
+      const s1 = 12, s2 = 12;
+      const x1=P.x+ux*s1, y1=P.y+uy*s1, x2=Q.x-ux*s2, y2=Q.y-uy*s2;
+      if(b.o===1) s += line(x1,y1,x2,y2);
+      else if(b.o===2) [-4.5,4.5].forEach(o=> s += line(x1+nx*o,y1+ny*o,x2+nx*o,y2+ny*o));
+      else { s += line(x1,y1,x2,y2); [-7,7].forEach(o=> s += line(x1+nx*o,y1+ny*o,x2+nx*o,y2+ny*o)); }
+    });
+    const HL = 0.58*S;
+    kit.atoms.forEach(a=>{
+      const p=lp(a.i,a.j);
+      kitHs(a).forEach(d=>{
+        const hx = p.x + d[0]*HL, hy = p.y + d[1]*HL;
+        s += line(p.x+d[0]*12, p.y+d[1]*12, hx-d[0]*9, hy-d[1]*9, "khbond");
+        s += `<text class="khl" x="${hx.toFixed(1)}" y="${hy.toFixed(1)}" text-anchor="middle" dominant-baseline="central">H</text>`;
+      });
+      const bad = kitBad.has(a.id) || kitValence(a) > (a.el==="C"?4:2);
+      s += `<text class="kal${a.el==="O"?" o":""}${bad?" bad":""}" x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central">${a.el}</text>`;
+    });
+    if(preview) s += line(preview.x1,preview.y1,preview.x2,preview.y2,"kprev");
+    kitSvg.innerHTML = s;
+    $("boardInfo").innerHTML = kitFormula();
+  }
+
+  function pushKitUndo(snap){ kitUndo.push(snap); if(kitUndo.length>80) kitUndo.shift(); }
+  let kd = null; // laufende Eingabe im Baukasten
+  function kitLocked(){ return !task || task.type!=="draw" || task.done; }
+  kitSvg.addEventListener("pointerdown", e=>{
+    if(e.pointerType==="pen") penSeen = true;
+    if(penSeen && e.pointerType==="touch") return;
+    if(kitLocked()) return;
+    e.preventDefault();
+    kitSvg.setPointerCapture(e.pointerId);
+    const pt = toBoard(e,kitSvg);
+    kd = {snap: JSON.stringify(kit), changed:false, moved:false, start: nearestPoint(pt.x,pt.y), cur:null, tapBond:null, id:e.pointerId};
+    kd.cur = kd.start;
+    if(kitTool==="chain" && !kd.start) kd.tapBond = bondNear(pt.x,pt.y);
+    if(kitTool==="erase") eraseAt(pt);
+    task.touched = true;
+  });
+  kitSvg.addEventListener("pointermove", e=>{
+    if(!kd || e.pointerId!==kd.id) return;
+    e.preventDefault();
+    const pt = toBoard(e,kitSvg);
+    if(kitTool==="erase"){ eraseAt(pt); return; }
+    if(kitTool!=="chain" || !kd.cur) return;
+    const q = nearestPoint(pt.x,pt.y);
+    if(q && (q.i!==kd.cur.i || q.j!==kd.cur.j) && isAdj(kd.cur,q)){
+      let A = atomAt(kd.cur.i,kd.cur.j), B = atomAt(q.i,q.j);
+      if(!(A && A.el==="O") && !(B && B.el==="O")){
+        if(!A) A = addKitAtom(kd.cur.i,kd.cur.j,"C");
+        if(!B) B = addKitAtom(q.i,q.j,"C");
+        if(!bondOf(A.id,B.id)){ kit.bonds.push({a:A.id,b:B.id,o:1}); kd.changed = true; kitBad.clear(); }
+      }
+      kd.cur = q; kd.moved = true;
+    }
+    const c = lp(kd.cur.i,kd.cur.j);
+    preview = {x1:c.x, y1:c.y, x2:pt.x, y2:pt.y};
+    renderKit();
+  });
+  function endKit(e){
+    if(!kd || e.pointerId!==kd.id) return;
+    const pt = toBoard(e,kitSvg);
+    if(kitTool==="chain" && !kd.moved){
+      if(kd.tapBond){ kd.tapBond.o = kd.tapBond.o%3 + 1; kd.changed = true; }
+      else if(kd.start && !atomAt(kd.start.i,kd.start.j) && !kit.atoms.length){ addKitAtom(kd.start.i,kd.start.j,"C"); kd.changed = true; }
+    }
+    if(kitTool==="oh" && e.type==="pointerup"){
+      const a = atomNear(pt.x,pt.y);
+      if(a && toggleOH(a)) kd.changed = true;
+    }
+    if(kd.changed){ pushKitUndo(kd.snap); kitBad.clear(); }
+    kd = null; preview = null;
+    renderKit();
+  }
+  kitSvg.addEventListener("pointerup", endKit);
+  kitSvg.addEventListener("pointercancel", endKit);
+  function eraseAt(pt){
+    const a = atomNear(pt.x,pt.y);
+    if(a){
+      if(a.el==="C") kitNeighbors(a.id).filter(n=>n.el==="O").forEach(n=>removeAtom(n.id));
+      removeAtom(a.id); cleanupOrphans(); kd.changed = true;
+    } else {
+      const b = bondNear(pt.x,pt.y);
+      if(b){ kit.bonds = kit.bonds.filter(x=>x!==b); cleanupOrphans(); kd.changed = true; }
+      else return;
+    }
+    kitBad.clear(); renderKit();
+  }
+
+  // ---------- Freihand ----------
+  let sd = null;
+  function sizeSketch(){
+    const w = sketch.clientWidth; if(!w) return;
+    const dpr = window.devicePixelRatio || 1;
+    sketch.width = Math.round(w*dpr); sketch.height = Math.round(w*VBH/VBW*dpr);
+    renderSketch();
+  }
+  function renderSketch(){
+    const W = sketch.width, H = sketch.height; if(!W) return;
+    const k = W/VBW;
+    sctx.setTransform(1,0,0,1,0,0);
+    sctx.fillStyle = css("--screen"); sctx.fillRect(0,0,W,H);
+    sctx.fillStyle = css("--line");
+    for(let y=20;y<VBH;y+=30) for(let x=20;x<VBW;x+=30){ sctx.beginPath(); sctx.arc(x*k,y*k,1.1*k,0,Math.PI*2); sctx.fill(); }
+    sctx.strokeStyle = css("--text"); sctx.lineCap = "round"; sctx.lineJoin = "round";
+    strokes.forEach(st=>{
+      if(st.length===1){ sctx.fillStyle = css("--text"); sctx.beginPath(); sctx.arc(st[0].x*k,st[0].y*k,2*k,0,Math.PI*2); sctx.fill(); return; }
+      for(let i=1;i<st.length;i++){
+        const a=st[i-1], b=st[i];
+        sctx.lineWidth = (1.4 + 2.6*((a.p+b.p)/2))*k;
+        sctx.beginPath(); sctx.moveTo(a.x*k,a.y*k); sctx.lineTo(b.x*k,b.y*k); sctx.stroke();
+      }
+    });
+  }
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  const pressure = e => (e.pointerType==="pen" && e.pressure>0) ? e.pressure : 0.5;
+  sketch.addEventListener("pointerdown", e=>{
+    if(e.pointerType==="pen") penSeen = true;
+    if(penSeen && e.pointerType==="touch") return;
+    if(!task || task.type!=="draw" || task.done) return;
+    e.preventDefault();
+    sketch.setPointerCapture(e.pointerId);
+    const pt = toBoard(e,sketch);
+    sd = {id:e.pointerId, snap: JSON.stringify(strokes), changed:false};
+    task.touched = true;
+    if(freeTool==="pen"){ sd.stroke = [{x:pt.x,y:pt.y,p:pressure(e)}]; strokes.push(sd.stroke); sd.changed = true; }
+    else sketchErase(pt);
+    renderSketch();
+  });
+  sketch.addEventListener("pointermove", e=>{
+    if(!sd || e.pointerId!==sd.id) return;
+    e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    (evs.length?evs:[e]).forEach(ev=>{
+      const pt = toBoard(ev,sketch);
+      if(freeTool==="pen") sd.stroke.push({x:pt.x,y:pt.y,p:pressure(ev)});
+      else sketchErase(pt);
+    });
+    renderSketch();
+  });
+  function endSketch(e){
+    if(!sd || e.pointerId!==sd.id) return;
+    if(sd.changed){ sketchUndo.push(sd.snap); if(sketchUndo.length>80) sketchUndo.shift(); }
+    sd = null;
+  }
+  sketch.addEventListener("pointerup", endSketch);
+  sketch.addEventListener("pointercancel", endSketch);
+  function sketchErase(pt){
+    const before = strokes.length;
+    strokes = strokes.filter(st=>!st.some(q=>Math.hypot(q.x-pt.x,q.y-pt.y)<14));
+    if(strokes.length!==before) sd.changed = true;
+  }
+  window.addEventListener("resize", ()=>{ if(drawWith==="free" && taskType==="draw") sizeSketch(); });
+
+  function undoBoard(){
+    if(!task || task.done) return;
+    if(drawWith==="kit"){ if(!kitUndo.length) return; kit = JSON.parse(kitUndo.pop()); kitBad.clear(); renderKit(); }
+    else { if(!sketchUndo.length) return; strokes = JSON.parse(sketchUndo.pop()); renderSketch(); }
+  }
+  function clearBoard(){
+    if(!task || task.done) return;
+    if(drawWith==="kit"){ if(!kit.atoms.length) return; pushKitUndo(JSON.stringify(kit)); kit = {atoms:[], bonds:[], next:kit.next}; kitBad.clear(); renderKit(); }
+    else { if(!strokes.length) return; sketchUndo.push(JSON.stringify(strokes)); strokes = []; renderSketch(); }
+  }
+  function resetBoard(){
+    kit = {atoms:[], bonds:[], next:1}; kitUndo = []; kitBad.clear();
+    strokes = []; sketchUndo = [];
+  }
+
+  // ---------- Prüfen im Zeichenmodus ----------
+  function solvedDraw(extra){
+    const t = task;
+    t.done = true; stats.solved++;
+    const firstTry = !t.wrong && t.hint===0;
+    if(firstTry) stats.first++;
+    stats.streak++;
+    logHistory(t, firstTry?"first":"ok");
+    $("feedback").innerHTML = fb("good", `Richtig! Das ist ${nmSpan(t.canon)}.`) + (extra||"");
+    renderTask(); renderWay(); renderStats();
+  }
+  function checkKit(){
+    const t = task; if(!t || t.done) return;
+    if(!kit.atoms.length){ $("feedback").innerHTML = fb("info","Zeichne zuerst die Struktur: Ziehe mit dem Stift von Punkt zu Punkt, um C–C-Bindungen zu zeichnen."); return; }
+    t.touched = true;
+    const {m, idx} = kitToMol();
+    const rev = new Map([...idx].map(([id,i])=>[i,id]));
+    const errs = [];
+    kitBad.clear();
+    m.el.forEach((e,i)=>{ if(e==="C" && val(m,i)>4) kitBad.add(rev.get(i)); });
+    if(kitBad.size) errs.push("Mindestens ein C-Atom hat mehr als vier Bindungen (rot markiert). Kohlenstoff ist vierbindig.");
+    const seen = new Set([0]), q=[0];
+    while(q.length){ const a=q.shift(); m.nb[a].forEach(e=>{ if(!seen.has(e.to)){ seen.add(e.to); q.push(e.to); } }); }
+    const nBonds = m.nb.reduce((s,l)=>s+l.length,0)/2;
+    if(seen.size < m.el.length) errs.push("Die Zeichnung besteht aus mehreren Teilen. Alle Atome müssen zu einem Molekül verbunden sein.");
+    else if(nBonds !== m.el.length-1) errs.push("Die Zeichnung enthält einen Ring. Gesucht ist eine offene Kette.");
+    if(errs.length){
+      t.wrong = true; stats.streak = 0;
+      $("feedback").innerHTML = errs.map(x=>fb("bad",x)).join("");
+      renderKit(); renderStats(); return;
+    }
+    if(treeCanon(m) === treeCanon(t.m)){ solvedDraw(); return; }
+    t.wrong = true; stats.streak = 0;
+    const out = [];
+    if(m.el.some((e,i)=>e==="C" && m.nb[i].filter(x=>m.el[x.to]==="O").length>1))
+      out.push("Mehrere OH-Gruppen an einem C-Atom sind in der Regel nicht stabil (Erlenmeyer-Regel). Bei Diolen und Triolen steht jede OH-Gruppe an einem eigenen C-Atom, z. B. Ethan-1,2-diol.");
+    let r = null;
+    try { r = nameMol(m); } catch(_){ r = null; }
+    if(r) out.push(`Deine Zeichnung zeigt ${nmSpan(buildName(r.best))}. Gesucht ist ${nmSpan(t.canon)}.`);
+    const a = molCounts(m), b = molCounts(t.m), bb = t.res.best;
+    const cmp = (x,y,what)=>{ if(x!==y) out.push(`${what}: gezeichnet ${x}, gesucht ${y}.`); };
+    cmp(a.C,b.C,"Anzahl der C-Atome");
+    cmp(a.dbl,b.dbl,"Anzahl der Doppelbindungen");
+    cmp(a.tri,b.tri,"Anzahl der Dreifachbindungen");
+    cmp(a.O,b.O,"Anzahl der OH-Gruppen");
+    if(r && a.C===b.C && r.best.len !== bb.len) out.push(`Die längste Kette deiner Zeichnung hat ${r.best.len} C-Atome. Der Stammname ${STEM[bb.len]}- verlangt ${bb.len}. Achte darauf, dass Seitenketten die Hauptkette nicht verlängern.`);
+    if(a.C===b.C && a.dbl===b.dbl && a.tri===b.tri && a.O===b.O) out.push("Die Anzahl der Atome und Bindungen stimmt. Prüfe die Positionen: Nummeriere die Hauptkette und setze Seitenketten, Mehrfachbindungen und OH-Gruppen an die angegebenen C-Atome.");
+    $("feedback").innerHTML = fb("bad","Die Struktur passt noch nicht zum Namen.") + out.map(x=>fb("hint",x)).join("");
+    renderKit(); renderStats();
+  }
+  function compareSketch(){
+    const t = task; if(!t || t.done) return;
+    if(!strokes.length){ $("feedback").innerHTML = fb("info","Zeichne zuerst die Strukturformel mit dem Stift."); return; }
+    t.compared = true; t.touched = true;
+    $("feedback").innerHTML = fb("info","Vergleiche deine Zeichnung mit der Lösung unten. Achte auf die Hauptkette, die Positionen und bei der Strukturformel auf vier Bindungen an jedem C-Atom.");
+    renderTask();
+  }
+  function selfAssess(ok){
+    const t = task; if(!t || t.done || !t.compared) return;
+    if(ok){ solvedDraw(fb("info","Selbstkontrolle: Zeichnung stimmt mit der Lösung überein.")); return; }
+    t.done = true; t.wrong = true; stats.streak = 0;
+    logHistory(t,"selfbad");
+    $("feedback").innerHTML = fb("hint",`Selbstkontrolle: Zeichnung mit Fehlern. Präge dir die Lösung ein und versuche eine neue Aufgabe.`);
+    renderTask(); renderWay(); renderStats();
+  }
+  function drawHint(){
+    const t = task, b = t.res.best;
+    t.hint++; t.touched = true;
+    let msg;
+    if(t.hint===1) msg = `Stammname ${STEM[b.len]}-: Die Hauptkette hat ${b.len} C-Atom${b.len>1?"e":""}. Zeichne sie zuerst${b.len>2?" als durchgehende Kette":""} und nummeriere sie in Gedanken von einem Ende aus.`;
+    else if(t.hint===2){
+      const p = [];
+      if(b.dblL.length) p.push(...b.dblL.map(l=>`Doppelbindung zwischen C${l} und C${l+1}`));
+      if(b.triL.length) p.push(...b.triL.map(l=>`Dreifachbindung zwischen C${l} und C${l+1}`));
+      if(b.ohL.length) p.push(...b.ohL.map(l=>`OH-Gruppe an C${l}`));
+      msg = p.length ? `Endung: ${p.join(", ")}.` : "Endung -an: Alle C–C-Bindungen sind Einfachbindungen.";
+    }
+    else if(t.hint===3) msg = b.subs.length ? `Seitenketten: ${subText(b)}. Methyl = 1 C-Atom, Ethyl = 2, Propyl = 3.` : "Diese Verbindung hat keine Seitenketten.";
+    else { t.hint = 4; msg = "Jedes C-Atom hat genau vier Bindungen. In der Strukturformel werden die freien Bindungen mit H-Atomen besetzt, in der Skelettformel werden sie weggelassen."; }
+    $("feedback").innerHTML = fb("hint", msg);
   }
 
   // ---------- Bedienung ----------
@@ -1107,20 +1635,41 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       bt.classList.add("active"); cb(bt.dataset[attr]);
     }));
   }
-  setupToggle("classToggle","cls", v=>{ klass=v; newTask(); });
+  $("classToggle").querySelectorAll("button").forEach(bt=>bt.addEventListener("click",()=>{
+    const c = bt.dataset.cls;
+    if(klasses.has(c)){
+      if(klasses.size===1){ $("feedback").innerHTML = fb("info","Mindestens eine Stoffklasse muss ausgewählt bleiben."); return; }
+      klasses.delete(c);
+    } else klasses.add(c);
+    bt.classList.toggle("active", klasses.has(c));
+    bt.setAttribute("aria-pressed", klasses.has(c));
+    newTask();
+  }));
   setupToggle("levelToggle","level", v=>{ level=+v; newTask(); });
   setupToggle("styleToggle","style", v=>{ style=v; drawMol(); });
   setupToggle("answerToggle","ans", v=>{ answer=v; renderTask(); });
+  setupToggle("typeToggle","tt", v=>{ taskType=v; newTask(); });
+  setupToggle("drawToggle","dw", v=>{ drawWith=v; if(task && !task.done){ task.compared=false; $("feedback").innerHTML=""; } renderTask(); });
+  setupToggle("kitTools","kt", v=>{ kitTool=v; });
+  setupToggle("freeTools","ft", v=>{ freeTool=v; });
+  $("btnUndo").addEventListener("click", undoBoard);
+  $("btnClear").addEventListener("click", clearBoard);
+  $("btnSelfOk").addEventListener("click", ()=>selfAssess(true));
+  $("btnSelfBad").addEventListener("click", ()=>selfAssess(false));
   $("chkOld").addEventListener("change", e=>{ allowOld=e.target.checked; if(task && task.done) renderWay(); });
   $("chkFormula").addEventListener("change", e=>{ showFormula=e.target.checked; drawMol(); });
   $("btnNew").addEventListener("click", ()=>newTask());
-  $("btnCheck").addEventListener("click", ()=>evaluate($("nameIn").value,false));
+  $("btnCheck").addEventListener("click", ()=>{
+    if(task && task.type==="draw"){ if(drawWith==="kit") checkKit(); else compareSketch(); }
+    else evaluate($("nameIn").value,false);
+  });
   $("btnHint").addEventListener("click", hint);
   $("btnSolve").addEventListener("click", showSolution);
   $("nameIn").addEventListener("input", ()=>{ $("nameIn").classList.remove("ok","bad"); if(task) task.touched = true; });
   document.addEventListener("keydown", e=>{
     if(e.key==="Enter" && e.target.id==="nameIn" && !$("guideBackdrop").classList.contains("open")){ e.preventDefault(); evaluate($("nameIn").value,false); }
     if(e.key==="Escape") $("guideBackdrop").classList.remove("open");
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="z" && task && task.type==="draw" && e.target.tagName!=="INPUT"){ e.preventDefault(); undoBoard(); }
   });
   document.querySelectorAll(".tabbtn").forEach(bt=>bt.addEventListener("click",()=>{
     document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===bt));
@@ -1129,6 +1678,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   $("btnGuide").addEventListener("click", e=>{ e.preventDefault(); $("guideBackdrop").classList.add("open"); });
   $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
   $("guideBackdrop").addEventListener("click", e=>{ if(e.target.id==="guideBackdrop") $("guideBackdrop").classList.remove("open"); });
+  $("btnCl").addEventListener("click", e=>{ e.preventDefault(); $("clBackdrop").classList.add("open"); });
+  $("closeCl").addEventListener("click", ()=>$("clBackdrop").classList.remove("open"));
+  $("clBackdrop").addEventListener("click", e=>{ if(e.target.id==="clBackdrop") $("clBackdrop").classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") $("clBackdrop").classList.remove("open"); });
 
 
   renderStats();

@@ -286,6 +286,25 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
 .legend .lg-est::before{background:var(--amber);}
 @media (max-width:600px){ .equation{white-space:normal; line-height:2.1;} .equation input.form{width:92px;} }
 .dev-pos{color:var(--amber);} .dev-neg{color:var(--teal);}
+/* Strukturformeln */
+:root{ --bt-CC:#ffb454; --bt-CH:#4fd1c5; --bt-OO:#b99cff; --bt-CO:#e4785b; --bt-OH:#7fd68a; }
+.struct-wrap{border:1px solid var(--line-soft); background:var(--panel); border-radius:4px; padding:10px 12px 12px; margin:0 0 14px;}
+.struct-wrap[hidden]{display:none;}
+.struct-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px;}
+.struct-head .t{font-size:12.5px; color:var(--text-dim); font-weight:600; margin-right:auto;}
+.struct-head .check-row{margin:0; font-size:12.5px;}
+.struct-eq{display:flex; align-items:center; flex-wrap:wrap; gap:6px 4px; padding:4px 0; overflow-x:auto;}
+.struct-eq .sp{display:inline-flex; align-items:center; gap:4px; max-width:100%;}
+.struct-eq .sp svg{max-width:100%; height:auto; display:block;}
+.struct-eq .co{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:20px; margin-right:2px;}
+.struct-eq .plus{color:var(--text-faint); font-size:20px; margin:0 6px;}
+.struct-eq .arr{color:var(--teal); font-size:22px; margin:0 10px;}
+.struct-legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--text-dim); margin-top:6px;}
+.struct-legend[hidden]{display:none;}
+.struct-legend span{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.struct-legend i{display:inline-block; width:14px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+.bdot{display:inline-block; width:12px; height:3px; border-radius:2px; vertical-align:middle; margin-right:7px;}
+body.nocolor .bdot{display:none;}
 </style>
 
 </head>
@@ -317,6 +336,8 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
       <h3>Reaktionsgleichung aufstellen</h3>
       <p>Bei „Selbst aufstellen“ werden die Summenformel des Alkans, der Reaktionspartner und die Produkte der vollständigen Verbrennung selbst eingetragen, dazu die Koeffizienten. Ein leeres Koeffizientenfeld gilt als 1. Erlaubt sind die <strong>kleinsten ganzzahligen Koeffizienten</strong> (z. B. 2 C<sub>2</sub>H<sub>6</sub> + 7 O<sub>2</sub> …) oder die Gleichung <strong>bezogen auf ein Alkanmolekül</strong> mit halbzahligem Koeffizienten vor O<sub>2</sub> (z. B. C<sub>2</sub>H<sub>6</sub> + 3,5 O<sub>2</sub> …). Bei „Nur ausgleichen“ sind die Formeln vorgegeben.</p>
       <p>Statt der Summenformel darf auch eine Halbstrukturformel eingegeben werden, z. B. CH3CH2CH3. Auf Groß- und Kleinschreibung achten. Wasser entsteht hier gasförmig, alle Stoffe werden als Gase betrachtet.</p>
+
+      <p>Ist die Gleichung richtig, erscheint sie zusätzlich mit <strong>Strukturformeln</strong> (Valenzstrichformeln). Daran lassen sich die Bindungen abzählen. Die Bindungsarten sind farbig markiert, passend zu den Farbstrichen in der Rechentabelle. Farben und freie Elektronenpaare lassen sich ausblenden.</p>
 
       <h3>Aufgabe einstellen</h3>
       <p><strong>Schwierigkeit:</strong> Leicht (Alkane mit ungerader C-Zahl, ganzzahlige Koeffizienten), Mittel (kurze und mittlere Kettenlängen), Schwer (lange Ketten und verzweigte Alkane) oder Gemischt.</p>
@@ -399,6 +420,15 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
       <p class="task-ctx" id="taskText" style="margin:8px 0 0; color:var(--text); font-size:14px; line-height:1.55;"></p>
       <div class="equation" id="equation"></div>
       <p class="eq-note" id="eqNote"></p>
+      <div class="struct-wrap" id="structWrap" hidden>
+        <div class="struct-head">
+          <span class="t">Reaktionsgleichung mit Strukturformeln</span>
+          <label class="check-row" for="chkColor"><input type="checkbox" id="chkColor" checked><span>Bindungsarten farbig</span></label>
+          <label class="check-row" for="chkLP"><input type="checkbox" id="chkLP" checked><span>freie Elektronenpaare</span></label>
+        </div>
+        <div class="struct-eq" id="structEq"></div>
+        <div class="struct-legend" id="structLegend"></div>
+      </div>
       <div class="eq-check" id="eqCheckRow">
         <button class="btn" id="btnCheckEq">Gleichung prüfen</button>
       </div>
@@ -492,7 +522,7 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
 
 <footer>
   <p class="footer-note">Mittlere Bindungsenthalpien nach gängigen Schulbuch-Tabellenwerken, gerundet auf ganze kJ/mol. Einzelne Schulbücher geben teilweise leicht abweichende Werte an. Die Berechnung mit mittleren Bindungsenthalpien liefert Näherungswerte.</p>
-  <p class="footer-credit">Bastian Baumgart · Verbrennungsenthalpie von Alkanen V1.0 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Verbrennungsenthalpie von Alkanen V1.2 (erstellt mit Claude Pro) · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 <script>
 (function(){
@@ -532,10 +562,10 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
     {name:"Octan", n:8, d:3, c:"Bestandteil von Benzin", hs:"CH3–(CH2)6–CH3", lit:-5116},
     {name:"Nonan", n:9, d:3, c:"Bestandteil von Kerosin", hs:"CH3–(CH2)7–CH3", lit:-5731},
     {name:"Decan", n:10, d:3, c:"Bestandteil von Kerosin und Diesel", hs:"CH3–(CH2)8–CH3", lit:-6345},
-    {name:"2-Methylpropan", n:4, d:3, c:"Isobutan, Kältemittel R600a im Kühlschrank", hs:"CH3–CH(CH3)–CH3", lit:-2649, iso:1},
-    {name:"2-Methylbutan", n:5, d:3, c:"Isopentan, Bestandteil von Benzin", hs:"CH3–CH(CH3)–CH2–CH3", lit:-3265, iso:1},
-    {name:"2,2-Dimethylpropan", n:5, d:3, c:"Neopentan", hs:"C(CH3)4", lit:-3250, iso:1},
-    {name:"2,2,4-Trimethylpentan", n:8, d:3, c:"Isooctan, Referenzkraftstoff mit der Oktanzahl 100", hs:"CH3–C(CH3)2–CH2–CH(CH3)–CH3", lit:-5099, iso:1}
+    {name:"2-Methylpropan", n:4, d:3, c:"Isobutan, Kältemittel R600a im Kühlschrank", hs:"CH3–CH(CH3)–CH3", lit:-2649, iso:1, ch:3, br:[[2,-1]]},
+    {name:"2-Methylbutan", n:5, d:3, c:"Isopentan, Bestandteil von Benzin", hs:"CH3–CH(CH3)–CH2–CH3", lit:-3265, iso:1, ch:4, br:[[2,-1]]},
+    {name:"2,2-Dimethylpropan", n:5, d:3, c:"Neopentan", hs:"C(CH3)4", lit:-3250, iso:1, ch:3, br:[[2,-1],[2,1]]},
+    {name:"2,2,4-Trimethylpentan", n:8, d:3, c:"Isooctan, Referenzkraftstoff mit der Oktanzahl 100", hs:"CH3–C(CH3)2–CH2–CH(CH3)–CH3", lit:-5099, iso:1, ch:5, br:[[2,-1],[2,1],[4,-1]]}
   ];
   const LEVEL_NAMES = ["gemischt","leicht","mittel","schwer"];
   const SPECIES = ["A","O2","CO2","H2O"];   // A = Alkan
@@ -646,11 +676,10 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
   // ---------- Auswahl ----------
   function renderSelect(){
     let html = "";
-    [1,2,3].forEach(d=>{
-      html += `<optgroup label="${LEVEL_NAMES[d][0].toUpperCase()+LEVEL_NAMES[d].slice(1)}">`;
-      A.forEach((a,i)=>{ if(a.d===d) html += `<option value="${i}">${a.name}</option>`; });
-      html += `</optgroup>`;
-    });
+    const opt = i => `<option value="${i}">${A[i].name} (${LEVEL_NAMES[A[i].d]})</option>`;
+    const idx = A.map((a,i)=>i);
+    html += `<optgroup label="Unverzweigte Alkane">` + idx.filter(i=>!A[i].iso).sort((x,y)=>A[x].n-A[y].n).map(opt).join("") + `</optgroup>`;
+    html += `<optgroup label="Verzweigte Alkane">` + idx.filter(i=>A[i].iso).sort((x,y)=>A[x].n-A[y].n).map(opt).join("") + `</optgroup>`;
     $("alkSelect").innerHTML = html;
   }
   $("btnLoad").addEventListener("click", ()=> newTask(+$("alkSelect").value));
@@ -690,6 +719,7 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
       const cand = pool.length>1 ? pool.filter(i=>i!==avoid) : pool;
       idx = cand[Math.floor(Math.random()*cand.length)];
     }
+    $("alkSelect").value = String(idx);
     task = {idx, a:A[idx], vals:{}, cls:null, wrong:false, done:false, shown:false, hint:0, ehint:0,
             eqOk:false, nu:null, map:null, rows:null, sol:null, marks:null, touched:false, num:++taskCounter};
     $("feedback").innerHTML = "";
@@ -711,6 +741,91 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
     const dr = r1(sb - sf);
     task.sol = {sb, sf, dr, dc:r1(dr/nu.A), k:nu.A};
   }
+
+  // ---------- Strukturformeln (Valenzstrichformeln) ----------
+  // Koordinaten in Bindungslängen-Einheiten, y nach unten
+  const BT = {CC:"C–C", CH:"C–H", OO:"O=O", CO:"C=O", OH:"O–H"};
+  function molAlkane(a){
+    const k = a.ch || a.n, br = a.br || [];
+    const s = br.length ? 1.6 : 1.2;
+    const at = [], bd = [];
+    const add = (el,x,y)=>{ at.push({el,x,y}); return at.length-1; };
+    const chain = [];
+    for(let i=0;i<k;i++) chain.push(add("C", i*s, 0));
+    for(let i=1;i<k;i++) bd.push({a:chain[i-1], b:chain[i], o:1, t:"CC"});
+    chain.forEach((ci,i)=>{
+      const pos = i+1, x = i*s;
+      const hasUp = br.some(([p,d])=>p===pos && d<0), hasDn = br.some(([p,d])=>p===pos && d>0);
+      if(!hasUp) bd.push({a:ci, b:add("H",x,-1), o:1, t:"CH"});
+      if(!hasDn) bd.push({a:ci, b:add("H",x, 1), o:1, t:"CH"});
+      if(i===0) bd.push({a:ci, b:add("H",x-1,0), o:1, t:"CH"});
+      if(i===k-1) bd.push({a:ci, b:add("H",x+1,0), o:1, t:"CH"});
+    });
+    br.forEach(([p,d])=>{
+      const x = (p-1)*s;
+      const c = add("C", x, d);
+      bd.push({a:chain[p-1], b:c, o:1, t:"CC"});
+      bd.push({a:c, b:add("H",x-1,d), o:1, t:"CH"});
+      bd.push({a:c, b:add("H",x+1,d), o:1, t:"CH"});
+      bd.push({a:c, b:add("H",x,2*d), o:1, t:"CH"});
+    });
+    return {at, bd, lp:[]};
+  }
+  function molSmall(key){
+    // lp: [Atomindex, Winkel in Grad, mathematisch (0° = rechts, 90° = oben)]
+    if(key==="O2") return {at:[{el:"O",x:0,y:0},{el:"O",x:1.2,y:0}], bd:[{a:0,b:1,o:2,t:"OO"}], lp:[[0,125],[0,235],[1,55],[1,-55]]};
+    if(key==="CO2") return {at:[{el:"O",x:0,y:0},{el:"C",x:1.2,y:0},{el:"O",x:2.4,y:0}], bd:[{a:0,b:1,o:2,t:"CO"},{a:1,b:2,o:2,t:"CO"}], lp:[[0,125],[0,235],[2,55],[2,-55]]};
+    if(key==="H2O") return {at:[{el:"H",x:0,y:0.62},{el:"O",x:0.8,y:0},{el:"H",x:1.6,y:0.62}], bd:[{a:1,b:0,o:1,t:"OH"},{a:1,b:2,o:1,t:"OH"}], lp:[[1,55],[1,125]]};
+  }
+  function molSVG(m, opt){
+    const U = 34, R = 8.5, pad = 0.55;
+    const xs = m.at.map(a=>a.x), ys = m.at.map(a=>a.y);
+    const x0 = Math.min(...xs)-pad, y0 = Math.min(...ys)-pad, x1 = Math.max(...xs)+pad, y1 = Math.max(...ys)+pad;
+    const W = (x1-x0)*U, H = (y1-y0)*U;
+    const P = a => [(a.x-x0)*U, (a.y-y0)*U];
+    const dim = "var(--text-dim)";
+    let g = "";
+    m.bd.forEach(b=>{
+      const [ax,ay] = P(m.at[b.a]), [bx,by] = P(m.at[b.b]);
+      const dx = bx-ax, dy = by-ay, L = Math.hypot(dx,dy), ux = dx/L, uy = dy/L;
+      const sx = ax+ux*R, sy = ay+uy*R, ex = bx-ux*R, ey = by-uy*R;
+      const col = opt.color ? `var(--bt-${b.t})` : dim;
+      const offs = b.o===2 ? [-2.6, 2.6] : [0];
+      offs.forEach(o=>{
+        const ox = -uy*o, oy = ux*o;
+        g += `<line x1="${(sx+ox).toFixed(1)}" y1="${(sy+oy).toFixed(1)}" x2="${(ex+ox).toFixed(1)}" y2="${(ey+oy).toFixed(1)}" stroke="${col}" stroke-width="${opt.color?2:1.6}" stroke-linecap="round"/>`;
+      });
+    });
+    if(opt.lp) m.lp.forEach(([i,deg])=>{
+      const [cx,cy] = P(m.at[i]);
+      const r = deg*Math.PI/180, ux = Math.cos(r), uy = -Math.sin(r);
+      const mx = cx+ux*12.5, my = cy+uy*12.5, hx = -uy*5, hy = ux*5;
+      g += `<line x1="${(mx-hx).toFixed(1)}" y1="${(my-hy).toFixed(1)}" x2="${(mx+hx).toFixed(1)}" y2="${(my+hy).toFixed(1)}" stroke="${dim}" stroke-width="1.6" stroke-linecap="round"/>`;
+    });
+    m.at.forEach(a=>{
+      const [x,y] = P(a);
+      g += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="15" font-family="ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace" fill="${a.el==="H"?"var(--text-dim)":"var(--text)"}" font-weight="${a.el==="H"?400:600}">${a.el}</text>`;
+    });
+    return `<svg viewBox="0 0 ${W.toFixed(1)} ${H.toFixed(1)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}" role="img" aria-label="${opt.label}">${g}</svg>`;
+  }
+  function renderStruct(){
+    const wrap = $("structWrap");
+    if(!task || !task.eqOk){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    const opt = {color:$("chkColor").checked, lp:$("chkLP").checked};
+    document.body.classList.toggle("nocolor", !opt.color);
+    const item = k => {
+      const m = k==="A" ? molAlkane(task.a) : molSmall(k);
+      const nu = task.nu[k];
+      return `<span class="sp">${nu!==1?'<span class="co">'+fmtCoef(nu)+'</span>':''}${molSVG(m, {...opt, label:"Strukturformel "+(k==="A"?task.a.name:k)})}</span>`;
+    };
+    const o = task.map;
+    $("structEq").innerHTML = item(o[0])+'<span class="plus">+</span>'+item(o[1])+'<span class="arr">⟶</span>'+item(o[2])+'<span class="plus">+</span>'+item(o[3]);
+    $("structLegend").hidden = !opt.color;
+    $("structLegend").innerHTML = Object.entries(BT).map(([k,v])=>`<span><i style="background:var(--bt-${k})"></i>${v}</span>`).join("");
+  }
+  $("chkColor").addEventListener("change", renderStruct);
+  $("chkLP").addEventListener("change", renderStruct);
 
   // ---------- Aufgabe darstellen ----------
   function inputHTML(id, cls){
@@ -741,6 +856,7 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
     $("taskCtx").textContent = a.c;
     $("taskText").innerHTML = `Berechne die molare Verbrennungsenthalpie Δ<sub>c</sub>H von <strong>${a.name}</strong> mithilfe der mittleren Bindungsenthalpien. Stelle dazu zuerst die Reaktionsgleichung der vollständigen Verbrennung auf.`;
     $("equation").innerHTML = eqHTML();
+    renderStruct();
     $("eqNote").textContent = task.eqOk
       ? (task.nu.A===1 ? "Die Gleichung beschreibt die Verbrennung von 1 mol Alkan." : `Die Gleichung beschreibt die Verbrennung von ${fmtCoef(task.nu.A)} mol Alkan.`)
       : (form==="self" ? "Trage Formeln und Koeffizienten ein. Leere Koeffizientenfelder gelten als 1." : "Trage die Koeffizienten ein. Leere Felder gelten als 1.");
@@ -766,7 +882,7 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
     ["e","p"].forEach(side=>{
       body += `<tr class="side"><td colspan="${cols}">${side==="e"?"Edukte: Bindungen werden gespalten":"Produkte: Bindungen werden gebildet"}</td></tr>`;
       rows.filter(r=>r.side===side).forEach(r=>{
-        let tr = `<tr><td class="bd">${r.bond}</td><td class="in">${fHTML(spF(r.in))}</td>`;
+        let tr = `<tr><td class="bd"><span class="bdot" style="background:var(--bt-${r.id})"></span>${r.bond}</td><td class="in">${fHTML(spF(r.in))}</td>`;
         if(step) tr += `<td>${inputHTML("n"+r.id,"cnt")}</td>`;
         if(step || given){
           if(given) tr += `<td class="fixed">${BEv(r.be)}</td>`;
@@ -1343,11 +1459,11 @@ canvas#cmp{width:100%; height:320px; display:block; border-radius:4px; border:1p
   $("closeGuide").addEventListener("click", ()=>$("guideBackdrop").classList.remove("open"));
   $("guideBackdrop").addEventListener("click", e=>{ if(e.target.id==="guideBackdrop") $("guideBackdrop").classList.remove("open"); });
 
-  // ---------- Start: Methan ----------
+  // ---------- Start: zufällige Aufgabe ----------
   renderLib();
   renderSelect();
   renderStats();
-  newTask(0);
+  newTask();
 })();
 </script>
 

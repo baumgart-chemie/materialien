@@ -227,6 +227,19 @@ footer a:hover{border-bottom-color:var(--teal);}
 ::-webkit-scrollbar{width:9px; height:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
 </style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+</style>
 </head>
 <body>
 
@@ -291,14 +304,13 @@ footer a:hover{border-bottom-color:var(--teal);}
 </div>
 
 <div class="modal-backdrop" id="changelogBackdrop" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
-  <div class="modal-box changelog-box">
+  <div class="modal-box">
     <div class="modal-head">
-      <h2 id="changelogTitle">Versionen &amp; Änderungen</h2>
+      <h2 id="changelogTitle">Versionshinweise</h2>
       <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
-      <section class="cl-version">
-        <div class="cl-head"><h3>Version 1.1</h3><time datetime="2026-10-03">03.10.2026</time></div>
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">03.10.2026</span></div>
         <ul>
           <li><strong>Luftpeak:</strong> Die mit der Spritze injizierte Luft erscheint als erster Peak bei der Totzeit (10 s bei 1,5 mL/min). Er ist in der Peaktabelle als „Luft (Totzeit)“ gekennzeichnet und zählt nicht zu den Flächenprozenten.</li>
           <li><strong>Mehrere Läufe vergleichen:</strong> Neue Läufe werden in eigener Farbe über die bisherigen gelegt (bis zu 8). Erst „Zurücksetzen“ löscht alle Läufe.</li>
@@ -307,16 +319,13 @@ footer a:hover{border-bottom-color:var(--teal);}
           <li>Schieberegler in der Seitenleiste stehen näher an ihrer Beschriftung.</li>
           <li>Systemschriften statt Google Fonts: Die Seite lädt keine externen Inhalte mehr. Neuer Link zu Impressum &amp; Datenschutz.</li>
         </ul>
-      </section>
-      <section class="cl-version">
-        <div class="cl-head"><h3>Version 1.0</h3><time datetime="2026-09-23">23.09.2026</time></div>
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">23.09.2026</span></div>
         <ul>
           <li>Erste Version der Simulation: isotherm oder mit Temperaturprogramm, einstellbar sind Trägergasfluss, Trennstufen, Laufzeit, Probenmenge und Detektorrauschen.</li>
           <li>Bibliothek mit 24 Einzelsubstanzen und 15 Stoffgemischen, deren Komponenten erst in der Auswertung sichtbar werden.</li>
           <li>Auswertung mit Peaktabelle und Bibliotheksabgleich, Einpunkt-Kalibrierung, Auflösung und CSV-Export.</li>
           <li>Anleitung zur Bedienung.</li>
         </ul>
-      </section>
     </div>
   </div>
 </div>
@@ -478,8 +487,7 @@ footer a:hover{border-bottom-color:var(--teal);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Retentionszeiten, Peakformen und Rauschen werden aus vereinfachten physikalischen Modellen berechnet und bilden kein reales Säulen-/Detektorverhalten exakt ab.</p>
-  <p class="footer-credit">Bastian Baumgart · GC-Simulator <a href="#changelog" id="btnChangelog" title="Änderungen der Versionen anzeigen">V1.1</a> (erstellt mit Claude Pro)</p>
-  <p class="footer-links"><a href="../impressum.html">Impressum &amp; Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · GC-Simulator V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
