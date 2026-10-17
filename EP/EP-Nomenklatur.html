@@ -200,6 +200,14 @@ table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); f
 table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
 .s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
 
+/* Stoffklassen (Mehrfachauswahl) */
+.cls-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:16px;}
+.cls-grid button{display:flex; align-items:center; gap:9px; background:var(--panel-alt); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-dim); padding:10px 10px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; text-align:left;}
+.cls-grid button:hover{border-color:var(--text-faint);}
+.cls-grid button:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.cls-grid .box{width:16px; height:16px; flex:none; border:1.5px solid var(--text-faint); border-radius:3px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; line-height:1; color:transparent;}
+.cls-grid button.active{background:var(--teal-dim); border-color:var(--teal-dim); color:var(--text);}
+.cls-grid button.active .box{background:var(--teal); border-color:var(--teal); color:#0d1614; font-weight:700;}
 /* Zeichnen */
 .name-card{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); margin:10px 0 12px;}
 .name-card .k{font-size:11px; color:var(--text-faint);}
@@ -273,7 +281,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
       <h3>Formel zeichnen</h3>
       <p>Beim Aufgabentyp <strong>„Formel zeichnen“</strong> ist der Name vorgegeben und die Formel wird gezeichnet. Die Simulation ist für Tablet und Stift (z. B. iPad mit Apple Pencil) ausgelegt, funktioniert aber auch mit Maus oder Finger. Sobald ein Stift erkannt wird, werden Berührungen mit der Hand ignoriert.</p>
-      <p><strong>Baukasten (automatische Prüfung):</strong> Mit „C-Atom hinzufügen“ zieht man den Stift von Punkt zu Punkt. Jede Linie ist eine C–C-Bindung, eine ganze Kette lässt sich in einem Zug zeichnen. Die Zeichnung erscheint als Strukturformel: Die C-Atome werden beschriftet, die freien Bindungen werden automatisch mit H-Atomen besetzt. Ein Tipp auf eine Bindung schaltet Einfach-, Doppel- und Dreifachbindung durch. Mit „OH-Gruppe“ tippt man auf ein C-Atom, um eine OH-Gruppe anzuhängen, mehrfaches Tippen hängt weitere an. Ein Tipp auf das O-Atom entfernt die OH-Gruppe wieder. Der Radierer löscht angetippte oder überstrichene Atome und Bindungen. Für Methan oder Methanol genügt ein Tipp auf einen Punkt. „Prüfen“ vergleicht die Zeichnung mit der gesuchten Verbindung, unabhängig davon, wie sie gedreht oder gezeichnet ist. Bei Fehlern wird angezeigt, welche Verbindung tatsächlich gezeichnet wurde.</p>
+      <p><strong>Baukasten (automatische Prüfung):</strong> Mit „C-Atom hinzufügen“ zieht man den Stift von Punkt zu Punkt. Jede Linie ist eine C–C-Bindung, eine ganze Kette lässt sich in einem Zug zeichnen. Die Zeichnung erscheint als Strukturformel: Die C-Atome werden beschriftet, die freien Bindungen werden automatisch mit H-Atomen besetzt. Ein Tipp auf eine Bindung schaltet Einfach-, Doppel- und Dreifachbindung durch. Mit „OH-Gruppe“ (nur sichtbar, wenn Alkohole ausgewählt sind) tippt man auf ein C-Atom, um eine OH-Gruppe anzuhängen, mehrfaches Tippen hängt weitere an. Ein Tipp auf das O-Atom entfernt die OH-Gruppe wieder. Der Radierer löscht angetippte oder überstrichene Atome und Bindungen. Für Methan oder Methanol genügt ein Tipp auf einen Punkt. „Prüfen“ vergleicht die Zeichnung mit der gesuchten Verbindung, unabhängig davon, wie sie gedreht oder gezeichnet ist. Bei Fehlern wird angezeigt, welche Verbindung tatsächlich gezeichnet wurde.</p>
       <p><strong>Freihand (Selbstkontrolle):</strong> Die Formel wird frei mit dem Stift gezeichnet, z. B. als vollständige Strukturformel mit allen H-Atomen. „Vergleichen“ zeigt die Lösung in dem links gewählten Formeltyp. Danach gibst du selbst an, ob deine Zeichnung stimmt.</p>
 
       <h3>Tipp, Lösung, Auswertung</h3>
@@ -320,12 +328,12 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
         <button data-tt="name" class="active">Name finden</button>
         <button data-tt="draw">Formel zeichnen</button>
       </div>
-      <p class="sub-label">Stoffklasse <span style="color:var(--text-faint)">(Mehrfachauswahl möglich)</span></p>
-      <div class="mode-toggle big" id="classToggle">
-        <button data-cls="alkan" class="active">Alkane</button>
-        <button data-cls="alken">Alkene</button>
-        <button data-cls="alkin">Alkine</button>
-        <button data-cls="alkohol">Alkohole</button>
+      <p class="sub-label">Stoffklassen <span style="color:var(--text-faint)">(mehrere anklickbar)</span></p>
+      <div class="cls-grid" id="classToggle">
+        <button data-cls="alkan" class="active" aria-pressed="true"><span class="box" aria-hidden="true">✓</span>Alkane</button>
+        <button data-cls="alken" aria-pressed="false"><span class="box" aria-hidden="true">✓</span>Alkene</button>
+        <button data-cls="alkin" aria-pressed="false"><span class="box" aria-hidden="true">✓</span>Alkine</button>
+        <button data-cls="alkohol" aria-pressed="false"><span class="box" aria-hidden="true">✓</span>Alkohole</button>
       </div>
       <p class="sub-label">Schwierigkeit</p>
       <div class="mode-toggle" id="levelToggle">
@@ -986,6 +994,9 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     if(draw){
       $("drawName").textContent = t.canon;
       $("kitTools").hidden = free; $("freeTools").hidden = !free;
+      const ohOk = klasses.has("alkohol");
+      $("kitTools").querySelector('[data-kt="oh"]').hidden = !ohOk;
+      if(!ohOk && kitTool==="oh"){ kitTool = "chain"; $("kitTools").querySelectorAll("button").forEach(b=>b.classList.toggle("active", b.dataset.kt==="chain")); }
       $("kitSvg").hidden = free; $("sketch").hidden = !free;
       $("board").classList.toggle("locked", t.done);
       $("boardInfo").hidden = free;
