@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Synthesewege</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --oxy:#ff8a7a; --nitro:#8fb4ff; --hal:#9bd88f;
+  --bond:#b9c0c6;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+header .status.shown .dot{background:var(--danger);}
+header .status.shown{color:var(--danger); border-color:var(--danger-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px 16px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text);
+  background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px;
+  overflow-x:auto; white-space:nowrap;
+}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;
+}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.type-list{display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
+.type-item{
+  display:flex; gap:10px; align-items:flex-start; padding:9px 11px; cursor:pointer;
+  border:1px solid var(--line); border-radius:4px; background:var(--panel);
+}
+.type-item:hover{border-color:var(--text-faint);}
+.type-item input{accent-color:var(--teal); width:16px; height:16px; margin:2px 0 0; flex:none;}
+.type-item .tt{font-size:13px; color:var(--text); font-weight:500;}
+.type-item .td{font-size:12px; color:var(--text-faint); line-height:1.45; margin-top:2px;}
+.type-item.on{border-color:var(--teal-dim); background:var(--panel-alt);}
+
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+.legend{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--text-dim);}
+.legend span.sw{display:inline-block; min-width:44px; font-weight:600;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.tA{color:var(--teal); border-color:var(--teal-dim);}
+.chip.tB{color:var(--amber); border-color:var(--amber-dim);}
+.chip.tC{color:var(--good); border-color:#35573a;}
+.chip.tD{color:var(--oxy); border-color:var(--danger-dim);}
+.ctx{font-size:14px; color:var(--text); line-height:1.55; margin:4px 0 10px;}
+.ctx p{margin:0 0 8px;}
+.ctx .dim{color:var(--text-dim); font-size:13px;}
+.mol-row{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 4px 14px;
+  overflow-x:auto;
+}
+.mol-box{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.mol-box .cap{font-size:12.5px; color:var(--text-dim); text-align:center; max-width:280px;}
+.mol-row .plus{color:var(--text-faint); font-size:22px;}
+.eqline{
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:18px; color:var(--text);
+  padding:12px 2px 16px; line-height:1.5; overflow-x:auto; white-space:nowrap;
+}
+.eqline sub, .opt sub, .q sub{font-size:.68em;}
+.rad{color:var(--amber); font-weight:700;}
+.arr{color:var(--teal); margin:0 .5em;}
+@media (max-width:600px){ .eqline{font-size:15px;} }
+
+svg.mol{display:block; max-width:100%; height:auto; overflow:visible;}
+svg.mol line, svg.mol path, svg.mol polygon{stroke:var(--bond); stroke-width:1.5; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+svg.mol path.br{stroke:var(--text-dim); stroke-width:1.4;}
+svg.mol text{fill:var(--text); font-size:15px; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+svg.mol .ox{fill:var(--oxy);}
+svg.mol .ni{fill:var(--nitro);}
+svg.mol .hal{fill:var(--hal);}
+svg.mol text.nn{fill:var(--text-dim); font-size:13px; font-style:italic;}
+svg.mol text.ix{fill:var(--text-dim); font-size:11.5px;}
+svg.mol line.lp{stroke-width:1.7;}
+svg.mol line.lp.ox{stroke:var(--oxy);}
+svg.mol line.lp.ni{stroke:var(--nitro);}
+svg.mol line.lp.hal{stroke:var(--hal);}
+svg.mol circle.rd{fill:var(--amber); stroke:none;}
+svg.mol path.wv{stroke:var(--text-dim); stroke-width:1.4;}
+.eqs{display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; padding:8px 2px 12px;}
+.eqop{font-size:20px; color:var(--text-faint); line-height:1;}
+.eqop.arr{color:var(--teal); font-size:22px;}
+.eqop.co{color:var(--text); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; margin-right:-6px;}
+.opt .eqs{padding:2px 0;}
+.eqnum{display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--line-soft);}
+.eqnum:last-child{border-bottom:none;}
+.eqnum > span{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:15px; flex:none;}
+.formula-box .eqs{padding:2px 0;}
+
+svg.net{display:block; width:100%; max-width:340px; height:auto;}
+svg.net polyline{fill:none; stroke:var(--text-dim); stroke-width:2; stroke-linejoin:round; stroke-linecap:round;}
+svg.net line{stroke:var(--amber); stroke-width:3; stroke-linecap:round;}
+svg.net circle{fill:var(--amber);}
+
+/* Teilaufgaben */
+.q-group{border-top:1px solid var(--line-soft); padding:12px 0 12px;}
+.q-group .q{font-size:13.5px; color:var(--text-dim); margin-bottom:9px;}
+.q-group .q b{color:var(--text); font-weight:600;}
+.q-group .q .qn{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; color:var(--amber); margin-right:7px;}
+.q-group.inline{display:grid; grid-template-columns:1fr auto; gap:8px 16px; align-items:center;}
+.q-group.inline .q{margin:0;}
+.q-group.inline .q.eqq{overflow-x:auto; min-width:0;}
+.q-group.inline .q.eqq .eqs{padding:2px 0;}
+@media (max-width:700px){ .q-group.inline{grid-template-columns:1fr;} }
+.choices{display:flex; flex-wrap:wrap; gap:8px;}
+.cards{display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(220px,1fr));}
+.cards.wide{grid-template-columns:1fr;}
+.cards.net3{grid-template-columns:repeat(auto-fill, minmax(190px,1fr));}
+.opt{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  border-radius:var(--radius); padding:8px 13px; min-height:38px; font-size:13.5px; font-family:inherit;
+  cursor:pointer; text-align:left; touch-action:manipulation;
+}
+.opt:hover{border-color:var(--text-faint);}
+.opt:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.opt.card{display:flex; align-items:center; justify-content:center; padding:12px 10px; min-height:96px; background:var(--panel); overflow-x:auto;}
+.opt.card.txt{justify-content:flex-start; min-height:52px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:14px; white-space:nowrap;}
+.opt.sel{border-color:var(--teal); background:var(--teal-dim);}
+.opt.card.sel{background:#16302d;}
+.q-group.ok .opt.sel{border-color:var(--good); background:#1d3322; box-shadow:0 0 0 1px #35573a;}
+.q-group.bad .opt.sel{border-color:var(--danger); background:#33201b; box-shadow:0 0 0 1px var(--danger-dim);}
+.q-group.done .opt:not(.sel){opacity:.55;}
+.mark{font-size:12px; margin-left:8px; font-weight:600;}
+.q-group.ok .mark::after{content:"✓ richtig"; color:var(--good);}
+.q-group.bad .mark::after{content:"✗ falsch"; color:var(--danger);}
+.why{font-size:12.5px; color:var(--danger); margin-top:8px; line-height:1.5;}
+.why sub{font-size:.75em;}
+
+.check-row{display:flex; justify-content:flex-end; padding:12px 0 2px; border-top:1px solid var(--line-soft);}
+.feedback{display:flex; flex-direction:column; gap:6px; margin:12px 0 4px;}
+.feedback:empty{display:none;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb sub{font-size:.75em;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.explain{font-size:13.5px; color:var(--text-dim); line-height:1.65; max-width:78ch;}
+.explain p{margin:0 0 10px;}
+.explain strong{color:var(--text); font-weight:600;}
+.explain .figure{background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:12px 14px; margin:6px 0 12px; overflow-x:auto;}
+.explain .figure .eqline{padding:4px 0; font-size:15px;}
+.explain ul{margin:0 0 10px; padding-left:18px;}
+.explain li{margin-bottom:4px;}
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+table.hist td sub{font-size:.72em;}
+table.hist tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:12px; background:var(--panel);}
+table.hist td.k{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); white-space:nowrap;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
+<style>
+/* Synthesewege */
+.sidebar{max-height:none; overflow:visible; align-self:stretch;}
+@media (max-width:920px){ .sidebar{align-self:auto;} }
+.type-item input[type=radio]{accent-color:var(--teal); width:16px; height:16px; margin:2px 0 0; flex:none;}
+.check-item{display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--text); cursor:pointer; margin-bottom:10px;}
+.check-item input{accent-color:var(--teal); width:16px; height:16px; margin:1px 0 0; flex:none;}
+.check-item .td{display:block; font-size:12px; color:var(--text-faint); line-height:1.45; margin-top:2px;}
+
+.pair-row{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap; margin:4px 0 14px;}
+.pair{flex:1 1 240px; min-width:0; border:1px solid var(--line); border-radius:4px; background:var(--panel); padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px;}
+.pair.goal{border-color:#35573a;}
+.pair .lab{font-size:11px; color:var(--text-faint); letter-spacing:.3px; text-transform:uppercase;}
+.pair.goal .lab{color:var(--good);}
+.pair .mol-wrap{overflow-x:auto; padding:2px 0;}
+.pair-arrow{align-self:center; color:var(--teal); font-size:24px; flex:none;}
+@media (max-width:640px){ .pair-arrow{display:none;} }
+.nm{font-size:14px; color:var(--text); font-weight:500;}
+.alt{font-size:12px; color:var(--text-faint); margin-left:8px;}
+.cf{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px; color:var(--text); white-space:nowrap;}
+.cf sub{font-size:.7em;}
+
+.sec-label{font-size:12.5px; color:var(--text-dim); font-weight:600; margin:16px 0 8px; display:flex; align-items:center; gap:10px;}
+.sec-label .cnt{font-weight:400; color:var(--text-faint); font-size:12px;}
+.path{display:flex; flex-direction:column;}
+.pnode{border:1px solid var(--line); background:var(--panel); border-radius:4px; padding:9px 12px; display:flex; align-items:center; gap:16px; overflow-x:auto;}
+.pnode .txt{display:flex; flex-direction:column; gap:3px; min-width:150px; flex:none;}
+.pnode .cls{font-size:11.5px; color:var(--text-faint);}
+.pnode.cur{border-color:var(--amber-dim); box-shadow:inset 3px 0 0 var(--amber);}
+.pnode.goal{border-color:#35573a; box-shadow:inset 3px 0 0 var(--good);}
+.pnode .badge{align-self:flex-start; margin-top:3px; font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--amber-dim); color:var(--amber); white-space:nowrap;}
+.pnode.goal .badge{border-color:#35573a; color:var(--good);}
+.parr{display:flex; align-items:center; gap:12px; padding:5px 0 5px 18px; min-height:42px;}
+.parr .ar{color:var(--teal); font-size:20px; line-height:1; width:14px; text-align:center;}
+.parr .rgf{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13.5px; color:var(--text);}
+.parr .rgc{font-size:12px; color:var(--text-faint);}
+.parr .no{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; color:var(--amber); min-width:18px;}
+.chip.rt{color:var(--teal); border-color:var(--teal-dim);}
+
+.rg-grp{margin-bottom:10px;}
+.rg-grp .gl{font-size:11.5px; color:var(--text-faint); margin:0 0 6px;}
+.opt.rg{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:118px; padding:7px 11px;}
+.opt.rg .f{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:14px; color:var(--text); white-space:nowrap;}
+.opt.rg .c{font-size:11px; color:var(--text-faint); white-space:nowrap;}
+.opt.rg.sel .c{color:var(--text-dim);}
+.q-group.bad .opt.sel{border-color:var(--danger); background:#33201b; box-shadow:0 0 0 1px var(--danger-dim);}
+.q-group.bad .mark::after{content:"✗ falsch"; color:var(--danger);}
+.opt.card .pc{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.opt.card .pc .nm{font-size:12.5px; text-align:center; white-space:normal;}
+.opt.card .pc .tag{font-size:11px; color:var(--amber);}
+.opt.card.none{font-size:13.5px; color:var(--text-dim);}
+.cards.prod{grid-template-columns:repeat(auto-fill, minmax(200px,1fr));}
+.check-row{gap:8px; align-items:center;}
+.check-row .left{margin-right:auto;}
+.done-box{border:1px solid #35573a; background:#16241a; color:var(--good); border-radius:4px; padding:10px 12px; font-size:13.5px; margin-top:12px;}
+.done-box.shown{border-color:var(--danger-dim); background:#2a1b17; color:var(--danger);}
+
+.eqrow{display:grid; grid-template-columns:24px 1fr; gap:8px; padding:8px 0; border-bottom:1px solid var(--line-soft);}
+.eqrow:last-of-type{border-bottom:none;}
+.eqrow .sn{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:14px; padding-top:10px;}
+.eqrow .eqs{padding:2px 0; overflow-x:auto; flex-wrap:nowrap; align-items:center;}
+.eqrow .mol-box .cap{font-size:11.5px; white-space:nowrap;}
+.eqrow .inf{font-size:12.5px; color:var(--text-faint); line-height:1.5; margin:2px 0 4px; max-width:78ch;}
+.rxa{display:inline-flex; flex-direction:column; align-items:center; flex:none; margin:0 4px; min-width:96px;}
+.rxa .t{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:12.5px; color:var(--text); white-space:nowrap;}
+.rxa .ln{color:var(--teal); font-size:24px; line-height:1;}
+.rxa .b{font-size:11px; color:var(--teal); white-space:nowrap;}
+.eqop.by{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:14px; color:var(--text-dim); white-space:nowrap; margin:0;}
+.explain h3{font-size:13.5px; color:var(--amber); margin:16px 0 4px; font-weight:600;}
+.explain h3:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Synthesewege</h1>
+  <span class="tag">Organische Stoffe gezielt herstellen – Reagenzien wählen und Reaktionstypen bestimmen</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Aus einem vorgegebenen <strong>Edukt</strong> soll ein <strong>Zielstoff</strong> hergestellt werden. Oft geht das nicht in einem Schritt: Man plant einen <strong>Syntheseweg</strong> über ein oder mehrere Zwischenprodukte. Die Stoffe sind unverzweigte Alkane, Alkene, Halogenalkane, Alkohole, Aldehyde, Ketone, Carbonsäuren und Ester.</p>
+
+      <h3>Ein Syntheseschritt</h3>
+      <p><strong>1. Stoff hinzufügen:</strong> Wähle aus der Stoffsammlung das Reagenz, mit dem der aktuelle Stoff umgesetzt werden soll. Die Reaktionsbedingungen (Licht, Katalysator, Temperatur) sind beim Reagenz angegeben.</p>
+      <p><strong>2. Reaktionstyp bestimmen:</strong> Gib an, um welchen Reaktionstyp es sich handelt – z. B. radikalische Substitution, elektrophile Addition, Eliminierung oder Oxidation.</p>
+      <p><strong>3. Reaktion durchführen:</strong> Reagiert der Stoff nicht mit dem Reagenz oder stimmt der Reaktionstyp nicht, erhältst du eine Rückmeldung und kannst deine Auswahl ändern. Ist alles richtig, erscheint das Produkt als nächster Stoff im Syntheseweg.</p>
+      <p>Entstehen <strong>mehrere Produkte</strong> (Isomere bei der Substitution, Markownikow- bzw. Saytzeff-Produkte, Alkohol und Carbonsäure bei der Esterhydrolyse), wählst du aus, mit welchem Stoff du weiterarbeitest.</p>
+
+      <h3>Regeln in dieser Übung</h3>
+      <p><strong>Markownikow:</strong> Bei der Addition von HX oder H₂O an ein Alken lagert sich das H-Atom an das C-Atom der Doppelbindung an, das bereits mehr H-Atome trägt.</p>
+      <p><strong>Saytzeff:</strong> Bei der Eliminierung entsteht bevorzugt das Alken mit der höher substituierten (innenliegenden) Doppelbindung. Das Nebenprodukt kann trotzdem gewählt werden.</p>
+      <p><strong>Oxidation:</strong> Kupfer(II)-oxid oxidiert primäre Alkohole zum Aldehyd, sekundäre zum Keton. Angesäuertes Kaliumpermanganat im Überschuss oxidiert primäre Alkohole bis zur Carbonsäure.</p>
+
+      <h3>Bedienung</h3>
+      <p>Im Modus <strong>Zielsynthese</strong> wählt „Neue Aufgabe“ zufällig ein Paar aus Edukt und Zielstoff in der gewählten Schwierigkeit. Über „Aufgabe gezielt wählen“ lassen sich klassische Synthesen direkt aufrufen, zum Beispiel für die Besprechung im Unterricht. Im Modus <strong>Freies Experimentieren</strong> wählst du einen Startstoff und probierst aus, welche Reaktionen ablaufen. Der Reaktionstyp muss dort nicht bestimmt werden, er wird nach jeder Reaktion angegeben.</p>
+      <p>„Tipp“ gibt schrittweise Hinweise zum nächsten Schritt: zuerst die Stoffklasse des Zwischenprodukts, dann den Reaktionstyp, dann das Reagenz. „Schritt zurück“ nimmt den letzten Schritt zurück. „Lösung zeigen“ zeigt den kürzesten Syntheseweg, die Aufgabe zählt dann nicht als gelöst.</p>
+      <p>Mit der Option <strong>Zwischenprodukte selbst vorhersagen</strong> musst du zusätzlich das Produkt jedes Schritts auswählen – oder erkennen, dass keine Reaktion stattfindet. Unter <strong>Darstellung</strong> lässt sich zwischen Valenzstrichformeln mit freien Elektronenpaaren und Halbstrukturformeln umschalten.</p>
+      <p>Nach dem Lösen stehen im Tab <strong>Erklärung</strong> alle Reaktionsgleichungen des Synthesewegs und eine Erläuterung der Reaktionstypen. Die <strong>Übersicht</strong> fasst alle Reaktionen der Übung zusammen, der <strong>Verlauf</strong> listet die Aufgaben dieser Sitzung.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">18.10.2026</span></div>
+      <ul>
+        <li>Erste Version: Synthesewege zwischen Alkanen, Alkenen, Halogenalkanen, Alkoholen, Aldehyden, Ketonen, Carbonsäuren und Estern mit 15 Stoffen in der <strong>Stoffsammlung</strong> und acht <strong>Reaktionstypen</strong>.</li>
+        <li>Modi <strong>Zielsynthese</strong> (drei Schwierigkeitsstufen, zufällige Aufgaben, klassische Synthesen zur gezielten Auswahl) und <strong>Freies Experimentieren</strong>.</li>
+        <li>Markownikow- und Saytzeff-Regel, Isomerenauswahl, optionale Vorhersage der Zwischenprodukte, gestufte Tipps, kürzester Weg als Lösung, Reaktionsgleichungen in der Erklärung. Valenzstrichformeln oder Halbstrukturformeln, bedienbar mit iPad und Stift.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <section class="block">
+      <h2>Modus</h2>
+      <div class="type-list" id="modeList">
+        <label class="type-item on" data-mode="goal">
+          <input type="radio" name="mode" value="goal" checked>
+          <span><span class="tt">Zielsynthese</span><span class="td" style="display:block">Edukt und Zielstoff sind vorgegeben – finde einen Syntheseweg.</span></span>
+        </label>
+        <label class="type-item" data-mode="free">
+          <input type="radio" name="mode" value="free">
+          <span><span class="tt">Freies Experimentieren</span><span class="td" style="display:block">Startstoff wählen und ausprobieren, welche Reaktionen ablaufen.</span></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="block" id="secLevel">
+      <h2>Schwierigkeit</h2>
+      <div class="field-full">
+        <select id="levelSelect" aria-label="Schwierigkeit">
+          <option value="e">Einstieg – 1 bis 2 Schritte</option>
+          <option value="s" selected>Standard – 2 bis 3 Schritte</option>
+          <option value="a">Anspruchsvoll – 3 bis 5 Schritte</option>
+        </select>
+      </div>
+      <p class="note">Die Schrittzahl bezieht sich auf den kürzesten Syntheseweg. „Neue Aufgabe“ wählt zufällig ein passendes Paar aus Edukt und Zielstoff.</p>
+    </section>
+
+    <section class="block" id="secClassic">
+      <h2>Aufgabe gezielt wählen</h2>
+      <div class="field-full">
+        <div style="display:flex; gap:6px;">
+          <select id="taskSelect" style="flex:1; min-width:0;" aria-label="Aufgabe gezielt wählen"></select>
+          <button class="btn ghost" id="btnLoad" style="flex:none;">Laden</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="secFree" hidden>
+      <h2>Startstoff</h2>
+      <div class="field-full">
+        <div style="display:flex; gap:6px;">
+          <select id="startSelect" style="flex:1; min-width:0;" aria-label="Startstoff"></select>
+          <button class="btn ghost" id="btnStart" style="flex:none;">Starten</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Optionen</h2>
+      <label class="check-item"><input type="checkbox" id="optPredict"><span>Zwischenprodukte selbst vorhersagen<span class="td">Zu jedem Schritt muss zusätzlich das Produkt ausgewählt werden.</span></span></label>
+      <label class="check-item"><input type="checkbox" id="optMin" checked><span>Länge des kürzesten Wegs anzeigen<span class="td">Nur im Modus Zielsynthese.</span></span></label>
+    </section>
+
+    <section class="block">
+      <h2>Darstellung</h2>
+      <div class="field-full">
+        <select id="dispSelect" aria-label="Formeldarstellung">
+          <option value="lewis" selected>Valenzstrichformeln</option>
+          <option value="cond">Halbstrukturformeln</option>
+        </select>
+      </div>
+      <div class="legend">
+        <div><span class="sw" style="color:var(--oxy)">O</span>Sauerstoff</div>
+        <div><span class="sw" style="color:var(--hal)">Cl, Br</span>Halogene</div>
+        <div><span class="sw">|</span>freies Elektronenpaar</div>
+      </div>
+      <p class="note">Valenzstrichformeln zeigen alle Atome, Bindungen und freien Elektronenpaare. Halbstrukturformeln fassen jedes C-Atom mit seinen H-Atomen zusammen.</p>
+    </section>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip tA" id="taskChip"></span>
+        <span class="chip" id="minChip"></span>
+      </div>
+      <div class="ctx" id="ctx"></div>
+      <div class="pair-row" id="pairRow"></div>
+
+      <div class="sec-label">Syntheseweg <span class="cnt" id="pathCnt"></span></div>
+      <div class="path" id="path"></div>
+
+      <div id="stepPanel">
+        <div class="sec-label" id="stepLabel">Nächster Schritt</div>
+        <div class="q-group" id="gRg">
+          <div class="q"><span class="qn">a)</span>Wähle einen <b>Stoff aus der Sammlung</b>, der zugegeben wird.<span class="mark"></span></div>
+          <div id="rgList"></div>
+        </div>
+        <div class="q-group" id="gType">
+          <div class="q"><span class="qn">b)</span>Bestimme den <b>Reaktionstyp</b>.<span class="mark"></span></div>
+          <div class="choices" id="typeList"></div>
+        </div>
+        <div class="q-group" id="gProd" hidden>
+          <div class="q"><span class="qn">c)</span>Welches <b>Produkt</b> entsteht?<span class="mark"></span></div>
+          <div class="cards prod" id="prodList"></div>
+        </div>
+        <div class="check-row">
+          <button class="btn ghost left" id="btnBack">Schritt zurück</button>
+          <button class="btn" id="btnDo">Reaktion durchführen</button>
+        </div>
+      </div>
+
+      <div id="choicePanel" hidden>
+        <div class="q-group">
+          <div class="q">Es entstehen <b>mehrere Produkte</b>. Mit welchem Stoff arbeitest du weiter?</div>
+          <div class="cards prod" id="choiceList"></div>
+        </div>
+        <div class="check-row">
+          <button class="btn ghost left" id="btnCancelChoice">Abbrechen</button>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon ohne Fehlversuch</span><span class="v mono" id="roClean">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="exp">Erklärung</button>
+      <button class="tabbtn" data-tab="ovw">Übersicht</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-exp">
+      <div id="expBox"></div>
+    </div>
+
+    <div class="tabpanel" id="tab-ovw">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>Edukt</th><th>Stoff aus der Sammlung</th><th>Produkt</th><th>Reaktionstyp</th></tr></thead>
+          <tbody id="ovwBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Die Übung verwendet ein vereinfachtes Modell mit unverzweigten Kohlenstoffketten. Konkurrenzreaktionen (z. B. Eliminierung neben Substitution) und Mehrfachsubstitution werden nicht berücksichtigt.</p>
+    </div>
+
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Aufgabe</th><th>Schritte</th><th>Fehlversuche</th><th>Status</th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Vereinfachtes Reaktionsmodell für unverzweigte Ketten mit bis zu sechs C-Atomen; cis/trans-Isomere werden nicht unterschieden.</p>
+  <p class="footer-credit">Bastian Baumgart · Synthesewege V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const f1 = v => Math.round(v*10)/10;
+function fm(s){ return esc(s).replace(/([A-Za-z\)])(\d+)/g, (m,a,d)=>a+"<sub>"+d+"</sub>"); }
+
+/* ============================================================
+   Valenzstrichformeln mit freien Elektronenpaaren
+   (Renderer wie in „Polymerisation & Kunststoffe“, ergänzt um Br, OH und C2H5)
+   ============================================================ */
+const U = 32, STEP = 1.35;
+const VE = {H:1, C:4, N:5, O:6, F:7, Cl:7, Br:7};
+const ELCLS = {O:"ox", N:"ni", F:"hal", Cl:"hal", Br:"hal"};
+
+function Mol(){ this.A=[]; this.B=[]; this.inner=[]; this.par=[]; this.brk=[]; }
+Mol.prototype.add = function(el,x,y,o){ o=o||{}; this.A.push({el, x, y, rad:o.rad?1:0, hide:!!o.hide}); return this.A.length-1; };
+Mol.prototype.bond = function(i,j,o){ this.B.push({i, j, o:o||1}); };
+
+function ring(m,cx,cy,r,rot){
+  const v=[];
+  for(let k=0;k<6;k++){ const t=(rot+k*60)*Math.PI/180; v.push(m.add("C", cx+r*Math.cos(t), cy+r*Math.sin(t), {hide:true})); }
+  for(let k=0;k<6;k++) m.bond(v[k], v[(k+1)%6]);
+  [1,3,5].forEach(k=>m.inner.push({cx, cy, a:v[k], b:v[(k+1)%6]}));
+  return v;
+}
+
+function sub(m,i,kind,d){
+  const a=m.A[i], x=a.x, y=a.y;
+  if(kind==="H"||kind==="F"||kind==="Cl"||kind==="Br"){ m.bond(i, m.add(kind,x,y+d)); return; }
+  if(kind==="OH"){ const o=m.add("O",x,y+d); m.bond(i,o); m.bond(o, m.add("H",x,y+2*d)); return; }
+  if(kind==="C2H5"){
+    const c1=m.add("C",x,y+d); m.bond(i,c1);
+    m.bond(c1, m.add("H",x-0.85,y+d)); m.bond(c1, m.add("H",x+0.85,y+d));
+    const c2=m.add("C",x,y+2*d); m.bond(c1,c2);
+    m.bond(c2, m.add("H",x-0.85,y+2*d)); m.bond(c2, m.add("H",x+0.85,y+2*d)); m.bond(c2, m.add("H",x,y+3*d));
+    return;
+  }
+  if(kind==="=O"){ m.bond(i, m.add("O",x,y+d), 2); return; }
+  if(kind==="CH3"){
+    const c=m.add("C",x,y+d); m.bond(i,c);
+    [[0,1],[-0.71,0.71],[0.71,0.71]].forEach(([dx,dy])=>m.bond(c, m.add("H", x+dx, y+d+dy*d)));
+    return;
+  }
+  if(kind==="C≡N"){ const c=m.add("C",x,y+d); m.bond(i,c); m.bond(c, m.add("N",x,y+2*d), 3); return; }
+  if(kind==="Ph"){ const r=0.9, v=ring(m, x, y+d*(1+r), r, d>0?-90:90); m.bond(i, v[0]); return; }
+  if(kind==="COOCH3"){
+    const c=m.add("C",x,y+d); m.bond(i,c);
+    m.bond(c, m.add("O",x-0.87,y+1.5*d), 2);
+    const o2=m.add("O",x+0.87,y+1.5*d); m.bond(c,o2);
+    sub(m,o2,"CH3",d);
+  }
+}
+
+function expand(tokens){
+  const out=[];
+  const X = {
+    HO:[{l:"H"},{l:"O"}], OH:[{l:"O"},{l:"H"}],
+    H2N:[{l:"H"},{l:"N",up:"H"}], NH2:[{l:"N",up:"H"},{l:"H"}], NH:[{l:"N",up:"H"}],
+    CH2:[{l:"C",up:"H",down:"H"}], "C=O":[{l:"C",up:"=O"}],
+    "O=C=N":[{l:"O"},"=",{l:"C"},"=",{l:"N"}], "N=C=O":[{l:"N"},"=",{l:"C"},"=",{l:"O"}]
+  };
+  tokens.forEach(t=>{
+    if(typeof t==="object"){ out.push(t.l==="CH" ? Object.assign({}, t, {l:"C", up:t.up||"H"}) : t); return; }
+    const g=t.match(/^\(CH2\)(\d+)$/);
+    if(g) out.push({grp:g[1]});
+    else if(X[t]) out.push(...X[t]);
+    else if(["Ph","*","~","=","[","]"].includes(t)) out.push(t);
+    else out.push({l:t});
+  });
+  return out;
+}
+
+function piece(m,t,x0){
+  if(t==="*"||t==="~"){ const i=m.add(t,x0,0,{hide:true}); return {L:i,R:i}; }
+  if(t==="Ph"){ const r=0.9, v=ring(m,x0+r,0,r,180); return {L:v[0], R:v[3]}; }
+  if(t.grp){ const c=m.add("C",x0,0); sub(m,c,"H",-1); sub(m,c,"H",1); m.par.push({x:x0, k:t.grp}); return {L:c,R:c}; }
+  const i=m.add(t.l,x0,0,{rad:t.rad});
+  if(t.up) sub(m,i,t.up,-1);
+  if(t.down) sub(m,i,t.down,1);
+  return {L:i,R:i};
+}
+
+function chainMol(tokens){
+  const m=new Mol(), tk=expand(tokens);
+  const EXT = {COOCH3:[1.1,1.6], Ph:[0.8,0.8], CH3:[0.3,0.3], C2H5:[0.85,0.85]};
+  const reach = (t,side) => (t && typeof t==="object") ? Math.max(0, ...[t.up,t.down].map(k=>EXT[k]?EXT[k][side]:0)) : 0;
+  let prev=null, prevTok=null, ord=1, pend=[];
+  for(const t of tk){
+    if(t==="="){ ord=2; continue; }
+    if(t==="["||t==="]"){ pend.push(t); continue; }
+    let x0 = prev==null ? 0 : m.A[prev.R].x + Math.max(STEP + (((t&&t.grp)||(prevTok&&prevTok.grp))?0.2:0), reach(prevTok,1) + reach(t,0) + 0.75);
+    let closeX=null;
+    if(prev && pend.includes("]")){
+      const maxX=Math.max(...m.A.map(a=>a.x));
+      closeX=Math.max((m.A[prev.R].x+x0)/2, maxX+0.4);
+      x0=Math.max(x0, closeX+0.6);
+    }
+    const n0=m.A.length, p=piece(m,t,x0);
+    if(prev) m.bond(prev.R, p.L, ord);
+    if(pend.includes("[")){
+      const mn=Math.min(...m.A.slice(n0).map(a=>a.x));
+      const mid=prev ? (m.A[prev.R].x+x0)/2 : x0-0.6;
+      m.brk.push({t:"[", x:Math.min(mid, mn-0.4)});
+    }
+    if(closeX!=null) m.brk.push({t:"]", x:closeX});
+    pend=[]; ord=1; prev=p; prevTok=t;
+  }
+  if(pend.includes("]")) m.brk.push({t:"]", x:Math.max(...m.A.map(a=>a.x))+0.4});
+  return m;
+}
+
+const adist = (a,b)=>{ const d=Math.abs(a-b)%360; return Math.min(d,360-d); };
+function chooseAngles(fixed, n){
+  const C=[]; for(let a=0;a<360;a+=15) C.push(a);
+  let best=null, bs=-1, bt=-1;
+  const rec=(start, ch)=>{
+    if(ch.length===n){
+      const all=fixed.concat(ch); let mn=360;
+      for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++) mn=Math.min(mn, adist(all[i],all[j]));
+      const ax=ch.filter(a=>a%90===0).length;
+      if(mn>bs || (mn===bs && ax>bt)){ bs=mn; bt=ax; best=ch.slice(); }
+      return;
+    }
+    for(let k=start;k<C.length;k++){ ch.push(C[k]); rec(k+1,ch); ch.pop(); }
+  };
+  rec(0,[]);
+  return best;
+}
+
+function render(m,opt){
+  opt=opt||{};
+  const P = a=>[a.x*U, a.y*U];
+  const nb = m.A.map(()=>[]);
+  m.B.forEach(b=>{ nb[b.i].push(b); nb[b.j].push(b); });
+  const other = (b,i)=>m.A[b.i===i?b.j:b.i];
+  const out=[], bb={x0:Infinity, x1:-Infinity, y0:Infinity, y1:-Infinity};
+  const ext=(x,y,rx,ry)=>{ bb.x0=Math.min(bb.x0,x-rx); bb.x1=Math.max(bb.x1,x+rx); bb.y0=Math.min(bb.y0,y-ry); bb.y1=Math.max(bb.y1,y+ry); };
+  const hw = a=> (a.el==="Cl"||a.el==="Br") ? 8 : 5.5;
+  const er = (a,dx,dy)=>{ if(a.hide) return 0; const rx=hw(a)+3.5, ry=9.5; return 1/Math.sqrt((dx/rx)**2+(dy/ry)**2); };
+  const L = (x1,y1,x2,y2,c)=>{ out.push(`<line${c?` class="${c}"`:""} x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`); ext(x1,y1,0,0); ext(x2,y2,0,0); };
+
+  m.B.forEach(b=>{
+    const A=m.A[b.i], B=m.A[b.j]; let [x1,y1]=P(A), [x2,y2]=P(B);
+    const len=Math.hypot(x2-x1,y2-y1), dx=(x2-x1)/len, dy=(y2-y1)/len;
+    const s1=er(A,dx,dy), s2=er(B,dx,dy);
+    x1+=dx*s1; y1+=dy*s1; x2-=dx*s2; y2-=dy*s2;
+    const nx=-dy, ny=dx;
+    (b.o===2?[-2.8,2.8] : b.o===3?[-3.8,0,3.8] : [0]).forEach(o=>L(x1+nx*o, y1+ny*o, x2+nx*o, y2+ny*o));
+  });
+  m.inner.forEach(r=>{
+    const a=P(m.A[r.a]), b=P(m.A[r.b]), cx=r.cx*U, cy=r.cy*U, s=0.72, sh=0.8;
+    const ia=[cx+(a[0]-cx)*s, cy+(a[1]-cy)*s], ib=[cx+(b[0]-cx)*s, cy+(b[1]-cy)*s];
+    const mx=(ia[0]+ib[0])/2, my=(ia[1]+ib[1])/2;
+    L(mx+(ia[0]-mx)*sh, my+(ia[1]-my)*sh, mx+(ib[0]-mx)*sh, my+(ib[1]-my)*sh);
+  });
+  m.A.forEach((a,i)=>{
+    const [x,y]=P(a);
+    if(a.el==="~"){
+      const [ox,oy]=P(other(nb[i][0],i)), len=Math.hypot(x-ox,y-oy), dx=(x-ox)/len, dy=(y-oy)/len, nx=-dy, ny=dx;
+      let d=`M${f1(x-nx*8)} ${f1(y-ny*8)}`;
+      for(let k=1;k<=4;k++){ const t=-8+k*4, w=(k%2?1:-1)*3.2; d+=` Q${f1(x+nx*(t-2)+dx*w)} ${f1(y+ny*(t-2)+dy*w)} ${f1(x+nx*t)} ${f1(y+ny*t)}`; }
+      out.push(`<path class="wv" d="${d}"/>`); ext(x,y,5,9);
+      return;
+    }
+    if(a.hide){ ext(x,y,0,0); return; }
+    out.push(`<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central"${ELCLS[a.el]?` class="${ELCLS[a.el]}"`:""}>${esc(a.el)}</text>`);
+    ext(x,y,hw(a),9);
+    const ve=VE[a.el]; if(ve==null) return;
+    const bsum=nb[i].reduce((s,b)=>s+b.o,0);
+    const np=Math.max(0, Math.floor((ve-bsum-a.rad)/2)), n=np+a.rad;
+    if(!n) return;
+    const fixed=nb[i].map(b=>{ const o=other(b,i); return (Math.round(Math.atan2(o.y-a.y,o.x-a.x)*180/Math.PI)+360)%360; });
+    let ang=chooseAngles(fixed,n), radA=null;
+    if(a.rad){
+      let bi=0, bd=-1;
+      ang.forEach((t,k)=>{ const d=Math.min(360, ...fixed.map(f=>adist(f,t))); if(d>bd+0.1){ bd=d; bi=k; } });
+      radA=ang[bi]; ang=ang.filter((_,k)=>k!==bi);
+    }
+    const rx=hw(a)+5, ry=11.5, cls="lp"+(ELCLS[a.el]?" "+ELCLS[a.el]:"");
+    ang.forEach(t=>{
+      const c=Math.cos(t*Math.PI/180), s=Math.sin(t*Math.PI/180), px=x+rx*c, py=y+ry*s, h=4.6;
+      L(px-s*h, py+c*h, px+s*h, py-c*h, cls); ext(px,py,3,3);
+    });
+    if(radA!=null){
+      const c=Math.cos(radA*Math.PI/180), s=Math.sin(radA*Math.PI/180), px=x+(rx+1)*c, py=y+(ry+1)*s;
+      out.push(`<circle class="rd" cx="${f1(px)}" cy="${f1(py)}" r="2.7"/>`); ext(px,py,3,3);
+    }
+  });
+  m.par.forEach(p=>{
+    const x=p.x*U, h=1.34*U, w=0.6*U;
+    out.push(`<path class="br" d="M${f1(x-w+4)} ${f1(-h)} Q${f1(x-w-5)} 0 ${f1(x-w+4)} ${f1(h)}"/>`);
+    out.push(`<path class="br" d="M${f1(x+w-4)} ${f1(-h)} Q${f1(x+w+5)} 0 ${f1(x+w-4)} ${f1(h)}"/>`);
+    out.push(`<text class="ix" x="${f1(x+w+2)}" y="${f1(h-3)}" dominant-baseline="central">${esc(p.k)}</text>`);
+    ext(x,0,w+11,h);
+  });
+  if(m.brk.length){
+    const y0=bb.y0-4, y1=bb.y1+4;
+    m.brk.forEach(b=>{
+      const x=b.x*U;
+      if(b.t==="[") out.push(`<path class="br" d="M${f1(x+5)} ${f1(y0)} H${f1(x)} V${f1(y1)} H${f1(x+5)}"/>`);
+      else { out.push(`<path class="br" d="M${f1(x-5)} ${f1(y0)} H${f1(x)} V${f1(y1)} H${f1(x-5)}"/>`); out.push(`<text class="nn" x="${f1(x+4)}" y="${f1(y1+2)}" dominant-baseline="central">n</text>`); ext(x+13,y1+9,0,0); }
+      ext(x,y0,0,0); ext(x,y1,0,0);
+    });
+  }
+  if(opt.sym){ const e=Math.max(-bb.y0, bb.y1); bb.y0=-e; bb.y1=e; }
+  const P0=6, W=f1(bb.x1-bb.x0+2*P0), H=f1(bb.y1-bb.y0+2*P0), sc=opt.scale||1;
+  return `<svg class="mol" viewBox="${f1(bb.x0-P0)} ${f1(bb.y0-P0)} ${W} ${H}" width="${f1(W*sc)}" height="${f1(H*sc)}" role="img" aria-label="${esc(opt.label||"Strukturformel")}">${out.join("")}</svg>`;
+}
+function chainSVG(tokens, opt){ return render(chainMol(tokens), opt); }
+/* ============================================================
+   Reaktions-Engine: Stoffklassen, Benennung, Formeln, Reaktionen
+   Moleküle (unverzweigte Ketten):
+     alkan(n) · alken(n,p) · halo(n,p,X) · dihalo(n,p,X) · alkohol(n,p)
+     aldehyd(n) · keton(n,p) · saeure(n) · ester(a,b,q)
+     a = C-Atome des Säureteils, b = C-Atome des Alkoholteils, q = Position des O-Atoms im Alkoholteil
+   ============================================================ */
+const PRE = ["","Meth","Eth","Prop","But","Pent","Hex"];
+const lo = n => PRE[n].toLowerCase();
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+const XN = {Cl:"chlor", Br:"brom"};
+const CL = {alkan:"Alkan", alken:"Alken", halo:"Halogenalkan", dihalo:"Dihalogenalkan", alkohol:"Alkohol", aldehyd:"Aldehyd", keton:"Keton", saeure:"Carbonsäure", ester:"Ester"};
+const CLPL = {alkan:"Alkane", alken:"Alkene", halo:"Halogenalkane", dihalo:"Dihalogenalkane", alkohol:"Alkohole", aldehyd:"Aldehyde", keton:"Ketone", saeure:"Carbonsäuren", ester:"Ester"};
+const CLA = {alkan:"ein Alkan", alken:"ein Alken", halo:"ein Halogenalkan", dihalo:"ein Dihalogenalkan", alkohol:"ein Alkohol", aldehyd:"ein Aldehyd", keton:"ein Keton", saeure:"eine Carbonsäure", ester:"ein Ester"};
+
+const mk = {
+  alkan:   n       => ({t:"alkan", n}),
+  alken:   (n,p)   => ({t:"alken", n, p:Math.min(p, n-p)}),
+  halo:    (n,p,X) => ({t:"halo", n, p:Math.min(p, n+1-p), X}),
+  dihalo:  (n,p,X) => ({t:"dihalo", n, p:Math.min(p, n-p), X}),
+  alkohol: (n,p)   => ({t:"alkohol", n, p:Math.min(p, n+1-p)}),
+  aldehyd: n       => ({t:"aldehyd", n}),
+  keton:   (n,p)   => ({t:"keton", n, p:Math.min(p, n+1-p)}),
+  saeure:  n       => ({t:"saeure", n}),
+  ester:   (a,b,q) => ({t:"ester", a, b, q:Math.min(q, b+1-q)})
+};
+function key(m){ return m.t==="ester" ? `ester|${m.a}|${m.b}|${m.q}` : [m.t, m.n, m.p, m.X].filter(v=>v!=null).join("|"); }
+function fromKey(k){
+  const s=k.split("|"), t=s[0], v=s.slice(1).map(x=>isNaN(+x)?x:+x);
+  if(t==="ester") return mk.ester(v[0],v[1],v[2]);
+  if(t==="halo"||t==="dihalo") return mk[t](v[0],v[1],v[2]);
+  return mk[t](v[0],v[1]);
+}
+const same = (a,b) => key(a)===key(b);
+const range = (a,b) => { const r=[]; for(let i=a;i<=b;i++) r.push(i); return r; };
+const uniqM = arr => { const s=new Set(); return arr.filter(m=>{ const k=key(m); if(s.has(k)) return false; s.add(k); return true; }); };
+
+/* ---------- Namen ---------- */
+function alkylName(b,q){
+  if(q===1) return lo(b)+"yl";
+  const sh=Math.min(q-1,b-q), lg=Math.max(q-1,b-q);
+  return `1-${lo(sh)}yl${lo(lg+1)}yl`;
+}
+function name(m){
+  const n=m.n, p=m.p;
+  switch(m.t){
+    case "alkan":   return PRE[n]+"an";
+    case "alken":   return n<=3 ? PRE[n]+"en" : `${PRE[n]}-${p}-en`;
+    case "halo":    return n<=2 ? cap(XN[m.X])+lo(n)+"an" : `${p}-${cap(XN[m.X])}${lo(n)}an`;
+    case "dihalo":  return `${p},${p+1}-Di${XN[m.X]}${lo(n)}an`;
+    case "alkohol": return n<=2 ? PRE[n]+"anol" : `${PRE[n]}an-${p}-ol`;
+    case "aldehyd": return PRE[n]+"anal";
+    case "keton":   return n<=4 ? PRE[n]+"anon" : `${PRE[n]}an-${p}-on`;
+    case "saeure":  return PRE[n]+"ansäure";
+    case "ester": { const al=alkylName(m.b,m.q); return `${PRE[m.a]}ansäure${m.q===1?al:"-("+al+")"}ester`; }
+  }
+}
+function altName(m){
+  const T = {"aldehyd|1":"Formaldehyd", "aldehyd|2":"Acetaldehyd", "keton|3|2":"Aceton", "saeure|1":"Ameisensäure", "saeure|2":"Essigsäure"};
+  if(T[key(m)]) return T[key(m)];
+  if(m.t==="ester"){ const al=alkylName(m.b,m.q).replace(/[a-z]/, c=>c.toUpperCase()); return (m.q===1?al:"("+al+")")+lo(m.a)+"anoat"; }
+  return "";
+}
+
+/* ---------- Halbstrukturformel (Text, Ziffern werden später tiefgestellt) ---------- */
+const cs = (h, x) => "C"+(h ? "H"+(h>1?h:"") : "")+(x||"");
+function condensed(m){
+  const n=m.n, p=m.p;
+  const chain = (arr, bonds) => arr.map((c,i)=>i ? (bonds&&bonds[i-1]==="="?"=":"–")+c : c).join("");
+  switch(m.t){
+    case "alkan": return n===1 ? "CH4" : chain(range(1,n).map(i=>cs(i===1||i===n?3:2)));
+    case "alken": {
+      const a=range(1,n).map(i=>{ let h=(i===1||i===n)?3:2; if(i===p||i===p+1) h--; return cs(h); });
+      const b=range(1,n-1).map(i=>i===p?"=":"–");
+      return chain(a,b);
+    }
+    case "halo": case "alkohol": {
+      const g = m.t==="halo" ? m.X : "OH";
+      if(n===1) return "CH3–"+g;
+      if(p===1){ const a=range(1,n).map(i=>cs(i===1?3:2)); return chain(a)+"–"+g; }
+      const a=range(1,n).map(i=>{ const h=(i===1||i===n)?3:2; return i===p ? cs(h-1, m.t==="halo"?g:"(OH)") : cs(h); });
+      return chain(a);
+    }
+    case "dihalo": {
+      const a=range(1,n).map(i=>{ let h=(i===1||i===n)?3:2; if(i===p||i===p+1) return cs(h-1, m.X); return cs(h); });
+      return chain(a.reverse());
+    }
+    case "aldehyd": return n===1 ? "HCHO" : chain(range(2,n).reverse().map(i=>cs(i===n?3:2)))+"–CHO";
+    case "keton": {
+      const a=range(1,n).map(i=>i===p ? "CO" : cs(i===1||i===n?3:2));
+      return chain(a);
+    }
+    case "saeure": return n===1 ? "HCOOH" : chain(range(2,m.n).reverse().map(i=>cs(i===m.n?3:2)))+"–COOH";
+    case "ester": {
+      const acid = m.a===1 ? "HCOO" : chain(range(2,m.a).reverse().map(i=>cs(i===m.a?3:2)))+"–COO";
+      let alk;
+      if(m.q===1) alk = m.b===1 ? "CH3" : chain(range(1,m.b).map(i=>cs(i===m.b?3:2)));
+      else {
+        const sh=Math.min(m.q-1,m.b-m.q), lg=Math.max(m.q-1,m.b-m.q);
+        const br = sh===1 ? "CH3" : "C2H5";
+        if(sh===lg) alk = `CH(${br})2`;
+        else alk = chain([`CH(${br})`].concat(range(1,lg).map(i=>cs(i===lg?3:2))));
+      }
+      return acid+"–"+alk;
+    }
+  }
+}
+
+/* ---------- Valenzstrichformel als Ketten-Tokens ----------
+   chainTok(n, {dbl, sub:{i:[...]}, right, leftOpen})
+   Atome werden von links (1) nach rechts (n) gezeichnet.
+   right: undefined → H am rechten Ende, Array → diese Tokens (leer = Bindung geht weiter)
+*/
+const SUBV = {"=O":2};
+function chainTok(n, o){
+  o=o||{};
+  const sub=o.sub||{}, out=[];
+  const ord = i => (o.dbl===i ? 2 : 1); // Bindung zwischen i und i+1
+  for(let i=1;i<=n;i++){
+    const subs=(sub[i]||[]).slice();
+    let used = (i>1?ord(i-1):0) + (i<n?ord(i):0) + subs.reduce((s,k)=>s+(SUBV[k]||1),0);
+    let leftH=false, rightEnd=null;
+    if(i===1){ if(o.leftOpen) used++; else { leftH=true; used++; } }
+    if(i===n){ used++; rightEnd = o.right===undefined ? ["H"] : o.right; }
+    let free = 4-used;
+    if(free<0 || free+subs.length>2) throw new Error("Valenzfehler bei C"+i);
+    const atom={l:"C"};
+    const up=subs.filter(k=>k==="=O"), dn=subs.filter(k=>k!=="=O");
+    if(up.length) atom.up=up[0];
+    if(dn.length) atom.down=dn[0];
+    if(dn.length>1) atom.up=dn[1];
+    if(!atom.up && free>0){ atom.up="H"; free--; }
+    if(!atom.down && free>0){ atom.down="H"; free--; }
+    if(free) throw new Error("Valenzfehler (frei) bei C"+i);
+    if(leftH) out.push("H");
+    out.push(atom);
+    if(i<n && ord(i)===2) out.push("=");
+    if(rightEnd) out.push(...rightEnd);
+  }
+  return out;
+}
+function tokens(m){
+  const n=m.n, p=m.p, r = i => n+1-i;   // gespiegelt: C1 rechts
+  switch(m.t){
+    case "alkan": return chainTok(n);
+    case "alken": return chainTok(n, {dbl:p});
+    case "halo": case "alkohol": {
+      const g = m.t==="halo" ? m.X : "OH", end = m.t==="halo" ? [m.X] : [{l:"O"},{l:"H"}];
+      if(p===1) return chainTok(n, {right:end});
+      return chainTok(n, {sub:{[r(p)]:[g]}});
+    }
+    case "dihalo": {
+      if(p===1) return chainTok(n, {right:[m.X], sub:{[n-1]:[m.X]}});
+      return chainTok(n, {sub:{[r(p)]:[m.X], [r(p+1)]:[m.X]}});
+    }
+    case "aldehyd": return chainTok(n, {sub:{[n]:["=O"]}});
+    case "keton":   return chainTok(n, {sub:{[r(p)]:["=O"]}});
+    case "saeure":  return chainTok(n, {sub:{[n]:["=O"]}, right:[{l:"O"},{l:"H"}]});
+    case "ester": {
+      const acid = chainTok(m.a, {sub:{[m.a]:["=O"]}, right:[]});
+      const sh=Math.min(m.q-1,m.b-m.q), lg=Math.max(m.q-1,m.b-m.q);
+      const alc = chainTok(lg+1, {leftOpen:true, sub: sh ? {1:[sh===1?"CH3":"C2H5"]} : {}});
+      return acid.concat([{l:"O"}], alc);
+    }
+  }
+}
+
+/* ---------- Stoffsammlung ---------- */
+const RG = [
+  {id:"cl2",   g:"hal",   f:"Cl₂",            n:"Chlor",                 c:"Licht (UV)"},
+  {id:"br2",   g:"hal",   f:"Br₂",            n:"Brom",                  c:"Licht (UV)"},
+  {id:"hcl",   g:"hal",   f:"HCl",            n:"Chlorwasserstoff",      c:""},
+  {id:"hbr",   g:"hal",   f:"HBr",            n:"Bromwasserstoff",       c:""},
+  {id:"h2o",   g:"aq",    f:"H₂O / H⁺",       n:"Wasser",                c:"Säure als Katalysator"},
+  {id:"naoh",  g:"aq",    f:"NaOH (aq)",      n:"Natronlauge",           c:"wässrige Lösung"},
+  {id:"koh",   g:"aq",    f:"KOH / Ethanol",  n:"Kaliumhydroxid",        c:"in Ethanol, Hitze"},
+  {id:"h2so4", g:"aq",    f:"H₂SO₄ (konz.)",  n:"konz. Schwefelsäure",   c:"ca. 170 °C"},
+  {id:"cuo",   g:"redox", f:"CuO",            n:"Kupfer(II)-oxid",       c:"erhitzt"},
+  {id:"kmno4", g:"redox", f:"KMnO₄ / H⁺",     n:"Kaliumpermanganat",     c:"angesäuert, im Überschuss"},
+  {id:"h2",    g:"redox", f:"H₂ / Pt",        n:"Wasserstoff",           c:"Platin-Katalysator"},
+  {id:"meoh",  g:"est",   f:"CH₃OH",          n:"Methanol",              c:"+ konz. H₂SO₄"},
+  {id:"etoh",  g:"est",   f:"C₂H₅OH",         n:"Ethanol",               c:"+ konz. H₂SO₄"},
+  {id:"hcooh", g:"est",   f:"HCOOH",          n:"Methansäure",           c:"+ konz. H₂SO₄"},
+  {id:"acoh",  g:"est",   f:"CH₃COOH",        n:"Ethansäure",            c:"+ konz. H₂SO₄"}
+];
+const RGG = {hal:"Halogene & Halogenwasserstoffe", aq:"Wasser, Säuren & Basen", redox:"Oxidations- & Reduktionsmittel", est:"Partner für die Veresterung"};
+const rg = id => RG.find(r=>r.id===id);
+
+/* ---------- Reaktionstypen ---------- */
+const RT = {
+  radSub: {n:"Radikalische Substitution", s:"S<sub>R</sub>"},
+  nuSub:  {n:"Nukleophile Substitution",  s:"S<sub>N</sub>"},
+  elAdd:  {n:"Elektrophile Addition",     s:"A<sub>E</sub>"},
+  elim:   {n:"Eliminierung",              s:"E"},
+  ox:     {n:"Oxidation",                 s:"Ox"},
+  red:    {n:"Reduktion (Hydrierung)",    s:"Red"},
+  kond:   {n:"Kondensation (Veresterung)",s:"K"},
+  hyd:    {n:"Hydrolyse",                 s:"H"}
+};
+
+/* Markownikow: Positionen des Halogen-/OH-Atoms bei Addition an alken(n,p) */
+function markov(n,p){
+  const hC = c => (c===1||c===n) ? 2 : 1;   // H-Atome am C der Doppelbindung
+  const a=hC(p), b=hC(p+1);
+  if(a<b) return [p];
+  if(b<a) return [p+1];
+  return [p, p+1];
+}
+/* Eliminierung: Doppelbindungen, die von Position c ausgehend möglich sind (Saytzeff: innenliegende bevorzugt) */
+function elimProds(n,c){
+  const ps=[]; if(c>=2) ps.push(mk.alken(n,c-1)); if(c<=n-1) ps.push(mk.alken(n,c));
+  const u=uniqM(ps);
+  const anyInner = u.some(m=>m.p>=2);
+  return u.map(m=>({m, main: u.length>1 ? (anyInner ? m.p>=2 : true) : true})).sort((a,b)=>b.main-a.main);
+}
+
+/* react(m, rid) → {ok:true, type, prods:[{m, main, tag}], by, info} | {ok:false, why, np} */
+function react(m, rid){
+  const R = (type, prods, by, info) => ({ok:true, type, prods:prods.map(x=>x.m?x:{m:x, main:true}), by:by||"", info:info||""});
+  const N = (why, np) => ({ok:false, why, np:!!np});
+  const r = rg(rid), nm = name(m), n=m.n;
+  const gen = () => N(`${r.n} reagiert nicht mit ${nm}.`);
+  const X = rid==="cl2"||rid==="hcl" ? "Cl" : "Br";
+  switch(m.t){
+    case "alkan":
+      if(rid==="cl2"||rid==="br2"){
+        const ps=uniqM(range(1,n).map(p=>mk.halo(n,p,X)));
+        return R("radSub", ps, "H"+X, ps.length>1 ? "Die Substitution kann an verschiedenen C-Atomen stattfinden. Es entsteht ein Gemisch isomerer Halogenalkane, das destillativ getrennt wird." : "");
+      }
+      return N(`Alkane sind reaktionsträge – ${r.n} reagiert nicht mit ${nm}.`);
+    case "alken": {
+      const p=m.p;
+      if(rid==="cl2"||rid==="br2") return R("elAdd", [mk.dihalo(n,p,X)], "", "Die Halogenatome lagern sich an die beiden C-Atome der Doppelbindung an. Licht ist dafür nicht nötig.");
+      if(rid==="hcl"||rid==="hbr"||rid==="h2o"){
+        const pos=markov(n,p), ps=uniqM(pos.map(c=>rid==="h2o" ? mk.alkohol(n,c) : mk.halo(n,c,X)));
+        let info="";
+        if(ps.length>1) info="Beide C-Atome der Doppelbindung tragen gleich viele H-Atome. Es entstehen zwei Isomere etwa zu gleichen Teilen.";
+        else if(pos.length===1 && n>=3) info="Regel von Markownikow: Das H-Atom lagert sich an das C-Atom der Doppelbindung an, das bereits mehr H-Atome trägt.";
+        return R("elAdd", ps, "", info);
+      }
+      if(rid==="h2") return R("red", [mk.alkan(n)], "", "Wasserstoff wird am Katalysator an die Doppelbindung angelagert. Dabei sinkt die Oxidationszahl der C-Atome.");
+      if(rid==="kmno4") return N("Permanganat oxidiert die Doppelbindung zu einem Diol bzw. spaltet das Molekül (Baeyer-Probe). Dieser Weg wird in der Übung nicht weiter verfolgt.", true);
+      if(rid==="naoh"||rid==="koh") return N(`Hydroxid-Ionen greifen die elektronenreiche Doppelbindung nicht an – ${r.n} reagiert nicht mit ${nm}.`);
+      return gen();
+    }
+    case "halo": {
+      const p=m.p;
+      if(rid==="naoh") return R("nuSub", [mk.alkohol(n,p)], "Na"+m.X, "Das Hydroxid-Ion (Nukleophil) ersetzt das Halogenatom, das als Halogenid-Ion austritt.");
+      if(rid==="koh"){
+        if(n<2) return N("Aus Halogenmethan kann kein Alken entstehen – es fehlt ein zweites C-Atom für die Doppelbindung.");
+        const ps=elimProds(n,p);
+        return R("elim", ps, "K"+m.X+" + H₂O", ps.length>1 ? "Die Doppelbindung kann auf zwei Seiten entstehen. Nach der Regel von Saytzeff bildet sich bevorzugt das höher substituierte Alken (innenliegende Doppelbindung)." : "Ein H-Atom und das Halogenatom werden von benachbarten C-Atomen abgespalten, es entsteht eine C=C-Doppelbindung.");
+      }
+      if(rid==="h2o") return N("Mit Wasser allein läuft die Substitution nur sehr langsam ab. Ein stärkeres Nukleophil ist nötig.");
+      return gen();
+    }
+    case "dihalo":
+      return N("Mit dem Dihalogenalkan sind in dieser Übung keine weiteren Schritte vorgesehen. Gehe einen Schritt zurück.");
+    case "alkohol": {
+      const p=m.p, prim = p===1;
+      if(rid==="hcl"||rid==="hbr") return R("nuSub", [mk.halo(n,p,X)], "H₂O", "Die OH-Gruppe wird protoniert und als Wasser abgespalten. Das Halogenid-Ion (Nukleophil) bindet an das C-Atom.");
+      if(rid==="h2so4"){
+        if(n<2) return N("Methanol kann kein Alken bilden – es hat nur ein C-Atom.");
+        const ps=elimProds(n,p);
+        return R("elim", ps, "H₂O", ps.length>1 ? "Wasser wird abgespalten (Dehydratisierung). Nach der Regel von Saytzeff bildet sich bevorzugt das höher substituierte Alken (innenliegende Doppelbindung)." : "Die konzentrierte Schwefelsäure spaltet Wasser ab (Dehydratisierung), es entsteht eine C=C-Doppelbindung.");
+      }
+      if(rid==="cuo") return prim ? R("ox", [mk.aldehyd(n)], "Cu + H₂O", "Primäre Alkohole werden zum Aldehyd oxidiert, Cu²⁺ wird zu Kupfer reduziert.")
+                                  : R("ox", [mk.keton(n,p)], "Cu + H₂O", "Sekundäre Alkohole werden zum Keton oxidiert, Cu²⁺ wird zu Kupfer reduziert.");
+      if(rid==="kmno4") return prim ? R("ox", [mk.saeure(n)], "Mn²⁺ + H₂O", "Mit einem starken Oxidationsmittel im Überschuss wird der primäre Alkohol über den Aldehyd bis zur Carbonsäure oxidiert.")
+                                    : R("ox", [mk.keton(n,p)], "Mn²⁺ + H₂O", "Sekundäre Alkohole werden zum Keton oxidiert. Ketone werden nicht weiter oxidiert.");
+      if(rid==="hcooh"||rid==="acoh") return R("kond", [mk.ester(rid==="hcooh"?1:2, n, p)], "H₂O", "Alkohol und Carbonsäure verbinden sich unter Abspaltung von Wasser zum Ester. Konzentrierte Schwefelsäure wirkt als Katalysator und bindet das Wasser.");
+      if(rid==="meoh"||rid==="etoh") return N("Zwei Alkohole bilden keinen Ester. Für eine Veresterung braucht ein Alkohol eine Carbonsäure als Partner.");
+      return gen();
+    }
+    case "aldehyd":
+      if(rid==="kmno4") return R("ox", [mk.saeure(n)], "Mn²⁺ + H₂O", "Die Aldehydgruppe wird zur Carboxygruppe oxidiert.");
+      if(rid==="h2")    return R("red", [mk.alkohol(n,1)], "", "Wasserstoff wird an die C=O-Doppelbindung angelagert, es entsteht ein primärer Alkohol.");
+      if(rid==="cuo")   return N("Kupfer(II)-oxid wird in dieser Übung als mildes Oxidationsmittel nur für Alkohole eingesetzt. Für die Oxidation des Aldehyds ist ein anderes Reagenz nötig.");
+      if(rid==="meoh"||rid==="etoh") return N("Aldehyde bilden mit Alkoholen keine Ester – dafür ist eine Carbonsäure nötig.");
+      return gen();
+    case "keton":
+      if(rid==="h2") return R("red", [mk.alkohol(n,m.p)], "", "Wasserstoff wird an die C=O-Doppelbindung angelagert, es entsteht ein sekundärer Alkohol.");
+      if(rid==="cuo"||rid==="kmno4") return N("Ketone lassen sich nicht weiter oxidieren, ohne dass das Kohlenstoffgerüst zerbricht.");
+      return gen();
+    case "saeure":
+      if(rid==="meoh"||rid==="etoh") return R("kond", [mk.ester(n, rid==="meoh"?1:2, 1)], "H₂O", "Carbonsäure und Alkohol verbinden sich unter Abspaltung von Wasser zum Ester. Konzentrierte Schwefelsäure wirkt als Katalysator und bindet das Wasser.");
+      if(rid==="naoh"||rid==="koh") return N("Es findet eine Neutralisation statt, es entsteht ein Salz der Carbonsäure. Für die Synthese führt das nicht weiter.", true);
+      if(rid==="hcooh"||rid==="acoh") return N("Für einen Ester braucht die Carbonsäure einen Alkohol als Partner, keine zweite Carbonsäure.");
+      if(rid==="h2") return N("Die Carboxygruppe wird von H₂/Pt unter diesen Bedingungen nicht reduziert.");
+      if(rid==="kmno4"||rid==="cuo") return N("Die Carboxygruppe lässt sich nicht weiter oxidieren, ohne das Kohlenstoffgerüst zu zerstören.");
+      return gen();
+    case "ester": {
+      const ac=mk.saeure(m.a), al=mk.alkohol(m.b,m.q);
+      if(rid==="h2o")  return R("hyd", [{m:al, main:true}, {m:ac, main:true}], "", "Der Ester wird durch Wasser in Alkohol und Carbonsäure gespalten. Die Säure katalysiert die Rückreaktion der Veresterung, es stellt sich ein Gleichgewicht ein.");
+      if(rid==="naoh") return R("hyd", [{m:al, main:true}, {m:ac, main:true, tag:"nach dem Ansäuern"}], "", "Alkalische Esterhydrolyse (Verseifung): Hydroxid-Ionen spalten den Ester vollständig in den Alkohol und das Salz der Carbonsäure. Durch Ansäuern wird die Carbonsäure freigesetzt.");
+      return gen();
+    }
+  }
+  return gen();
+}
+
+/* ---------- Graph-Suche ---------- */
+function neighbors(m){
+  const out=[];
+  RG.forEach(r=>{ const res=react(m,r.id); if(res.ok) res.prods.forEach(p=>out.push({rid:r.id, type:res.type, to:p.m})); });
+  return out;
+}
+function bfs(start, maxD, stopKey){
+  const sk=key(start), dist={[sk]:0}, prev={}, q=[start];
+  while(q.length){
+    const m=q.shift(), d=dist[key(m)];
+    if(stopKey && key(m)===stopKey) break;
+    if(d>=maxD) continue;
+    for(const e of neighbors(m)){
+      const k=key(e.to); if(k in dist) continue;
+      dist[k]=d+1; prev[k]={from:m, rid:e.rid, type:e.type, to:e.to}; q.push(e.to);
+    }
+  }
+  return {dist, prev};
+}
+function shortestPath(from, to, maxD){
+  const tk=key(to), {dist, prev}=bfs(from, maxD||8, tk);
+  if(!(tk in dist)) return null;
+  const path=[]; let k=tk;
+  while(k!==key(from)){ const e=prev[k]; path.unshift(e); k=key(e.from); }
+  return path;
+}
+
+/* ---------- Aufgaben ---------- */
+const LEVELS = {e:{n:"Einstieg", d:[1,2]}, s:{n:"Standard", d:[2,3]}, a:{n:"Anspruchsvoll", d:[3,5]}};
+const skel = m => m.t==="ester" ? [m.a, m.b] : [m.n];
+function relatedSkeleton(s, t){
+  const S=skel(s);
+  if(t.t==="ester") return S.includes(t.a) || S.includes(t.b);
+  return S.includes(t.n);
+}
+function allStarts(maxN){
+  const L=[];
+  for(let n=1;n<=maxN;n++){
+    L.push(mk.alkan(n));
+    for(let p=1;p<=Math.floor(n/2);p++) L.push(mk.alken(n,p));
+    for(let p=1;p<=Math.ceil(n/2);p++){ L.push(mk.alkohol(n,p)); L.push(mk.halo(n,p,"Cl")); L.push(mk.halo(n,p,"Br")); }
+    L.push(mk.aldehyd(n));
+    for(let p=2;p<=Math.ceil(n/2);p++) L.push(mk.keton(n,p));
+    L.push(mk.saeure(n));
+  }
+  return uniqM(L);
+}
+const START_W = {alkan:1.4, alken:1.4, alkohol:1.3, halo:0.8, aldehyd:0.8, keton:0.6, saeure:0.5, ester:0.6};
+const TARGET_W = {alkan:0.5, alken:0.9, halo:0.8, dihalo:0.35, alkohol:1, aldehyd:1.2, keton:1.2, saeure:1.2, ester:1.3};
+function wpick(arr, w){
+  const s=arr.reduce((a,x)=>a+w(x),0); let r=Math.random()*s;
+  for(const x of arr){ r-=w(x); if(r<=0) return x; }
+  return arr[arr.length-1];
+}
+function genTask(level, avoidKey){
+  const [d0,d1]=LEVELS[level].d;
+  const starts = allStarts(level==="e"?4:5).concat([mk.ester(2,2,1), mk.ester(1,2,1), mk.ester(2,3,1)]);
+  for(let tries=0; tries<300; tries++){
+    const s=wpick(starts, m=>START_W[m.t]||1);
+    const {dist}=bfs(s, d1);
+    const cands=Object.keys(dist).filter(k=>dist[k]>=d0 && dist[k]<=d1).map(fromKey)
+      .filter(t=>relatedSkeleton(s,t)).filter(t=>!(t.t==="dihalo" && dist[key(t)]>2));
+    if(!cands.length) continue;
+    const ds=[...new Set(cands.map(t=>dist[key(t)]))];
+    const d=ds[Math.floor(Math.random()*ds.length)];
+    const t=wpick(cands.filter(c=>dist[key(c)]===d), m=>TARGET_W[m.t]||1);
+    const lab=key(s)+">"+key(t);
+    if(lab===avoidKey) continue;
+    const path=shortestPath(s,t,d);
+    if(!path) continue;
+    if(s.t!=="ester" && path.some(e=>e.type==="hyd")) continue;   // keine Umwege über Ester aus der Sammlung
+    if(s.t==="ester" && path.some(e=>e.type==="kond")) continue;
+    return {start:s, target:t, minD:d};
+  }
+  return {start:mk.alken(2,1), target:mk.saeure(2), minD:2};
+}
+const CLASSICS = [
+  [mk.alken(3,1), mk.dihalo(3,1,"Br")],
+  [mk.alkohol(2,1), mk.halo(2,1,"Cl")],
+  [mk.alkan(2), mk.alkohol(2,1)],
+  [mk.alken(2,1), mk.aldehyd(2)],
+  [mk.alken(2,1), mk.saeure(2)],
+  [mk.alken(2,1), mk.ester(2,2,1)],
+  [mk.halo(3,1,"Br"), mk.alkohol(3,2)],
+  [mk.alkohol(3,1), mk.alkohol(3,2)],
+  [mk.aldehyd(3), mk.alken(3,1)],
+  [mk.alken(4,1), mk.keton(4,2)],
+  [mk.ester(2,2,1), mk.aldehyd(2)],
+  [mk.alkan(3), mk.keton(3,2)],
+  [mk.alkan(1), mk.ester(1,1,1)],
+  [mk.alkan(2), mk.ester(2,2,1)],
+  [mk.alkohol(5,1), mk.keton(5,2)],
+  [mk.alkan(4), mk.keton(4,2)]
+];
+/* ============================================================
+   Erklärungen und Rückmeldungen
+   ============================================================ */
+const TYPE_EX = {
+  radSub: "<strong>Radikalische Substitution (S<sub>R</sub>):</strong> Licht spaltet das Halogenmolekül homolytisch in zwei Radikale (Kettenstart). Ein Halogenradikal entreißt dem Alkan ein H-Atom, das entstandene Alkylradikal reagiert mit einem weiteren Halogenmolekül (Kettenfortpflanzung). Insgesamt wird ein H-Atom durch ein Halogenatom ersetzt, Nebenprodukt ist der Halogenwasserstoff.",
+  elAdd:  "<strong>Elektrophile Addition (A<sub>E</sub>):</strong> Ein elektrophiles Teilchen (H⁺ bzw. das polarisierte Halogenmolekül) greift die elektronenreiche C=C-Doppelbindung an. Über ein Carbokation bzw. Halonium-Ion lagert sich anschließend das Nukleophil an, die Doppelbindung wird zur Einfachbindung. Bei unsymmetrischen Alkenen gilt die Regel von Markownikow: Das H-Atom geht an das C-Atom, das bereits mehr H-Atome trägt.",
+  nuSub:  "<strong>Nukleophile Substitution (S<sub>N</sub>):</strong> Ein Nukleophil (OH⁻, Cl⁻, Br⁻) greift das positiv polarisierte C-Atom an. Die Abgangsgruppe – ein Halogenid-Ion bzw. Wasser nach Protonierung der OH-Gruppe – verlässt das Molekül.",
+  elim:   "<strong>Eliminierung (E):</strong> Von zwei benachbarten C-Atomen werden ein H-Atom und die funktionelle Gruppe als kleines Molekül (HX bzw. H₂O) abgespalten, es entsteht eine C=C-Doppelbindung. Gibt es mehrere Möglichkeiten, entsteht nach Saytzeff bevorzugt das höher substituierte Alken.",
+  ox:     "<strong>Oxidation:</strong> Die Oxidationszahl des C-Atoms mit der funktionellen Gruppe steigt, z. B. primärer Alkohol (–I) → Aldehyd (+I) → Carbonsäure (+III) oder sekundärer Alkohol (0) → Keton (+II). Das Oxidationsmittel wird dabei reduziert. Ketone lassen sich nicht weiter oxidieren, ohne dass das Kohlenstoffgerüst zerbricht.",
+  red:    "<strong>Reduktion (Hydrierung):</strong> Wasserstoff wird am Platin-Katalysator an eine C=C- oder C=O-Doppelbindung angelagert, die Oxidationszahl der beteiligten C-Atome sinkt. Formal ist die Hydrierung eine Addition, sie verläuft aber nicht elektrophil.",
+  kond:   "<strong>Kondensation (Veresterung):</strong> Carbonsäure und Alkohol verbinden sich unter Abspaltung von Wasser zum Ester. Die Reaktion ist eine Gleichgewichtsreaktion, konzentrierte Schwefelsäure dient als Katalysator und bindet das entstehende Wasser.",
+  hyd:    "<strong>Hydrolyse:</strong> Der Ester wird durch Wasser in Carbonsäure und Alkohol gespalten. Säurekatalysiert stellt sich ein Gleichgewicht ein, alkalisch (Verseifung) verläuft die Spaltung vollständig zum Salz der Carbonsäure."
+};
+const WHY_PAIR = {
+  "radSub|nuSub": "Licht spaltet das Halogenmolekül in Radikale – die angreifenden Teilchen sind keine Nukleophile.",
+  "radSub|elAdd": "Alkane haben keine Doppelbindung, an die etwas angelagert werden könnte. Hier wird ein H-Atom ersetzt.",
+  "elAdd|radSub": "Die C=C-Doppelbindung wird aufgelöst und die Teilchen lagern sich an – es wird nichts ersetzt.",
+  "elAdd|nuSub":  "Die C=C-Doppelbindung wird aufgelöst und die Teilchen lagern sich an – es wird nichts ersetzt.",
+  "elAdd|red":    "Hier wird kein Wasserstoff am Katalysator angelagert, sondern ein polares Molekül, das die Doppelbindung elektrophil angreift.",
+  "red|elAdd":    "Es ist zwar eine Addition, aber keine elektrophile: H₂ wird am Platin-Katalysator angelagert. Diese Hydrierung ist eine Reduktion.",
+  "nuSub|elim":   "Im Produkt entsteht keine Doppelbindung – die funktionelle Gruppe wird gegen eine andere ausgetauscht.",
+  "elim|nuSub":   "Unter diesen Bedingungen wird ein kleines Molekül abgespalten und es entsteht eine C=C-Doppelbindung – es wird nichts ausgetauscht.",
+  "ox|elim":      "Es werden zwar zwei H-Atome entfernt, sie werden aber vom Oxidationsmittel aufgenommen. Es entsteht keine C=C-Doppelbindung, sondern die Oxidationszahl des C-Atoms steigt.",
+  "hyd|nuSub":    "Der Ester wird durch Wasser bzw. Hydroxid-Ionen in zwei Moleküle gespalten – das ist die Umkehrung der Veresterung.",
+  "kond|nuSub":   "Zwei Moleküle verbinden sich unter Abspaltung von Wasser – das ist eine Kondensation."
+};
+const WHY_TYPE = {
+  radSub: "Unter Lichteinwirkung entstehen Radikale; am Alkan wird ein H-Atom ersetzt.",
+  nuSub:  "Ein Atom bzw. eine Atomgruppe wird durch ein Nukleophil (z. B. OH⁻, Cl⁻, Br⁻) ersetzt.",
+  elAdd:  "An die C=C-Doppelbindung wird ein Molekül angelagert, die Doppelbindung wird zur Einfachbindung.",
+  elim:   "Ein kleines Molekül (HX bzw. H₂O) wird abgespalten, es entsteht eine Doppelbindung.",
+  ox:     "Das Reagenz ist ein Oxidationsmittel. Überlege, wie sich die Oxidationszahl des C-Atoms mit der funktionellen Gruppe ändert.",
+  red:    "Wasserstoff wird am Katalysator an eine Doppelbindung angelagert – die Oxidationszahl der C-Atome sinkt.",
+  kond:   "Zwei Moleküle verbinden sich unter Abspaltung von Wasser.",
+  hyd:    "Das Molekül wird durch Reaktion mit Wasser bzw. Hydroxid-Ionen gespalten."
+};
+
+/* ============================================================
+   Zustand
+   ============================================================ */
+const opts = {mode:"goal", level:"s", predict:false, showMin:true, disp:"lewis"};
+const stats = {solved:0, clean:0, streak:0, shown:0};
+const history = [];
+let T = null, taskNo = 0, lastLabel = "";
+
+const cur = () => T.steps.length ? T.steps[T.steps.length-1].to : T.start;
+const isGoal = () => opts.mode==="goal";
+
+function molHTML(m, sc){
+  if(opts.disp==="cond") return `<span class="cf">${fm(condensed(m))}</span>`;
+  return chainSVG(tokens(m), {scale:sc||1, label:name(m)});
+}
+function nameHTML(m, tag){
+  const a=altName(m);
+  return `<span class="nm">${esc(name(m))}${a?`<span class="alt">${esc(a)}</span>`:""}</span>${tag?`<span class="tag">${esc(tag)}</span>`:""}`;
+}
+const molBox = (m, sc) => `<div class="mol-box">${molHTML(m, sc)}<div class="cap">${esc(name(m))}</div></div>`;
+const rgHTML = r => esc(r.f);
+
+/* ============================================================
+   Aufgabe laden
+   ============================================================ */
+function loadTask(start, target, minD){
+  if(T && isGoalTask(T) && !T.done && (T.steps.length || T.errors || T.hints))
+    history.push({no:taskNo, title:T.title, steps:T.steps.length, minD:T.minD, errors:T.errors, st:"open"});
+  T = {start, target, minD, steps:[], errors:0, hints:0, hintIdx:0, done:false, shown:false,
+       sel:{rid:null, type:null, prod:null}, marks:{}, pending:null, cards:null, cardsKey:"",
+       goal: !!target, level: opts.level,
+       title: target ? `${name(start)} → ${name(target)}` : `Freies Experimentieren mit ${name(start)}`};
+  taskNo += target ? 1 : 0;
+  lastLabel = target ? key(start)+">"+key(target) : "";
+  $("feedback").innerHTML = "";
+  renderAll();
+  renderExplain();
+  renderHistory();
+}
+const isGoalTask = t => t && t.goal;
+
+function newTask(){
+  if(!isGoal()){ startFree(); return; }
+  const g = genTask(opts.level, lastLabel);
+  loadTask(g.start, g.target, g.minD);
+}
+function startFree(){
+  const k = $("startSelect").value;
+  loadTask(fromKey(k), null, 0);
+}
+
+/* ============================================================
+   Darstellung
+   ============================================================ */
+function renderAll(){
+  renderHead(); renderPath(); renderPanel(); renderChoice(); renderStats();
+}
+
+function renderHead(){
+  const g = T.goal;
+  $("taskNum").textContent = g ? "Aufgabe "+taskNo : "Freies Experimentieren";
+  $("taskChip").hidden = !g;
+  if(g) $("taskChip").textContent = T.level ? LEVELS[T.level].n : "Klassische Synthese";
+  $("minChip").hidden = !(g && opts.showMin);
+  $("minChip").textContent = `kürzester Weg: ${T.minD} ${T.minD===1?"Schritt":"Schritte"}`;
+  $("ctx").innerHTML = g
+    ? `<p>Stelle aus dem <b>Edukt</b> den <b>Zielstoff</b> her. Wähle für jeden Schritt einen Stoff aus der Sammlung und bestimme den Reaktionstyp.</p>`
+    : `<p>Wähle einen Stoff aus der Sammlung und führe die Reaktion durch. Probiere aus, welche Reaktionen mit dem aktuellen Stoff ablaufen – der Reaktionstyp wird jeweils angegeben.</p>`;
+  const box = (lab, m, cls) => `<div class="pair${cls?" "+cls:""}"><span class="lab">${lab}</span><div class="mol-wrap">${molHTML(m, .9)}</div>${nameHTML(m)}</div>`;
+  $("pairRow").innerHTML = g
+    ? box("Edukt", T.start) + `<span class="pair-arrow">⟶</span>` + box("Zielstoff", T.target, "goal")
+    : box("Startstoff", T.start);
+  const bn=$("btnNew"); bn.textContent = g ? "Neue Aufgabe" : "Neu starten";
+  $("btnSolve").hidden = !g;
+  if(!g) setStatus("", "Freies Experimentieren");
+  else if(T.done) setStatus(T.shown?"shown":"done", T.shown?"Lösung angezeigt":"gelöst");
+  else setStatus("running","Aufgabe offen");
+}
+
+function renderPath(){
+  const n=T.steps.length, reached = T.goal && same(cur(), T.target);
+  const node = (m, i) => {
+    const last = i===n, cls = last ? (reached ? " goal" : " cur") : "";
+    const lab = i===0 ? (T.goal ? "Edukt" : "Startstoff") : `Zwischenprodukt ${i}`;
+    const badge = last ? `<span class="badge">${reached ? "Zielstoff erreicht" : "aktueller Stoff"}</span>` : "";
+    return `<div class="pnode${cls}"><div class="txt"><span class="cls">${last && reached && i>0 ? "Produkt" : lab} · ${CL[m.t]}</span>${nameHTML(m)}${badge}</div>${molHTML(m, .72)}</div>`;
+  };
+  let h = node(T.start, 0);
+  T.steps.forEach((s,i)=>{
+    const r=rg(s.rid);
+    h += `<div class="parr"><span class="no">${i+1}</span><span class="ar">↓</span><span class="rgf">${rgHTML(r)}</span>${r.c?`<span class="rgc">${esc(r.c)}</span>`:""}<span class="chip rt">${RT[s.type].n}</span></div>`;
+    h += node(s.to, i+1);
+  });
+  $("path").innerHTML = h;
+  $("pathCnt").textContent = n ? `${n} ${n===1?"Schritt":"Schritte"}` : "";
+}
+
+function renderPanel(){
+  const lock = T.done || !!T.pending;
+  $("stepPanel").hidden = T.done || !!T.pending;
+  $("stepLabel").textContent = `Schritt ${T.steps.length+1}: Umsetzung von ${name(cur())}`;
+  const groups = Object.keys(RGG).map(g=>`<div class="rg-grp"><div class="gl">${RGG[g]}</div><div class="choices">${
+    RG.filter(r=>r.g===g).map(r=>`<button type="button" class="opt rg${T.sel.rid===r.id?" sel":""}" data-rid="${r.id}"><span class="f">${rgHTML(r)}</span><span class="c">${esc(r.n)}${r.c?" · "+esc(r.c):""}</span></button>`).join("")
+  }</div></div>`).join("");
+  $("rgList").innerHTML = groups;
+  $("typeList").innerHTML = Object.keys(RT).map(k=>`<button type="button" class="opt${T.sel.type===k?" sel":""}" data-type="${k}">${RT[k].n}</button>`).join("");
+  const showProd = opts.predict && !!T.sel.rid;
+  $("gProd").hidden = !showProd;
+  $("gType").hidden = !T.goal;
+  $("gProd").querySelector(".qn").textContent = T.goal ? "c)" : "b)";
+  if(showProd){
+    const cards = predictCards();
+    $("prodList").innerHTML = cards.map(c=> c==="none"
+      ? `<button type="button" class="opt card none${T.sel.prod==="none"?" sel":""}" data-prod="none">Keine Reaktion</button>`
+      : `<button type="button" class="opt card${T.sel.prod===key(c)?" sel":""}" data-prod="${esc(key(c))}"><span class="pc">${molHTML(c, .75)}<span class="nm">${esc(name(c))}</span></span></button>`).join("");
+  }
+  ["gRg","gType","gProd"].forEach(id=>{ const el=$(id); el.classList.toggle("bad", T.marks[id]==="bad"); });
+  $("btnBack").disabled = lock || !T.steps.length;
+  $("btnHint").disabled = T.done;
+  $("btnSolve").disabled = T.done;
+}
+
+function renderChoice(){
+  const p=T.pending;
+  $("choicePanel").hidden = !p;
+  if(!p) return;
+  $("choiceList").innerHTML = p.res.prods.map((x,i)=>`<button type="button" class="opt card" data-pi="${i}"><span class="pc">${molHTML(x.m, .75)}<span class="nm">${esc(name(x.m))}</span>${p.res.prods.length>1 && p.res.type==="elim" ? `<span class="tag">${x.main?"Hauptprodukt (Saytzeff)":"Nebenprodukt"}</span>` : (x.tag?`<span class="tag">${esc(x.tag)}</span>`:"")}</span></button>`).join("");
+}
+
+function setStatus(kind, txt){ const b=$("statusBadge"); b.className="status "+kind; $("statusText").textContent=txt; }
+function renderStats(){
+  $("roSolved").textContent=stats.solved; $("roClean").textContent=stats.clean;
+  $("roStreak").textContent=stats.streak; $("roShown").textContent=stats.shown;
+}
+function renderHistory(){
+  if(!history.length){ $("histBody").innerHTML=`<tr><td colspan="5" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr>`; return; }
+  const lab = {clean:["s-first","ohne Fehlversuch gelöst"], ok:["s-ok","gelöst"], shown:["s-shown","Lösung angesehen"], open:["s-open","nicht beendet"]};
+  $("histBody").innerHTML = history.slice().reverse().map(h=>`<tr><td class="mono">${h.no}</td><td>${esc(h.title)}</td><td class="mono">${h.st==="shown"?"–":h.steps} / ${h.minD}</td><td class="mono">${h.errors}</td><td class="${lab[h.st][0]}">${lab[h.st][1]}</td></tr>`).join("");
+}
+
+/* ---------- Produktkarten (Option „Zwischenprodukte vorhersagen“) ---------- */
+function validM(m){
+  if(!m) return false;
+  if(m.t==="alken" && (m.n<2 || m.p<1)) return false;
+  if(m.t==="dihalo" && (m.n<2 || m.p<1)) return false;
+  if(m.t==="keton" && (m.n<3 || m.p<2)) return false;
+  if((m.n!=null && (m.n<1 || m.n>6)) || (m.p!=null && m.p<1)) return false;
+  try{ tokens(m); return true; } catch(e){ return false; }
+}
+function plausible(S){
+  const n=S.n, L=[], X=S.X||"Cl";
+  const alc = range(1,Math.ceil((n||1)/2)).map(p=>mk.alkohol(n,p));
+  const alk = range(1,Math.floor((n||1)/2)).map(p=>mk.alken(n,p));
+  const hal = range(1,Math.ceil((n||1)/2)).map(p=>mk.halo(n,p,X));
+  switch(S.t){
+    case "alkan":   L.push(...hal, ...alc, ...alk, mk.alkan(n)); break;
+    case "alken":   L.push(mk.alkan(n), ...alc, ...hal, ...alk, mk.dihalo(n,S.p,"Br"), mk.aldehyd(n)); break;
+    case "halo":    L.push(...alc, ...alk, mk.alkan(n), mk.dihalo(n,S.p,X), ...hal); break;
+    case "dihalo":  L.push(...alk, ...alc, mk.alkan(n)); break;
+    case "alkohol": L.push(mk.aldehyd(n), mk.keton(n,2), mk.saeure(n), ...alk, mk.halo(n,S.p,"Cl"), mk.ester(2,n,S.p), mk.alkan(n), ...alc); break;
+    case "aldehyd": L.push(mk.alkohol(n,1), mk.saeure(n), mk.keton(n,2), mk.alkan(n), mk.ester(n,2,1)); break;
+    case "keton":   L.push(mk.alkohol(n,S.p), mk.aldehyd(n), mk.saeure(n), mk.alkan(n), mk.alkohol(n,1)); break;
+    case "saeure":  L.push(mk.aldehyd(n), mk.alkohol(n,1), mk.ester(n,1,1), mk.ester(n,2,1), mk.keton(n,2)); break;
+    case "ester":   L.push(mk.saeure(S.a), mk.alkohol(S.b,S.q), mk.aldehyd(S.a), mk.alkohol(S.a,1), mk.saeure(S.b), mk.aldehyd(S.b)); break;
+  }
+  RG.forEach(r=>{ const res=react(S, r.id); if(res.ok) res.prods.forEach(p=>L.push(p.m)); });
+  return uniqM(L.filter(validM)).filter(m=>!same(m,S));
+}
+function predictCards(){
+  const S=cur(), k=key(S)+"#"+T.sel.rid+"#"+T.steps.length;
+  if(T.cardsKey===k) return T.cards;
+  const res=react(S, T.sel.rid), right = res.ok ? res.prods.map(p=>p.m) : [];
+  const rk = new Set(right.map(key));
+  const wrong = shuffle(plausible(S).filter(m=>!rk.has(key(m)))).slice(0, Math.max(2, 4-right.length));
+  T.cards = shuffle(right.concat(wrong)).concat(["none"]);
+  T.cardsKey = k;
+  return T.cards;
+}
+
+/* ============================================================
+   Bedienung eines Schritts
+   ============================================================ */
+function fb(cls, html, append){
+  const div=`<div class="fb ${cls}">${html}</div>`;
+  if(append) $("feedback").insertAdjacentHTML("beforeend", div); else $("feedback").innerHTML=div;
+}
+
+$("rgList").addEventListener("click", e=>{
+  const b=e.target.closest(".opt"); if(!b || T.done || T.pending) return;
+  T.sel.rid = b.dataset.rid; T.sel.prod = null;
+  T.marks = {};
+  renderPanel();
+});
+$("typeList").addEventListener("click", e=>{
+  const b=e.target.closest(".opt"); if(!b || T.done || T.pending) return;
+  T.sel.type = b.dataset.type; delete T.marks.gType;
+  renderPanel();
+});
+$("prodList").addEventListener("click", e=>{
+  const b=e.target.closest(".opt"); if(!b || T.done || T.pending) return;
+  T.sel.prod = b.dataset.prod; delete T.marks.gProd;
+  renderPanel();
+});
+
+function doStep(){
+  if(T.done || T.pending) return;
+  const S=cur(), s=T.sel;
+  if(!s.rid){ fb("info","Wähle zuerst einen Stoff aus der Sammlung."); return; }
+  const noneSel = opts.predict && s.prod==="none";
+  if(T.goal && !s.type && !noneSel){ fb("info","Bestimme noch den Reaktionstyp."); return; }
+  if(opts.predict && !s.prod){ fb("info","Wähle noch das Produkt aus – oder „Keine Reaktion“."); return; }
+  const r=rg(s.rid), res=react(S, s.rid);
+  if(!res.ok){
+    if(res.np){ fb("info", `<strong>Reaktion führt nicht weiter:</strong> ${res.why}`); return; }
+    if(noneSel){ fb("good", `Richtig erkannt – keine Reaktion. ${res.why}`); return; }
+    T.errors++; T.marks={gRg:"bad"}; renderPanel();
+    fb("bad", `<strong>Keine Reaktion:</strong> ${res.why}`);
+    return;
+  }
+  if(noneSel){ T.errors++; T.marks={gProd:"bad"}; renderPanel(); fb("bad", `Doch – ${esc(name(S))} reagiert mit ${esc(r.n)}. Überlege, welches Produkt entsteht.`); return; }
+  if(T.goal && s.type!==res.type){
+    T.errors++; T.marks={gType:"bad"}; renderPanel();
+    const why = WHY_PAIR[res.type+"|"+s.type] || WHY_TYPE[res.type];
+    fb("bad", `Die Reaktion läuft ab, aber der Reaktionstyp stimmt nicht. ${why}`);
+    return;
+  }
+  if(opts.predict){
+    const pi = res.prods.findIndex(p=>key(p.m)===s.prod);
+    if(pi<0){ T.errors++; T.marks={gProd:"bad"}; renderPanel(); fb("bad", "Reagenz und Reaktionstyp passen, aber dieses Produkt entsteht nicht. Überlege, welche Atome ersetzt, angelagert oder abgespalten werden."); return; }
+    applyStep(S, s.rid, res, pi);
+    return;
+  }
+  if(res.prods.length>1){
+    T.pending = {S, rid:s.rid, res};
+    renderPanel(); renderChoice();
+    fb("good", `${T.goal?"Richtig – ":"<strong>Reaktionstyp:</strong> "}${RT[res.type].n}. ${res.info}`);
+    return;
+  }
+  applyStep(S, s.rid, res, 0);
+}
+
+function applyStep(S, rid, res, pi){
+  const p=res.prods[pi];
+  T.steps.push({from:S, rid, type:res.type, to:p.m, by:res.by, info:res.info, tag:p.tag||""});
+  T.pending=null; T.sel={rid:null, type:null, prod:null}; T.marks={}; T.hintIdx=0;
+  renderPath(); renderPanel(); renderChoice();
+  const msg = `<strong>✓ ${RT[res.type].n}:</strong> Aus ${esc(name(S))} entsteht ${esc(name(p.m))}${p.tag?` (${esc(p.tag)})`:""}.${res.info && res.prods.length===1 ? " "+res.info : ""}`;
+  if(T.goal && same(p.m, T.target)){ solved(msg); return; }
+  fb("good", msg);
+  if(!T.goal){ renderExplain(); return; }
+  const left = shortestPath(p.m, T.target, 7);
+  if(!left) fb("hint", "Von diesem Stoff aus lässt sich der Zielstoff mit den Reagenzien der Sammlung nicht mehr herstellen. Gehe mit „Schritt zurück“ zurück.", true);
+  else if(T.steps.length + left.length > T.minD + 2) fb("info", `Dein Weg wird länger als nötig: Von hier aus sind noch mindestens ${left.length} ${left.length===1?"Schritt":"Schritte"} nötig.`, true);
+}
+
+function chooseProduct(pi){
+  const p=T.pending; if(!p) return;
+  applyStep(p.S, p.rid, p.res, pi);
+}
+$("choiceList").addEventListener("click", e=>{ const b=e.target.closest(".opt"); if(b) chooseProduct(+b.dataset.pi); });
+$("btnCancelChoice").addEventListener("click", ()=>{ T.pending=null; renderPanel(); renderChoice(); $("feedback").innerHTML=""; });
+
+function back(){
+  if(T.done) return;
+  if(T.pending){ T.pending=null; renderPanel(); renderChoice(); return; }
+  if(!T.steps.length) return;
+  T.steps.pop(); T.sel={rid:null, type:null, prod:null}; T.marks={}; T.hintIdx=0;
+  renderPath(); renderPanel();
+  fb("info", `Letzter Schritt zurückgenommen. Aktueller Stoff: ${esc(name(cur()))}.`);
+  if(!T.goal) renderExplain();
+}
+
+/* ============================================================
+   Tipp, Lösung, Abschluss
+   ============================================================ */
+function hint(){
+  if(T.done) return;
+  const S=cur();
+  if(!T.goal){
+    const ok = RG.filter(r=>react(S,r.id).ok);
+    fb("hint", ok.length ? `<strong>Tipp:</strong> Mit ${esc(name(S))} reagieren ${ok.map(r=>`${esc(r.f)} (${RT[react(S,r.id).type].n})`).join(", ")}.` : `<strong>Tipp:</strong> Mit ${esc(name(S))} reagiert kein Stoff der Sammlung. Gehe einen Schritt zurück.`, true);
+    return;
+  }
+  const path = shortestPath(S, T.target, 7);
+  if(!path){ fb("hint", "<strong>Tipp:</strong> Von hier aus ist der Zielstoff nicht erreichbar. Nimm mit „Schritt zurück“ den letzten Schritt zurück.", true); return; }
+  const e=path[0];
+  const tips = [
+    `Noch mindestens ${path.length} ${path.length===1?"Schritt":"Schritte"}. ${path.length===1?"Der Zielstoff":"Als Nächstes sollte"} ${path.length===1?"entsteht direkt aus "+esc(name(S))+".":esc(CLA[e.to.t])+" entstehen."}`,
+    `Der nächste Schritt ist eine <b>${RT[e.type].n}</b>.`,
+    `Geeigneter Stoff aus der Sammlung: <b>${esc(rg(e.rid).f)}</b> (${esc(rg(e.rid).n)}).`
+  ];
+  if(T.hintIdx < tips.length){ fb("hint", `<strong>Tipp ${T.hintIdx+1}:</strong> ${tips[T.hintIdx]}`, true); T.hintIdx++; T.hints++; }
+  else fb("info", "Keine weiteren Tipps für diesen Schritt – nutze „Lösung zeigen“, um den kürzesten Weg anzuzeigen.", true);
+}
+
+function solved(msg){
+  stats.solved++; if(T.errors===0) stats.clean++; stats.streak++;
+  const extra = T.steps.length===T.minD ? " Das ist der kürzeste Weg." : ` Der kürzeste Weg hat ${T.minD} ${T.minD===1?"Schritt":"Schritte"}.`;
+  fb("good", `${msg}<br><strong>Zielstoff erreicht – in ${T.steps.length} ${T.steps.length===1?"Schritt":"Schritten"}${T.errors?` mit ${T.errors} ${T.errors===1?"Fehlversuch":"Fehlversuchen"}`:" ohne Fehlversuch"}.</strong>${extra} Alle Reaktionsgleichungen stehen unten im Tab „Erklärung“.`);
+  finish(T.errors===0 ? "clean" : "ok");
+}
+function solve(){
+  if(T.done || !T.goal) return;
+  T.shown=true; stats.shown++; stats.streak=0;
+  fb("info", "Der kürzeste Syntheseweg steht unten im Tab „Erklärung“. Die Aufgabe zählt nicht als gelöst.");
+  finish("shown");
+}
+function finish(st){
+  T.done=true; T.pending=null;
+  history.push({no:taskNo, title:T.title, steps:T.steps.length, minD:T.minD, errors:T.errors, st});
+  renderHead(); renderPath(); renderPanel(); renderChoice(); renderStats(); renderHistory(); renderExplain();
+}
+
+function eqRows(steps){
+  return steps.map((s,i)=>{
+    const r=rg(s.rid);
+    return `<div class="eqrow"><span class="sn">${i+1}</span><div><div class="eqs">${molBox(s.from,.7)}<span class="rxa"><span class="t">${rgHTML(r)}</span><span class="ln">⟶</span><span class="b">${RT[s.type].n}</span></span>${molBox(s.to,.7)}${s.by?`<span class="eqop">+</span><span class="eqop by">${esc(s.by)}</span>`:""}</div>${s.info?`<div class="inf">${esc(s.info)}${r.c?` Bedingungen: ${esc(r.c)}.`:""}</div>`:(r.c?`<div class="inf">Bedingungen: ${esc(r.c)}.</div>`:"")}</div></div>`;
+  }).join("");
+}
+function pathSteps(path){
+  return path.map(e=>{ const res=react(e.from, e.rid); const p=res.prods.find(x=>same(x.m,e.to)); return {from:e.from, rid:e.rid, type:e.type, to:e.to, by:res.by, info:res.info, tag:p&&p.tag}; });
+}
+function renderExplain(){
+  const box=$("expBox");
+  if(!T.goal){
+    if(!T.steps.length){ box.innerHTML=`<div class="empty-hint">Hier erscheinen die Reaktionsgleichungen der durchgeführten Schritte.</div>`; return; }
+    box.innerHTML = `<div class="explain"><h3>Deine Reaktionen</h3>${eqRows(T.steps)}${typeEx(T.steps)}</div>`;
+    return;
+  }
+  if(!T.done){ box.innerHTML=`<div class="empty-hint">Die Erklärung erscheint, sobald der Zielstoff erreicht oder die Lösung angezeigt wurde.</div>`; return; }
+  const opt = pathSteps(shortestPath(T.start, T.target, 7) || []);
+  let h="";
+  if(T.shown){
+    h += `<h3>Kürzester Syntheseweg (${opt.length} ${opt.length===1?"Schritt":"Schritte"})</h3>${eqRows(opt)}`;
+    if(T.steps.length) h += `<h3>Deine bisherigen Schritte</h3>${eqRows(T.steps)}`;
+  } else {
+    h += `<h3>Dein Syntheseweg (${T.steps.length} ${T.steps.length===1?"Schritt":"Schritte"})</h3>${eqRows(T.steps)}`;
+    if(T.steps.length>T.minD) h += `<h3>Kürzester Syntheseweg (${opt.length} ${opt.length===1?"Schritt":"Schritte"})</h3>${eqRows(opt)}`;
+  }
+  const alt = otherRoutesNote(opt);
+  box.innerHTML = `<div class="explain">${h}${alt}${typeEx(T.steps.concat(opt))}</div>`;
+}
+function otherRoutesNote(opt){
+  if(!opt.length) return "";
+  return `<p class="note">Oft gibt es mehrere gleich kurze Wege, z. B. mit Chlor statt Brom oder mit einem anderen Oxidationsmittel. Jeder Weg, der zum Zielstoff führt, gilt als Lösung.</p>`;
+}
+function typeEx(steps){
+  const used=[...new Set(steps.map(s=>s.type))];
+  if(!used.length) return "";
+  return `<h3>Die Reaktionstypen</h3>${used.map(t=>`<p>${TYPE_EX[t]}</p>`).join("")}`;
+}
+
+/* ---------- Übersicht ---------- */
+function renderOverview(){
+  const rows = [
+    ["Alkane", "Cl₂ bzw. Br₂, Licht", "Halogenalkan (+ HX)", "radSub"],
+    ["Alkene", "Cl₂ bzw. Br₂", "1,2-Dihalogenalkan", "elAdd"],
+    ["Alkene", "HCl bzw. HBr", "Halogenalkan (Markownikow)", "elAdd"],
+    ["Alkene", "H₂O / H⁺", "Alkohol (Markownikow)", "elAdd"],
+    ["Alkene", "H₂ / Pt", "Alkan", "red"],
+    ["Halogenalkane", "NaOH (aq)", "Alkohol", "nuSub"],
+    ["Halogenalkane", "KOH / Ethanol, Hitze", "Alken (Saytzeff)", "elim"],
+    ["Alkohole", "HCl bzw. HBr", "Halogenalkan", "nuSub"],
+    ["Alkohole", "H₂SO₄ (konz.), 170 °C", "Alken (Saytzeff)", "elim"],
+    ["primäre Alkohole", "CuO, erhitzt", "Aldehyd", "ox"],
+    ["primäre Alkohole", "KMnO₄ / H⁺ (Überschuss)", "Carbonsäure", "ox"],
+    ["sekundäre Alkohole", "CuO bzw. KMnO₄ / H⁺", "Keton", "ox"],
+    ["Aldehyde", "KMnO₄ / H⁺", "Carbonsäure", "ox"],
+    ["Aldehyde", "H₂ / Pt", "primärer Alkohol", "red"],
+    ["Ketone", "H₂ / Pt", "sekundärer Alkohol", "red"],
+    ["Alkohole", "Methansäure bzw. Ethansäure + H₂SO₄", "Ester + Wasser", "kond"],
+    ["Carbonsäuren", "Methanol bzw. Ethanol + H₂SO₄", "Ester + Wasser", "kond"],
+    ["Ester", "H₂O / H⁺ bzw. NaOH (aq)", "Carbonsäure + Alkohol", "hyd"]
+  ];
+  $("ovwBody").innerHTML = rows.map(r=>`<tr><td>${esc(r[0])}</td><td class="k">${esc(r[1])}</td><td>${esc(r[2])}</td><td>${RT[r[3]].n}</td></tr>`).join("");
+}
+
+/* ---------- Auswahllisten ---------- */
+const CLASSIC_LIST = CLASSICS.map(([s,t])=>({s, t, d:(shortestPath(s,t,7)||[]).length}));
+function renderSelects(){
+  $("taskSelect").innerHTML = CLASSIC_LIST.map((c,i)=>`<option value="${i}">${esc(name(c.s))} → ${esc(name(c.t))} (${c.d})</option>`).join("");
+  const starts = allStarts(5).concat([mk.ester(1,1,1), mk.ester(2,1,1), mk.ester(2,2,1), mk.ester(2,3,1), mk.ester(3,2,1)]);
+  const order = ["alkan","alken","halo","alkohol","aldehyd","keton","saeure","ester"];
+  $("startSelect").innerHTML = order.map(t=>`<optgroup label="${CLPL[t]}">${starts.filter(m=>m.t===t).map(m=>`<option value="${esc(key(m))}">${esc(name(m))}</option>`).join("")}</optgroup>`).join("");
+  $("startSelect").value = key(mk.alkan(3));
+}
+
+/* ---------- Ereignisse ---------- */
+$("btnNew").addEventListener("click", newTask);
+$("btnHint").addEventListener("click", hint);
+$("btnSolve").addEventListener("click", solve);
+$("btnDo").addEventListener("click", doStep);
+$("btnBack").addEventListener("click", back);
+$("btnLoad").addEventListener("click", ()=>{
+  const c=CLASSIC_LIST[+$("taskSelect").value]; if(!c) return;
+  const lv=opts.level; opts.level=null; loadTask(c.s, c.t, c.d); opts.level=lv; T.level=null; renderHead();
+});
+$("btnStart").addEventListener("click", startFree);
+$("levelSelect").addEventListener("change", e=>{ opts.level=e.target.value; });
+$("optPredict").addEventListener("change", e=>{ opts.predict=e.target.checked; T.sel.prod=null; T.marks={}; renderPanel(); });
+$("optMin").addEventListener("change", e=>{ opts.showMin=e.target.checked; renderHead(); });
+$("dispSelect").addEventListener("change", e=>{ opts.disp=e.target.value; renderAll(); renderExplain(); });
+$("modeList").addEventListener("change", e=>{
+  if(e.target.name!=="mode") return;
+  opts.mode=e.target.value;
+  document.querySelectorAll("#modeList .type-item").forEach(l=>l.classList.toggle("on", l.dataset.mode===opts.mode));
+  $("secLevel").hidden = $("secClassic").hidden = !isGoal();
+  $("secFree").hidden = isGoal();
+  newTask();
+});
+
+document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click", ()=>{
+  document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+}));
+
+const gbd=$("guideBackdrop");
+$("btnGuide").addEventListener("click", e=>{ e.preventDefault(); gbd.classList.add("open"); });
+$("closeGuide").addEventListener("click", ()=>gbd.classList.remove("open"));
+gbd.addEventListener("click", e=>{ if(e.target===gbd) gbd.classList.remove("open"); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") gbd.classList.remove("open"); });
+
+renderSelects(); renderOverview(); renderStats(); renderHistory();
+newTask();
+if(typeof window!=="undefined") window.__syn = {get T(){return T;}, react, shortestPath, name, key, fromKey, mk, RG, genTask, doStep, chooseProduct, opts, CLASSIC_LIST, loadTask};
+})();
+</script>
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
+})();
+</script>
+</body>
+</html>

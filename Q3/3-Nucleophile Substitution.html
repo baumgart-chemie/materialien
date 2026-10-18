@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulation „Nucleophile Substitution“ mit Trainer · SN1, SN2, E1 & E2</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --danger:#e4785b; --danger-dim:#6b3a2c; --good:#7fd68a;
+  --oxy:#ff8a7a; --nitro:#8fb4ff; --hal:#9bd88f; --bond:#b9c0c6;
+  --screen:#0e1113;
+  --m-sn2:#4fd1c5; --m-sn1:#ffb454; --m-e2:#8fb4ff; --m-e1:#c9a2ff;
+  --radius:3px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+    --line:#31383e; --line-soft:#262c31; --text:#e7e4dd; --text-dim:#9aa2a9;
+  }
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;}
+h1,h2,h3{font-weight:600; margin:0;}
+sub{font-size:.72em;}
+[hidden]{display:none !important;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin:-22px -26px 14px; padding:22px 26px 10px; position:sticky; top:-22px; background:var(--panel); z-index:1;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 4px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 320px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none;} }
+.main{padding:20px 24px 60px; min-width:0;}
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;
+}
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+.row label{font-size:13px; color:var(--text-dim);}
+.row .val{font-size:13px; color:var(--amber); min-width:64px; text-align:right;}
+.sidebar .row{margin-bottom:7px;}
+.sidebar input[type=range]{display:block; margin:0 0 20px;}
+.sidebar input[type=range]:last-child{margin-bottom:0;}
+input[type=range]{width:100%; accent-color: var(--teal); height:4px; background:transparent; cursor:pointer;}
+input[type=range]:disabled{opacity:.35; cursor:not-allowed;}
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:8px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+.subname{font-size:12.5px; color:var(--teal); margin:-6px 0 4px;}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+.mode-toggle button{
+  flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:9px 6px;
+  font-size:12.5px; cursor:pointer; font-family:inherit; touch-action:manipulation;
+}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle.app button{font-size:13.5px; padding:10px 6px; font-weight:500;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit;
+  font-weight:500; touch-action:manipulation; min-height:36px;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+
+.legend{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--text-dim);}
+.legend > div{display:flex; align-items:center; gap:10px;}
+.legend .sw{display:inline-block; min-width:44px; font-weight:600; text-align:center;}
+.legend svg{flex:none;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:70ch;}
+
+/* screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px; position:relative;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+.mech-btns{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+.mech-btns button{
+  background:var(--panel-alt); color:var(--text-dim); border:none; padding:6px 12px 5px; cursor:pointer;
+  font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:72px; touch-action:manipulation;
+}
+.mech-btns button + button{border-left:1px solid var(--line);}
+.mech-btns button .mn{font-size:13.5px; font-weight:600;}
+.mech-btns button .ms{font-size:10.5px; font-family:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace; color:var(--text-faint);}
+.mech-btns button.active{background:var(--teal-dim); color:var(--text);}
+.mech-btns button.active .ms{color:var(--text-dim);}
+.mech-btns button.dom .mn::after{content:" ★"; color:var(--amber); font-size:11px;}
+.mech-btns button:disabled{opacity:.35; cursor:not-allowed;}
+.speed-group{display:flex; gap:4px; margin-left:auto;}
+.speed-group button{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
+  padding:6px 9px; border-radius:var(--radius); cursor:pointer; font-family:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+.speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
+
+svg#scene{width:100%; height:370px; display:block;}
+@media (max-width:700px){ svg#scene{height:250px;} }
+svg.mol{overflow:visible;}
+svg.mol line, svg.mol polygon.wd{stroke:var(--bond); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+svg.mol polygon.wd{fill:var(--bond); stroke-width:1;}
+svg.mol line.pb{stroke-dasharray:3.5 3.5;}
+svg.mol text{fill:var(--text); font-size:17px; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+svg.mol text.g{font-size:15.5px;}
+svg.mol text.ox{fill:var(--oxy);} svg.mol text.ni{fill:var(--nitro);} svg.mol text.hal{fill:var(--hal);}
+svg.mol line.lp{stroke:var(--text); stroke-width:1.8;}
+svg.mol line.lp.ox{stroke:var(--oxy);} svg.mol line.lp.ni{stroke:var(--nitro);} svg.mol line.lp.hal{stroke:var(--hal);}
+svg.mol circle.chc{fill:none; stroke:var(--text); stroke-width:1.2;}
+svg.mol text.cht{font-size:12.5px; font-weight:700;}
+svg.mol text.dl{font-size:12.5px; fill:var(--text-dim); font-style:italic;}
+svg.mol path.ea{fill:none; stroke:var(--amber); stroke-width:1.9; stroke-linecap:round;}
+svg.mol polygon.eh{fill:var(--amber); stroke:none;}
+svg.mol path.br{fill:none; stroke:var(--text-dim); stroke-width:1.4;}
+svg.mol text.bk{fill:var(--text-dim); font-size:15px;}
+svg.mol ellipse.lobe{fill:rgba(79,209,197,.13); stroke:var(--teal-dim); stroke-width:1.2;}
+svg.mol text.nn{fill:var(--text-dim); font-size:13px;}
+svg.mol text.nn.hi{fill:var(--amber);}
+
+.caption{
+  margin:4px 2px 10px; padding:10px 13px; border:1px solid var(--line-soft); border-radius:4px; background:var(--panel);
+  font-size:13.5px; line-height:1.6; color:var(--text-dim); min-height:68px;
+}
+.caption b{color:var(--text); font-weight:600;}
+.step-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 2px 10px;}
+.step-dots{display:flex; gap:6px; margin-left:auto;}
+.step-dots i{width:9px; height:9px; border-radius:50%; background:var(--line); display:block;}
+.step-dots i.on{background:var(--amber);}
+.chrom-hint{margin:0 2px 12px; padding:9px 12px; border:1px solid var(--amber-dim); border-radius:3px; background:rgba(255,180,84,.07); color:var(--amber); font-size:12.8px; line-height:1.5;}
+.readout-bar{display:flex; gap:26px; padding:10px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:4px;}
+.readout{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* Produktverteilung */
+.dist{margin-top:22px;}
+.dist h2{font-size:12.5px; color:var(--text-dim); font-weight:600; margin-bottom:10px;}
+.dist-bar{display:flex; height:26px; border-radius:3px; overflow:hidden; border:1px solid var(--line); background:var(--panel-alt);}
+.dist-bar div{height:100%; display:flex; align-items:center; justify-content:center; font-size:11.5px; color:#0d1614; font-weight:600; white-space:nowrap; overflow:hidden; transition:width .35s ease;}
+.dist-main{font-size:13.5px; color:var(--text-dim); margin:10px 0 8px;}
+.dist-main b{color:var(--text); font-weight:600;}
+
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+tbody td{padding:7px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+tbody tr:hover{background:var(--panel-alt);}
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+.sw-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; vertical-align:middle;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+
+.factor-list{display:flex; flex-direction:column; gap:8px;}
+.factor{border:1px solid var(--line-soft); border-radius:4px; background:var(--panel-alt); padding:10px 13px;}
+.factor .fh{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px;}
+.factor .fk{font-size:11.5px; color:var(--text-faint);}
+.factor .fv{font-size:13.5px; color:var(--text); font-weight:600;}
+.factor .fx{font-size:13px; color:var(--text-dim); line-height:1.55;}
+.chips{display:inline-flex; gap:5px; margin-left:auto; flex-wrap:wrap;}
+.chip{font-size:11px; padding:1px 7px; border-radius:10px; border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;}
+.chip.up{color:var(--good); border-color:#35573a;}
+.chip.dn{color:var(--danger); border-color:var(--danger-dim);}
+
+canvas#kin{width:100%; height:300px; display:block; border:1px solid var(--line); border-radius:4px; background:var(--screen);}
+.run-legend{display:flex; flex-wrap:wrap; gap:6px 14px; padding:10px 2px 6px; font-size:12px; color:var(--text-dim);}
+.run-legend i{display:inline-block; width:16px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px;}
+svg#energy{width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:4px; background:var(--screen);}
+svg#energy text{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+.explain{font-size:13.5px; color:var(--text-dim); line-height:1.65; max-width:80ch;}
+.explain p{margin:0 0 10px;}
+.explain b, .explain strong{color:var(--text); font-weight:600;}
+.cmp td:first-child{color:var(--text-faint); white-space:nowrap;}
+.cmp td{line-height:1.5;}
+
+/* Trainer */
+.type-list{display:flex; flex-direction:column; gap:6px;}
+.type-list label{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-dim); padding:7px 9px; border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-alt); cursor:pointer;}
+.type-list input{accent-color:var(--teal); width:16px; height:16px;}
+.seq{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:8px 0;}
+.seq .st{border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); padding:6px 8px 4px; display:flex; flex-direction:column; align-items:center; max-width:100%; overflow-x:auto;}
+.seq .st .sn{font-size:11px; color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; align-self:flex-start;}
+.seq .st svg{max-width:100%; height:auto;}
+.seq .ar{font-size:22px; color:var(--text-faint);}
+.task-meta{display:flex; align-items:center; gap:10px; margin:4px 0 10px;}
+.task-num{font-size:12px; color:var(--amber);}
+.task-chip{font-size:11.5px; padding:2px 9px; border-radius:10px; border:1px solid var(--line); color:var(--text-dim);}
+.ctx{font-size:13.5px; color:var(--text-dim); line-height:1.6; margin-bottom:8px;}
+.ctx b{color:var(--text); font-weight:600;}
+.ctx .cond{display:grid; grid-template-columns:auto 1fr; gap:3px 14px; margin:8px 0;}
+.ctx .cond span:nth-child(odd){color:var(--text-faint); font-size:12.5px;}
+.ctx .fig{display:flex; justify-content:center; padding:8px; margin:8px 0; border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); overflow-x:auto;}
+.ctx .fig svg{max-width:100%; height:auto;}
+.q-group{border-top:1px solid var(--line-soft); padding:12px 0 12px;}
+.q-group .q{font-size:13.5px; color:var(--text-dim); margin-bottom:9px; line-height:1.5;}
+.q-group .q b{color:var(--text); font-weight:600;}
+.q-group .q .qn{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; color:var(--amber); margin-right:7px;}
+.choices{display:flex; flex-wrap:wrap; gap:8px;}
+.opt{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  border-radius:var(--radius); padding:8px 13px; min-height:40px; font-size:13.5px; font-family:inherit;
+  cursor:pointer; text-align:left; touch-action:manipulation; line-height:1.4;
+}
+.opt:hover{border-color:var(--text-faint);}
+.opt.sel{border-color:var(--teal); background:var(--teal-dim);}
+.q-group.ok .opt.sel{border-color:var(--good); background:#1d3322; box-shadow:0 0 0 1px #35573a;}
+.q-group.bad .opt.sel{border-color:var(--danger); background:#33201b; box-shadow:0 0 0 1px var(--danger-dim);}
+.q-group.done .opt:not(.sel){opacity:.55;}
+.mark{font-size:12px; margin-left:8px; font-weight:600;}
+.q-group.ok .mark::after{content:"✓ richtig"; color:var(--good);}
+.q-group.bad .mark::after{content:"✗ falsch"; color:var(--danger);}
+.why{font-size:12.5px; color:var(--danger); margin-top:8px; line-height:1.5;}
+.check-row{display:flex; justify-content:flex-end; padding:12px 0 2px; border-top:1px solid var(--line-soft);}
+.feedback{display:flex; flex-direction:column; gap:6px; margin:12px 0 4px;}
+.feedback:empty{display:none;}
+.fb{font-size:13px; line-height:1.55; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb b{color:var(--text);}
+.kt td, .kt th{text-align:right;}
+.kt td:first-child, .kt th:first-child, .kt th:nth-child(2){text-align:left;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Simulation „Nucleophile Substitution“ mit Trainer</h1>
+  <span class="tag">S<sub>N</sub>1, S<sub>N</sub>2 und die Konkurrenz zur Eliminierung</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status" id="statusBadge"><span class="dot"></span><span id="statusText">bereit</span></span>
+</header>
+
+<!-- Anleitung -->
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Simulation oder Trainer</h3>
+      <p>Oben in der Seitenleiste wechselst du zwischen der <strong>Simulation</strong> (Reaktionen selbst einstellen und Mechanismen ansehen) und dem <strong>Trainer</strong> (Aufgaben mit Rückmeldung).</p>
+      <h3>Reaktionspartner und Bedingungen</h3>
+      <p>Wähle das <strong>Substrat</strong> (Methyl-, primäres, sekundäres oder tertiäres Halogenalkan), die <strong>Abgangsgruppe</strong> (F, Cl, Br, I) und das <strong>Nucleophil bzw. die Base</strong>. Dazu kommen das <strong>Lösemittel</strong> (polar protisch oder polar aprotisch), die <strong>Temperatur</strong> und die Anfangskonzentrationen. Wasser ist zugleich Nucleophil und Lösemittel – seine Konzentration lässt sich dann nicht verändern.</p>
+      <h3>Mechanismus ansehen</h3>
+      <p>Über dem Formelbild stehen die vier Mechanismen mit ihrem Anteil unter den gewählten Bedingungen. Der Stern ★ markiert den überwiegenden Mechanismus, er wird nach jeder Änderung automatisch gewählt. Mit <strong>Weiter</strong> und <strong>Zurück</strong> gehst du Schritt für Schritt durch den Mechanismus, <strong>Abspielen</strong> zeigt alle Schritte nacheinander. Die Atome bewegen sich dabei kontinuierlich – so wird z. B. das Umklappen der Substituenten beim S<sub>N</sub>2-Mechanismus sichtbar.</p>
+      <h3>Formeln</h3>
+      <p>Alle Formeln sind <strong>Valenzstrichformeln</strong>: Striche am Atom sind freie Elektronenpaare. Gebogene orange Pfeile zeigen, wohin sich ein <strong>Elektronenpaar</strong> verschiebt. Gestrichelte Linien sind Bindungen, die sich gerade bilden oder lösen; die eckige Klammer mit ‡ kennzeichnet einen Übergangszustand. Keile zeigen nach vorn zum Betrachter, gestrichelte Keile nach hinten.</p>
+      <h3>Produktverteilung</h3>
+      <p>Unter dem Formelbild siehst du, welcher Anteil der Substratmoleküle nach welchem Mechanismus reagiert und welche Produkte dabei entstehen. Die Anteile stammen aus einem vereinfachten Modell und sind nur qualitativ richtig.</p>
+      <h3>Kinetik</h3>
+      <p>Im Reiter <strong>Kinetik</strong> startest du eine Messung: Aufgezeichnet wird die Konzentration des Halogenalkans in Abhängigkeit von der Zeit. Bis zu acht Messungen werden übereinandergelegt; die Tabelle nennt die Anfangsgeschwindigkeit v<sub>0</sub> und die Halbwertszeit. Verändere jeweils nur <strong>eine</strong> Konzentration und vergleiche v<sub>0</sub> – so bestimmst du die Reaktionsordnungen.</p>
+      <h3>Energiediagramm</h3>
+      <p>Der Reiter <strong>Energiediagramm</strong> zeigt den Energieverlauf des gewählten Mechanismus. Der Punkt folgt der Animation. Die Höhen sind qualitativ: Je schneller ein Mechanismus unter den gewählten Bedingungen ist, desto niedriger liegt sein Übergangszustand.</p>
+      <h3>Trainer</h3>
+      <p>Der Trainer bietet zwei Aufgabentypen, die du links auswählst: <strong>Mechanismus &amp; Hauptprodukt vorhersagen</strong> – verläuft die Substitution unter den angegebenen Bedingungen nach S<sub>N</sub>1 oder S<sub>N</sub>2, und welches Hauptprodukt entsteht (bei 2-Halogenbutanen mit Stereochemie)? – und <strong>Mechanismustyp bestimmen</strong>: Ein Mechanismus oder ein Ausschnitt daraus ist als Formelbild vorgegeben, du bestimmst den Typ, das Erkennungsmerkmal und das Geschwindigkeitsgesetz bzw. die Stereochemie. Eliminierungen bleiben im Trainer unberücksichtigt. Tippe auf <strong>Neue Aufgabe</strong>, wähle in jeder Teilaufgabe eine Antwort und drücke <strong>Prüfen</strong>. Falsche Antworten werden mit einem Hinweis auf den Denkfehler markiert; die Auswahl lässt sich ändern und erneut prüfen. Die Aufgaben beruhen auf demselben Modell wie die Simulation – über den Link nach dem Lösen lässt sich die Reaktion dort ansehen.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Versionshinweise -->
+<div class="modal-backdrop" id="changelogBackdrop" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">18.10.2026</span></div>
+        <ul>
+          <li>Erste Version: animierte Mechanismen S<sub>N</sub>1, S<sub>N</sub>2, E1 und E2 als Valenzstrichformeln mit freien Elektronenpaaren und Elektronenpaar-Pfeilen, inklusive Übergangszuständen, Carbokation und Walden-Umkehr.</li>
+          <li>Einstellbar sind Substrat, Abgangsgruppe, Nucleophil/Base, Lösemittel, Temperatur und Konzentrationen; daraus werden Produktverteilung und Hauptprodukt berechnet (Saizew- und Hofmann-Produkt).</li>
+          <li>Reiter Einflussfaktoren, Kinetik (Konzentrations-Zeit-Kurven, Anfangsgeschwindigkeit, bis zu 8 Messungen), Energiediagramm und Überblick.</li>
+          <li>Trainer mit zwei Aufgabentypen: Mechanismus (S<sub>N</sub>1 oder S<sub>N</sub>2) und Hauptprodukt unter zufälligen Bedingungen vorhersagen (bei 2-Halogenbutanen mit Stereochemie) sowie den Mechanismustyp aus einem vorgegebenen Formelbild bestimmen. Eliminierungen bleiben im Trainer unberücksichtigt.</li>
+        </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="mode-toggle app" id="appMode">
+      <button data-m="sim" class="active">Simulation</button>
+      <button data-m="train">Trainer</button>
+    </div>
+
+    <div id="simSide">
+      <section class="block">
+        <h2>Substrat</h2>
+        <div class="field-full">
+          <label for="subSel">Halogenalkan</label>
+          <select id="subSel">
+            <option value="methyl">Methyl (Halogenmethan)</option>
+            <option value="prim" selected>primär (Halogenethan)</option>
+            <option value="sec">sekundär (2-Halogenbutan)</option>
+            <option value="tert">tertiär (2-Halogen-2-methylpropan)</option>
+          </select>
+        </div>
+        <div class="field-full">
+          <label for="lgSel">Abgangsgruppe</label>
+          <select id="lgSel">
+            <option value="F">Fluor (F)</option>
+            <option value="Cl">Chlor (Cl)</option>
+            <option value="Br" selected>Brom (Br)</option>
+            <option value="I">Iod (I)</option>
+          </select>
+        </div>
+        <p class="subname" id="subName"></p>
+      </section>
+
+      <section class="block">
+        <h2>Nucleophil / Base</h2>
+        <div class="field-full">
+          <select id="nuSel" aria-label="Nucleophil oder Base">
+            <option value="OH" selected>Hydroxid-Ion OH⁻</option>
+            <option value="CN">Cyanid-Ion CN⁻</option>
+            <option value="I">Iodid-Ion I⁻</option>
+            <option value="H2O">Wasser H₂O</option>
+            <option value="tBuO">tert-Butanolat-Ion (CH₃)₃CO⁻</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Bedingungen</h2>
+        <div class="field-full"><label>Lösemittel</label></div>
+        <div class="mode-toggle" id="solvToggle">
+          <button data-s="protic" class="active">polar protisch</button>
+          <button data-s="aprotic">polar aprotisch</button>
+        </div>
+        <p class="note" id="solvNote" style="margin:-8px 0 16px;"></p>
+        <div class="row"><label for="tSl">Temperatur</label><span class="val mono" id="tVal"></span></div>
+        <input type="range" id="tSl" min="10" max="90" step="5" value="25">
+        <div class="row"><label for="cRXSl">c₀(Halogenalkan)</label><span class="val mono" id="cRXVal"></span></div>
+        <input type="range" id="cRXSl" min="0.05" max="1" step="0.05" value="0.5">
+        <div class="row"><label for="cNuSl" id="cNuLab">c₀(Nucleophil)</label><span class="val mono" id="cNuVal"></span></div>
+        <input type="range" id="cNuSl" min="0.1" max="2" step="0.1" value="1">
+      </section>
+    </div>
+
+    <div id="trainSide" hidden>
+      <section class="block">
+        <h2>Aufgabentypen</h2>
+        <div class="type-list" id="typeList"></div>
+        <p class="note">Mehrfachauswahl möglich. „Neue Aufgabe“ wählt zufällig aus den markierten Typen. Im Trainer geht es nur um S<sub>N</sub>1 und S<sub>N</sub>2 – Eliminierungen (E1, E2) werden nicht berücksichtigt.</p>
+      </section>
+    </div>
+
+    <section class="block">
+      <h2>Darstellung in den Formeln</h2>
+      <div class="legend">
+        <div><span class="sw" style="color:var(--oxy)">O</span>Sauerstoff</div>
+        <div><span class="sw" style="color:var(--nitro)">N</span>Stickstoff</div>
+        <div><span class="sw" style="color:var(--hal)">F Cl Br I</span>Halogene</div>
+        <div><span class="sw">|</span>freies Elektronenpaar</div>
+        <div><svg width="44" height="16" viewBox="0 0 44 16"><path d="M4 13 Q22 -4 36 9" fill="none" stroke="#ffb454" stroke-width="1.9"/><polygon points="40,12 31,10 37,4" fill="#ffb454"/></svg>Verschiebung eines Elektronenpaars</div>
+        <div><svg width="44" height="16" viewBox="0 0 44 16"><line x1="6" y1="8" x2="38" y2="8" stroke="#b9c0c6" stroke-width="1.6" stroke-dasharray="3.5 3.5"/></svg>Bindung bildet/löst sich</div>
+        <div><svg width="44" height="16" viewBox="0 0 44 16"><polygon points="6,8 38,4 38,12" fill="#b9c0c6"/></svg>Bindung nach vorn</div>
+        <div><svg width="44" height="16" viewBox="0 0 44 16"><g stroke="#b9c0c6" stroke-width="1.6"><line x1="11" y1="7" x2="11" y2="9"/><line x1="17" y1="6" x2="17" y2="10"/><line x1="23" y1="5.5" x2="23" y2="10.5"/><line x1="29" y1="5" x2="29" y2="11"/><line x1="35" y1="4" x2="35" y2="12"/></g></svg>Bindung nach hinten</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div id="simMain">
+      <div class="screen-card">
+        <div class="screen-top">
+          <div class="mech-btns" id="mechBtns"></div>
+          <div class="speed-group" id="speedGroup">
+            <button data-s="0.5">0,5×</button><button data-s="1" class="active">1×</button><button data-s="2">2×</button>
+          </div>
+        </div>
+        <svg id="scene" class="mol" role="img" aria-label="Reaktionsmechanismus als Valenzstrichformeln"></svg>
+        <div class="caption" id="caption"></div>
+        <div class="chrom-hint" id="mechWarn" hidden></div>
+        <div class="step-row">
+          <button class="btn ghost" id="btnPrev">◀ Zurück</button>
+          <button class="btn primary" id="btnNext">Weiter ▶</button>
+          <button class="btn" id="btnPlay">Abspielen</button>
+          <button class="btn ghost" id="btnRestart">↺ Von vorn</button>
+          <div class="step-dots" id="stepDots"></div>
+        </div>
+        <div class="readout-bar">
+          <div class="readout"><span class="k">Mechanismus</span><span class="v" id="roMech"></span></div>
+          <div class="readout"><span class="k">Schritt</span><span class="v mono" id="roStep"></span></div>
+          <div class="readout"><span class="k">Geschwindigkeitsgesetz</span><span class="v" id="roLaw"></span></div>
+          <div class="readout"><span class="k">Stereochemie</span><span class="v" id="roStereo"></span></div>
+          <div class="readout"><span class="k">Produkt dieses Mechanismus</span><span class="v" id="roProd"></span></div>
+        </div>
+      </div>
+
+      <div class="dist">
+        <h2>Produktverteilung unter den gewählten Bedingungen (Modell)</h2>
+        <div class="dist-bar" id="distBar"></div>
+        <p class="dist-main" id="distMain"></p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Mechanismus</th><th>Anteil</th><th>Produkt</th><th>Stereochemie</th><th>Nebenprodukte</th></tr></thead>
+          <tbody id="distBody"></tbody>
+        </table></div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button data-tab="tFactors" class="active">Einflussfaktoren</button>
+        <button data-tab="tKin">Kinetik</button>
+        <button data-tab="tEnergy">Energiediagramm</button>
+        <button data-tab="tOverview">Überblick</button>
+      </div>
+      <div class="tabpanel active" id="tFactors">
+        <div class="factor-list" id="factorList"></div>
+      </div>
+      <div class="tabpanel" id="tKin">
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn primary" id="btnRun">Messung starten</button>
+          <button class="btn ghost" id="btnClearRuns">Messreihe löschen</button>
+          <span class="note" style="margin:0;" id="kinInfo"></span>
+        </div>
+        <canvas id="kin"></canvas>
+        <div class="run-legend" id="runLegend"></div>
+        <div class="table-wrap"><table class="kt">
+          <thead><tr><th>Messung</th><th>Bedingungen</th><th>c₀(RX) in mol/L</th><th>c₀(Nu) in mol/L</th><th>v₀ in mol/(L·s)</th><th>t½</th></tr></thead>
+          <tbody id="runBody"><tr><td colspan="6" class="empty-hint">Noch keine Messung. Stelle die Bedingungen ein und starte eine Messung.</td></tr></tbody>
+        </table></div>
+        <p class="note">Tipp: Ändere zwischen zwei Messungen nur <b>eine</b> Konzentration. Verdoppelt sich v₀ sowohl bei doppelter c₀(RX) als auch bei doppelter c₀(Nu), gilt v = k · c(RX) · c(Nu) – eine Reaktion 2. Ordnung (S<sub>N</sub>2/E2). Hängt v₀ nur von c₀(RX) ab, gilt v = k · c(RX) – eine Reaktion 1. Ordnung (S<sub>N</sub>1/E1). Bei Konkurrenz mehrerer Mechanismen liegt das Ergebnis dazwischen.</p>
+      </div>
+      <div class="tabpanel" id="tEnergy">
+        <svg id="energy" viewBox="0 0 680 300" role="img" aria-label="Energiediagramm"></svg>
+        <p class="note" id="energyNote"></p>
+      </div>
+      <div class="tabpanel" id="tOverview">
+        <div class="table-wrap"><table class="cmp">
+          <thead><tr><th></th><th>S<sub>N</sub>2</th><th>S<sub>N</sub>1</th><th>E2</th><th>E1</th></tr></thead>
+          <tbody>
+            <tr><td>Ablauf</td><td>ein Schritt (konzertiert): Angriff von der Rückseite, gleichzeitig Austritt der Abgangsgruppe</td><td>zwei Schritte: 1. Ionisierung zum Carbokation (langsam), 2. Angriff des Nucleophils (schnell)</td><td>ein Schritt: Base spaltet β-H ab, C=C entsteht, Abgangsgruppe tritt aus</td><td>zwei Schritte: 1. Ionisierung zum Carbokation, 2. Abspaltung eines β-H<sup>+</sup></td></tr>
+            <tr><td>Zwischenstufe</td><td>keine (nur Übergangszustand)</td><td>Carbokation (trigonal-planar)</td><td>keine</td><td>Carbokation</td></tr>
+            <tr><td>Geschwindigkeitsgesetz</td><td>v = k · c(RX) · c(Nu)</td><td>v = k · c(RX)</td><td>v = k · c(RX) · c(Base)</td><td>v = k · c(RX)</td></tr>
+            <tr><td>Stereochemie</td><td>Inversion (Walden-Umkehr)</td><td>Racemisierung</td><td>anti-Eliminierung (H und X antiperiplanar)</td><td>–</td></tr>
+            <tr><td>Substrat</td><td>Methyl &gt; primär &gt; sekundär; tertiär nicht</td><td>tertiär &gt; sekundär; Methyl und primär nicht</td><td>tertiär &gt; sekundär &gt; primär</td><td>tertiär &gt; sekundär</td></tr>
+            <tr><td>Nucleophil / Base</td><td>starkes Nucleophil, hohe Konzentration</td><td>schwaches Nucleophil (oft das Lösemittel: Solvolyse)</td><td>starke, auch sterisch anspruchsvolle Base</td><td>schwache Base, höhere Temperatur</td></tr>
+            <tr><td>Lösemittel</td><td>polar aprotisch</td><td>polar protisch</td><td>polar aprotisch (oder Alkohol)</td><td>polar protisch</td></tr>
+            <tr><td>Temperatur</td><td colspan="2">niedrige Temperatur begünstigt Substitution</td><td colspan="2">hohe Temperatur begünstigt Eliminierung</td></tr>
+          </tbody>
+        </table></div>
+        <div class="explain" style="margin-top:16px;">
+          <p><b>Abgangsgruppe:</b> I⁻ &gt; Br⁻ &gt; Cl⁻ ≫ F⁻. Gute Abgangsgruppen sind schwache Basen, groß und gut polarisierbar; die C–I-Bindung ist zudem die schwächste. Die Abgangsgruppe ist bei allen vier Mechanismen am geschwindigkeitsbestimmenden Schritt beteiligt.</p>
+          <p><b>Regioselektivität der Eliminierung:</b> Nach der <b>Saizew-Regel</b> entsteht bevorzugt das höher substituierte, stabilere Alken (aus 2-Brombutan: But-2-en). Sterisch anspruchsvolle Basen wie tert-Butanolat greifen das besser zugängliche H-Atom der CH₃-Gruppe an und liefern das <b>Hofmann-Produkt</b> (But-1-en).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINER -->
+    <div id="trainMain" hidden>
+      <div class="screen-card" style="padding:14px 16px 6px;">
+        <div class="screen-top">
+          <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+          <button class="btn ghost" id="btnHint">Tipp</button>
+          <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+        </div>
+        <div class="task-meta">
+          <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+          <span class="task-chip" id="taskChip"></span>
+        </div>
+        <div class="ctx" id="ctx"></div>
+        <div id="groups"></div>
+        <div class="check-row"><button class="btn" id="btnCheck">Prüfen</button></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="readout-bar">
+          <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+          <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+          <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+          <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Vereinfachtes Modell zu Lehrzwecken · Geschwindigkeitskonstanten, Produktanteile und Energieniveaus werden aus Faustregeln zu Substrat, Nucleophil, Abgangsgruppe, Lösemittel und Temperatur berechnet und sind nur qualitativ richtig. Konkurrenz zwischen Nucleophil und Lösemittel beim S<sub>N</sub>1-Mechanismus wird nicht berücksichtigt.</p>
+  <p class="footer-credit">Bastian Baumgart · Simulation „Nucleophile Substitution“ mit Trainer V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const f1 = v => Math.round(v*10)/10;
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const deNum = (v,d) => v.toFixed(d).replace(".",",");
+const D = Math.PI/180;
+function sci(v,d){
+  d = d==null?1:d;
+  if(!isFinite(v) || v<=0) return "0";
+  let e=Math.floor(Math.log10(v)), m=v/Math.pow(10,e);
+  if(+m.toFixed(d)>=10){ m/=10; e++; }
+  if(e===0) return deNum(m,d);
+  return deNum(m,d)+" · 10<sup>"+String(e).replace("-","−")+"</sup>";
+}
+function fmtTime(s){
+  if(!isFinite(s)) return "–";
+  if(s<120) return deNum(s, s<10?1:0)+" s";
+  if(s<7200) return deNum(s/60, s<600?1:0)+" min";
+  if(s<172800) return deNum(s/3600, s<36000?1:0)+" h";
+  if(s<6.3e7) return deNum(s/86400, s<864000?1:0)+" d";
+  return "> 2 Jahre";
+}
+const pct = v => v>=0.995 ? "100 %" : v<0.001 ? "< 0,1 %" : (v<0.1 ? deNum(v*100,1) : deNum(v*100,0))+" %";
+
+/* =====================================================================
+   Modell
+   log10 k bei 25 °C, Abgangsgruppe Br, polar protisch.
+   ===================================================================== */
+const SUB = {
+  methyl:{R:["H","H","H"],          sn2:0,    sn1:-10,  e2:-Infinity, chiral:false, kind:"Methyl"},
+  prim:  {R:["CH3","H","H"],        sn2:-1.3, sn1:-7.5, e2:-2.4,      chiral:false, kind:"primär"},
+  sec:   {R:["CH3","C2H5","H"],     sn2:-3.3, sn1:-4.4, e2:-3.4,      chiral:true,  kind:"sekundär"},
+  tert:  {R:["CH3","CH3","CH3"],    sn2:-9,   sn1:-1.3, e2:-1.0,      chiral:false, kind:"tertiär"}
+};
+const SIDX = {methyl:0, prim:1, sec:2, tert:3};
+const LG = {
+  F: {pre:"Fluor", ion:"Fluorid-Ion", f:"F⁻",  v:-5},
+  Cl:{pre:"Chlor", ion:"Chlorid-Ion", f:"Cl⁻", v:-1.6},
+  Br:{pre:"Brom",  ion:"Bromid-Ion",  f:"Br⁻", v:0},
+  I: {pre:"Iod",   ion:"Iodid-Ion",   f:"I⁻",  v:0.6}
+};
+const NU = {
+  OH:  {name:"Hydroxid-Ion",       f:"OH⁻",        sn2:0,   e2:0,    apr:3,   anion:true,  acid:"Wasser"},
+  CN:  {name:"Cyanid-Ion",         f:"CN⁻",        sn2:0.3, e2:-2.5, apr:3,   anion:true,  acid:"Cyanwasserstoff (HCN)"},
+  I:   {name:"Iodid-Ion",          f:"I⁻",         sn2:0.3, e2:-10,  apr:1.5, anion:true,  acid:"Iodwasserstoff (HI)"},
+  H2O: {name:"Wasser",             f:"H₂O",        sn2:-4,  e2:-7,   apr:0,   anion:false, acid:"Oxonium-Ion (H₃O⁺)", solvent:true},
+  tBuO:{name:"tert-Butanolat-Ion", f:"(CH₃)₃CO⁻",  sn2:-2,  e2:0.7,  apr:3,   anion:true,  acid:"tert-Butanol"}
+};
+const EA = {SN2:75, SN1:95, E2:95, dE1:20};
+const MECHS = ["SN2","SN1","E2","E1"];
+const MN = {SN2:"S<sub>N</sub>2", SN1:"S<sub>N</sub>1", E2:"E2", E1:"E1"};
+const MCOL = {SN2:"#4fd1c5", SN1:"#ffb454", E2:"#8fb4ff", E1:"#c9a2ff"};
+const arrh = (Ea,T) => Math.exp(-Ea*1000/8.314*(1/T - 1/298.15));
+
+function model(p){
+  const s=SUB[p.sub], l=LG[p.lg].v, n=NU[p.nu], apr = p.solv==="aprotic" && !n.solvent, T=p.T+273.15;
+  const k2  = Math.pow(10, s.sn2 + l + n.sn2 + (apr?n.apr:0)) * arrh(EA.SN2,T);
+  const kE2 = s.e2===-Infinity ? 0 : Math.pow(10, s.e2 + l + n.e2 + (apr?n.apr-0.5:0)) * arrh(EA.E2,T);
+  const k1  = Math.pow(10, s.sn1 + 1.2*l + (apr?-3.5:0)) * arrh(EA.SN1,T);
+  let fE1 = 0;
+  if(s.e2!==-Infinity){ const r = 0.16*arrh(EA.dE1,T); fE1 = r/(1+r); }
+  const cNu = n.solvent ? 55.5 : p.cNu;
+  const v = {SN2:k2*p.cRX*cNu, E2:kE2*p.cRX*cNu, SN1:k1*p.cRX*(1-fE1), E1:k1*p.cRX*fE1};
+  const tot = v.SN2+v.E2+v.SN1+v.E1;
+  const share = {}; MECHS.forEach(m=>share[m]= tot>0 ? v[m]/tot : 0);
+  return {k2,kE2,k1,fE1,cNu,v,tot,share};
+}
+const domOf = m => MECHS.reduce((a,b)=> m.share[b]>m.share[a]?b:a, "SN2");
+
+/* ---------- Namen ---------- */
+function subName(sub,lg,stereo){
+  const X=LG[lg].pre;
+  if(sub==="methyl") return X+"methan";
+  if(sub==="prim") return X+"ethan";
+  if(sub==="sec") return (stereo?"(R)-":"")+"2-"+X+"butan";
+  return "2-"+X+"-2-methylpropan";
+}
+const PSN = {
+  OH:  ["Methanol","Ethanol","Butan-2-ol","2-Methylpropan-2-ol"],
+  H2O: ["Methanol","Ethanol","Butan-2-ol","2-Methylpropan-2-ol"],
+  CN:  ["Ethannitril","Propannitril","2-Methylbutannitril","2,2-Dimethylpropannitril"],
+  I:   ["Iodmethan","Iodethan","2-Iodbutan","2-Iod-2-methylpropan"],
+  tBuO:["2-Methoxy-2-methylpropan","2-Ethoxy-2-methylpropan","2-(Butan-2-yloxy)-2-methylpropan","Di-tert-butylether"]
+};
+const prodSN = (sub,nu) => PSN[nu][SIDX[sub]];
+function prodE(sub,nu,mech){
+  if(sub==="methyl") return null;
+  if(sub==="prim") return "Ethen";
+  if(sub==="sec") return (mech==="E2" && nu==="tBuO") ? "But-1-en" : "But-2-en";
+  return "2-Methylpropen";
+}
+function prodOf(p,mech,withStereo){
+  if(mech==="SN2") return (withStereo && p.sub==="sec" ? "(S)-" : "") + prodSN(p.sub,p.nu);
+  if(mech==="SN1") return prodSN(p.sub,p.nu) + (withStereo && p.sub==="sec" ? " (Racemat)" : "");
+  return prodE(p.sub,p.nu,mech);
+}
+function stereoOf(p,mech){
+  if(mech==="SN2") return p.sub==="sec" ? "Inversion: (R) → (S)" : "Inversion (kein Stereozentrum)";
+  if(mech==="SN1") return p.sub==="sec" ? "Racemat (R) : (S) = 1 : 1" : "– (kein Stereozentrum)";
+  if(mech==="E2") return p.sub==="sec" && p.nu!=="tBuO" ? "anti-Eliminierung, E/Z-Gemisch" : "anti-Eliminierung";
+  return p.sub==="sec" ? "E/Z-Gemisch" : "–";
+}
+function byproducts(p,mech){
+  const x=LG[p.lg].ion;
+  if(mech==="SN2"||mech==="SN1") return p.nu==="H2O" ? x+", H₃O⁺" : x;
+  return x+", "+NU[p.nu].acid;
+}
+
+/* =====================================================================
+   Formelzeichnung: Valenzstrichformeln mit freien Elektronenpaaren
+   ===================================================================== */
+const U = 46;
+const VE = {H:1, C:4, N:5, O:6, F:7, Cl:7, Br:7, I:7};
+const HW = {H:5.5, C:6, N:6, O:6.5, F:5, Cl:9, Br:10, I:3.5};
+const ELC = {O:"ox", N:"ni", F:"hal", Cl:"hal", Br:"hal", I:"hal"};
+const GRP = {CH3:{R:"CH₃",L:"H₃C",dl:6}, C2H5:{R:"C₂H₅",L:"H₅C₂",dl:11}, tBu:{R:"C(CH₃)₃",L:"(H₃C)₃C",dl:6}};
+
+function Fr(){ return {A:[], B:[], R:[], brk:null, lobes:null, T:[], cap:""}; }
+function at(F,id,el,x,y,o){ F.A.push(Object.assign({id,el,x,y}, o||{})); return id; }
+function bd(F,i,j,o,s){ F.B.push({i,j,o:o||1,s:s||"n"}); }
+
+const P_IN  = [[-0.5,-0.93],[-0.68,0.5],[-0.25,0.9]];
+const P_TS  = [[0,-1.05],[-0.33,0.86],[0.33,0.86]];
+const P_OUT = P_IN.map(([x,y])=>[-x,y]);
+const STY = ["n","w","h"];
+function subs(F,cid,cx,cy,R,P,pre){
+  R.forEach((g,k)=>{
+    const id=pre+"r"+k, sc = g==="H" ? 1 : 1.13;
+    at(F,id,g,cx+P[k][0]*sc,cy+P[k][1]*sc,{grp:!!GRP[g]});
+    bd(F,cid,id,1,STY[k]);
+  });
+}
+const NUL = {
+  OH:  {el:"O", sub:[["H",-0.8,-0.5,1]]},
+  H2O: {el:"O", sub:[["H",-0.72,-0.6,1],["H",-0.72,0.6,1]]},
+  CN:  {el:"C", sub:[["N",-1.12,0,3]]},
+  I:   {el:"I", sub:[]},
+  tBuO:{el:"O", sub:[["tBu",-0.98,-0.52,1]]}
+};
+/* st: free | ts | bound | acid ; o.drop1 → erstes H fehlt (deprotoniert) */
+function nuAt(F,nu,x,y,th,pre,st,o){
+  o=o||{};
+  const d=NUL[nu], an=NU[nu].anion, opt={};
+  if(st==="free" && an) opt.ch=-1;
+  if(st==="ts"){ opt.d = an ? "δ−" : "δ+"; if(an) opt.lpch=-1; }
+  if((st==="bound"||st==="acid") && nu==="H2O" && !o.drop1) opt.ch=1;
+  at(F,pre,d.el,x,y,opt);
+  const c=Math.cos(th), s=Math.sin(th);
+  d.sub.forEach(([el,lx,ly,ord],k)=>{
+    if(o.drop1 && k===0) return;
+    const sid=pre+"s"+k;
+    at(F,sid,el,x+lx*c-ly*s,y+lx*s+ly*c,{grp:!!GRP[el]});
+    bd(F,pre,sid,ord);
+  });
+  return pre;
+}
+function hydronium(F,pre,x,y){
+  at(F,pre,"O",x,y,{ch:1});
+  [[0,-0.9],[-0.8,0.45],[0.8,0.45]].forEach(([dx,dy],k)=>{ at(F,pre+"h"+k,"H",x+dx,y+dy); bd(F,pre,pre+"h"+k); });
+}
+
+/* ---------- Mechanismen ---------- */
+function gOf(k){ return Math.max(58, Math.min(150, 55 + 5.7*(-Math.log10(Math.max(k,1e-30))))); }
+
+function buildSN2(p,m){
+  const s=SUB[p.sub], X=p.lg, nu=p.nu, an=NU[nu].anion, R=s.R, fr=[];
+  const nN=NU[nu].name, sN=subName(p.sub,p.lg,true), pr=prodOf(p,"SN2",true);
+  let F=Fr();
+  at(F,"c","C",0,0,{d:"δ+"}); subs(F,"c",0,0,R,P_IN,""); at(F,"x",X,1.5,0,{d:"δ−"}); bd(F,"c","x");
+  nuAt(F,nu,-3.0,0,0,"n","free");
+  F.R.push({f:{lp:"n"},t:{a:"c"},bend:-1},{f:{b:["c","x"]},t:{a:"x"},bend:1});
+  F.cap=`<b>Edukte:</b> Die C–${X}-Bindung in ${esc(sN)} ist polar, das C-Atom positiv polarisiert (δ+). Das ${nN} greift mit einem freien Elektronenpaar dieses C-Atom an – und zwar von der <b>Rückseite</b>, gegenüber der Abgangsgruppe.`;
+  fr.push(F);
+  F=Fr();
+  at(F,"c","C",0,0); subs(F,"c",0,0,R,P_TS,""); at(F,"x",X,1.85,0,{d:"δ−"}); bd(F,"c","x",1,"p");
+  nuAt(F,nu,-1.85,0,0,"n","ts"); bd(F,"n","c",1,"p");
+  F.brk={ch: an?"−":""};
+  F.cap=`<b>Übergangszustand ‡:</b> Die neue Bindung bildet sich, während die C–${X}-Bindung bricht – beides geschieht <b>gleichzeitig</b> (konzertiert). Das C-Atom ist kurzzeitig fünffach koordiniert, die drei übrigen Substituenten liegen in einer Ebene. Beide Teilchen sind am geschwindigkeitsbestimmenden Schritt beteiligt: v = k · c(RX) · c(Nu).`;
+  fr.push(F);
+  F=Fr();
+  at(F,"c","C",0,0); subs(F,"c",0,0,R,P_OUT,""); nuAt(F,nu,-1.5,0,0,"n","bound"); bd(F,"n","c"); at(F,"x",X,3.0,0,{ch:-1});
+  const umb = `Die drei Substituenten sind wie ein Regenschirm im Wind umgeklappt: <b>Inversion der Konfiguration</b> (Walden-Umkehr)` + (p.sub==="sec" ? ` – aus (R)-2-${LG[X].pre}butan entsteht <b>(S)</b>-Produkt.` : ".");
+  if(nu==="H2O"){
+    const hx=-1.5-0.72, hy=-0.6, wx=-3.0, wy=-1.95, th=Math.atan2(hy-wy,hx-wx);
+    nuAt(F,"H2O",wx,wy,th,"w","free");
+    F.R.push({f:{lp:"w"},t:{a:"ns0"},bend:-1},{f:{b:["n","ns0"]},t:{a:"n"},bend:1});
+    F.cap=`<b>Oxonium-Ion:</b> Zunächst entsteht ein positiv geladenes Oxonium-Ion. ${umb} Ein weiteres Wassermolekül nimmt anschließend ein Proton auf.`;
+    fr.push(F);
+    F=Fr();
+    at(F,"c","C",0,0); subs(F,"c",0,0,R,P_OUT,""); nuAt(F,"H2O",-1.5,0,0,"n","bound",{drop1:true}); bd(F,"n","c"); at(F,"x",X,3.0,0,{ch:-1});
+    nuAt(F,"H2O",wx,wy,th,"w","acid"); at(F,"ns0","H",wx+0.95*Math.cos(th),wy+0.95*Math.sin(th)); bd(F,"w","ns0");
+    F.cap=`<b>Produkte:</b> ${esc(pr)}, ein ${LG[X].ion} und ein Oxonium-Ion (H₃O⁺).`;
+    fr.push(F);
+    return {frames:fr, pts:[{E:0,l:"Edukte"},{E:gOf(m.k2*m.cNu),l:"Übergangszustand",ts:1},{E:14,l:"Oxonium-Ion"},{E:24,l:"",ts:1},{E:-18,l:"Produkte"}], dots:[0,1,2,4]};
+  }
+  F.cap=`<b>Produkte:</b> ${esc(pr)} und ein ${LG[X].ion}. ${umb}`;
+  fr.push(F);
+  return {frames:fr, pts:[{E:0,l:"Edukte"},{E:gOf(m.k2),l:"Übergangszustand",ts:1},{E:-30,l:"Produkte"}], dots:[0,1,2]};
+}
+
+function sn1Products(F,p,state){ // state: "bound" | "alcohol"
+  const s=SUB[p.sub], R=s.R, nu=p.nu, o = state==="alcohol" ? {drop1:true} : {};
+  const name = prodSN(p.sub,nu);
+  if(s.chiral){
+    at(F,"pac","C",-2.0,0); subs(F,"pac",-2.0,0,R,P_OUT,"pa"); nuAt(F,nu,-3.5,0,0,"pan","bound",o); bd(F,"pan","pac");
+    at(F,"pbc","C",2.9,0); subs(F,"pbc",2.9,0,R,P_IN,"pb"); nuAt(F,nu,4.4,0,Math.PI,"pbn","bound",o); bd(F,"pbn","pbc");
+    F.T.push({x:-2.5,y:1.9,t:"(S)-"+name,c:"nn"},{x:3.5,y:1.9,t:"(R)-"+name,c:"nn"},{x:-2.5,y:2.4,t:"50 %",c:"nn hi"},{x:3.5,y:2.4,t:"50 %",c:"nn hi"});
+  } else {
+    at(F,"pac","C",0,0); subs(F,"pac",0,0,R,P_OUT,"pa"); nuAt(F,nu,-1.5,0,0,"pan","bound",o); bd(F,"pan","pac");
+  }
+}
+function buildSN1(p,m){
+  const s=SUB[p.sub], X=p.lg, nu=p.nu, R=s.R, fr=[], nN=NU[nu].name, sN=subName(p.sub,p.lg,true);
+  let F=Fr();
+  at(F,"c","C",0,0,{d:"δ+"}); subs(F,"c",0,0,R,P_IN,""); at(F,"x",X,1.5,0,{d:"δ−"}); bd(F,"c","x");
+  F.R.push({f:{b:["c","x"]},t:{a:"x"},bend:1});
+  F.cap=`<b>Schritt 1 – Ionisierung:</b> Die polare C–${X}-Bindung in ${esc(sN)} bricht <b>heterolytisch</b>: Das bindende Elektronenpaar geht vollständig auf das ${LG[X].pre}-Atom über. Das Nucleophil ist an diesem Schritt nicht beteiligt.`;
+  fr.push(F);
+  F=Fr();
+  at(F,"c","C",0,0,{ch:1}); subs(F,"c",0,0,R,P_TS,""); at(F,"x",X,2.4,1.6,{ch:-1}); F.lobes={id:"c"};
+  F.cap=`<b>Carbokation:</b> Es entstehen ein Carbokation und ein ${LG[X].ion}. Dieser Schritt ist <b>langsam und geschwindigkeitsbestimmend</b> – nur das Substrat ist beteiligt: v = k · c(RX). Das Carbokation ist <b>trigonal-planar</b>, das leere p-Orbital (türkis) zeigt nach beiden Seiten. Alkylgruppen stabilisieren die positive Ladung (+I-Effekt, Hyperkonjugation): tertiär &gt; sekundär ≫ primär.`;
+  fr.push(F);
+  F=Fr();
+  at(F,"c","C",0,0,{ch:1}); subs(F,"c",0,0,R,P_TS,""); at(F,"x",X,2.4,1.6,{ch:-1}); F.lobes={id:"c"};
+  nuAt(F,nu,-2.6,0,0,"n","free"); nuAt(F,nu,2.6,-0.15,Math.PI,"m","free");
+  F.R.push({f:{lp:"n"},t:{a:"c"},bend:-1},{f:{lp:"m"},t:{a:"c"},bend:1});
+  F.cap=`<b>Schritt 2 – Angriff des Nucleophils:</b> Das ${nN} greift das planare Carbokation schnell an. Ein Angriff von links und von rechts ist <b>gleich wahrscheinlich</b> – beide Möglichkeiten sind dargestellt.`;
+  fr.push(F);
+  const g1=gOf(m.k1);
+  if(nu==="H2O"){
+    F=Fr();
+    at(F,"c","C",0,0); subs(F,"c",0,0,R,P_OUT,""); nuAt(F,nu,-1.5,0,0,"n","bound"); bd(F,"n","c"); at(F,"x",X,2.4,1.6,{ch:-1});
+    const hx=-1.5-0.72, hy=-0.6, wx=-3.0, wy=-1.95, th=Math.atan2(hy-wy,hx-wx);
+    nuAt(F,"H2O",wx,wy,th,"w","free");
+    F.R.push({f:{lp:"w"},t:{a:"ns0"},bend:-1},{f:{b:["n","ns0"]},t:{a:"n"},bend:1});
+    F.T.push({x:1.0,y:-1.75,t:"(Angriff von rechts: analog)",c:"nn"});
+    F.cap=`<b>Deprotonierung:</b> Es entsteht ein Oxonium-Ion. Ein weiteres Wassermolekül nimmt ein Proton auf.`;
+    fr.push(F);
+    F=Fr(); sn1Products(F,p,"alcohol");
+    if(s.chiral){ hydronium(F,"hy",0.45,-1.55); at(F,"x",X,0.45,1.55,{ch:-1}); }
+    else { hydronium(F,"hy",-2.9,-1.6); at(F,"x",X,2.4,1.6,{ch:-1}); }
+    F.cap = productCapSN1(p);
+    fr.push(F);
+    return {frames:fr, pts:[{E:0,l:"Edukte"},{E:g1,l:"ÜZ 1",ts:1},{E:g1-20,l:"Carbokation"},{E:g1-11,l:"ÜZ 2",ts:1},{E:-4,l:"Oxonium-Ion"},{E:6,l:"",ts:1},{E:-22,l:"Produkte"}], dots:[0,2,2,4,6]};
+  }
+  F=Fr(); sn1Products(F,p,"bound");
+  if(s.chiral) at(F,"x",X,0.45,-1.4,{ch:-1}); else at(F,"x",X,2.4,1.6,{ch:-1});
+  F.cap = productCapSN1(p);
+  fr.push(F);
+  return {frames:fr, pts:[{E:0,l:"Edukte"},{E:g1,l:"ÜZ 1",ts:1},{E:g1-20,l:"Carbokation"},{E:g1-11,l:"ÜZ 2",ts:1},{E:-30,l:"Produkte"}], dots:[0,2,2,4]};
+}
+function productCapSN1(p){
+  const n=prodSN(p.sub,p.nu);
+  if(SUB[p.sub].chiral) return `<b>Produkte:</b> Angriff von links liefert (S)-, Angriff von rechts (R)-${esc(n)} – jeweils 50 %. Es entsteht ein <b>Racemat</b>, die optische Aktivität geht verloren (Racemisierung).`;
+  return `<b>Produkt:</b> ${esc(n)}. Beide Angriffsseiten liefern dasselbe Produkt, weil das C-Atom kein Stereozentrum ist.`;
+}
+
+/* Eliminierung: Cα = a, Cβ = b (links), abgespaltenes H = h, Abgangsgruppe x */
+function eGroups(p,mech){
+  if(p.sub==="prim") return {ra:["H","H"], rb:["H","H"]};
+  if(p.sub==="sec") return (mech==="E2" && p.nu==="tBuO") ? {ra:["C2H5","H"], rb:["H","H"]} : {ra:["CH3","H"], rb:["H","CH3"]};
+  return {ra:["CH3","CH3"], rb:["H","H"]};
+}
+const EG = {
+  sp3:{b:[-1.4,0], h:[-1.4,-1.05], x:[0,1.12], ra:[[0.92,-0.56],[0.98,0.44]], rb:[[-2.32,-0.54],[-2.36,0.44]]},
+  ts: {b:[-1.4,0], h:[-1.4,-1.3], x:[0,1.5],  ra:[[0.78,-0.74],[0.86,0.62]], rb:[[-2.18,-0.74],[-2.26,0.62]]},
+  cat:{b:[-1.4,0], h:[-1.4,-1.05], x:[-0.55,1.75], ra:[[0.55,-0.92],[0.55,0.92]], rb:[[-2.32,-0.54],[-2.36,0.44]]},
+  alk:{b:[-1.4,0], h:[-1.4,-1.42], x:[-0.7,1.6], ra:[[0.55,-0.92],[0.55,0.92]], rb:[[-1.95,-0.92],[-1.95,0.92]]}
+};
+function eSkel(F,g,G,o){
+  o=o||{};
+  const gp=(base,off,el)=>{ const sc = el==="H"?1:1.12; return [base[0]+off[0]*sc, base[1]+off[1]*sc]; };
+  at(F,"a","C",0,0,o.aCh?{ch:o.aCh}:{});
+  at(F,"b","C",G.b[0],G.b[1]);
+  bd(F,"a","b",o.ab||1);
+  g.ra.forEach((el,k)=>{ const q=gp([0,0],G.ra[k],el); at(F,"ra"+k,el,q[0],q[1],{grp:!!GRP[el]}); bd(F,"a","ra"+k); });
+  g.rb.forEach((el,k)=>{ const q=gp([0,0],[G.rb[k][0]-G.b[0],G.rb[k][1]-G.b[1]],el); at(F,"rb"+k,el,G.b[0]+q[0],G.b[1]+q[1],{grp:!!GRP[el]}); bd(F,"b","rb"+k); });
+  at(F,"h","H",G.h[0],G.h[1]);
+  if(o.hb!==false) bd(F,"b","h",1,o.hs||"n");
+  at(F,"x",o.X,G.x[0],G.x[1],o.xo||{});
+  if(o.xb!==false) bd(F,"a","x",1,o.xs||"n");
+}
+const BASE_POS = [-1.4,-2.32], BASE_TH = 0;
+function buildE2(p,m){
+  const g=eGroups(p,"E2"), X=p.lg, nu=p.nu, an=NU[nu].anion, fr=[], pe=prodE(p.sub,nu,"E2"), bN=NU[nu].name;
+  let F=Fr();
+  eSkel(F,g,EG.sp3,{X});
+  nuAt(F,nu,BASE_POS[0],BASE_POS[1],BASE_TH,"n","free");
+  F.R.push({f:{lp:"n"},t:{a:"h"},bend:-1},{f:{b:["b","h"]},t:{b:["a","b"]},bend:-1},{f:{b:["a","x"]},t:{a:"x"},bend:-1});
+  const hof = p.sub==="sec" ? (nu==="tBuO" ? " Die sperrige Base erreicht am besten ein H-Atom der endständigen CH₃-Gruppe (<b>Hofmann-Produkt</b>)." : " Abgespalten wird bevorzugt ein H-Atom der CH₂-Gruppe, sodass das höher substituierte Alken entsteht (<b>Saizew-Regel</b>).") : "";
+  F.cap=`<b>Edukte:</b> Das ${bN} wirkt als <b>Base</b>: Es greift ein H-Atom am β-C-Atom an, nicht das C-Atom selbst. Das H-Atom und die Abgangsgruppe stehen sich gegenüber (<b>antiperiplanar</b>).${hof}`;
+  fr.push(F);
+  F=Fr();
+  eSkel(F,g,EG.ts,{X, ab:1.5, hs:"p", xs:"p", xo:{d:"δ−"}});
+  nuAt(F,nu,BASE_POS[0],BASE_POS[1],BASE_TH,"n","ts"); bd(F,"n","h",1,"p");
+  F.brk={ch: an?"−":""};
+  F.cap=`<b>Übergangszustand ‡:</b> Drei Vorgänge laufen <b>gleichzeitig</b> ab: Die Base bindet das Proton, aus dem C–H-Bindungselektronenpaar entsteht die π-Bindung, und die Abgangsgruppe löst sich. Substrat und Base sind am geschwindigkeitsbestimmenden Schritt beteiligt: v = k · c(RX) · c(Base).`;
+  fr.push(F);
+  F=Fr();
+  eSkel(F,g,EG.alk,{X, ab:2, hb:false, xb:false, xo:{ch:-1}});
+  nuAt(F,nu,BASE_POS[0],BASE_POS[1],BASE_TH,"n","acid"); bd(F,"n","h");
+  F.cap=`<b>Produkte:</b> ${esc(pe)}, ${esc(NU[nu].acid)} und ein ${LG[X].ion}. Aus zwei Teilchen sind drei geworden – deshalb begünstigt eine höhere Temperatur die Eliminierung.`;
+  fr.push(F);
+  return {frames:fr, pts:[{E:0,l:"Edukte"},{E:gOf(m.kE2*(NU[nu].solvent?55.5:1)),l:"Übergangszustand",ts:1},{E:-12,l:"Produkte"}], dots:[0,1,2]};
+}
+function buildE1(p,m){
+  const g=eGroups(p,"E1"), X=p.lg, nu=p.nu, fr=[], pe=prodE(p.sub,nu,"E1"), bN=NU[nu].name, sN=subName(p.sub,p.lg,true);
+  let F=Fr();
+  eSkel(F,g,EG.sp3,{X});
+  F.R.push({f:{b:["a","x"]},t:{a:"x"},bend:-1});
+  F.cap=`<b>Schritt 1 – Ionisierung:</b> Wie beim S<sub>N</sub>1-Mechanismus bricht die C–${X}-Bindung in ${esc(sN)} heterolytisch. Dieser Schritt ist langsam und geschwindigkeitsbestimmend: v = k · c(RX).`;
+  fr.push(F);
+  F=Fr();
+  eSkel(F,g,EG.cat,{X, aCh:1, xb:false, xo:{ch:-1}});
+  F.cap=`<b>Carbokation:</b> Es entstehen ein trigonal-planares Carbokation und ein ${LG[X].ion}. Ab hier konkurrieren S<sub>N</sub>1 (Angriff am C<sup>+</sup>) und E1 (Abspaltung eines β-H<sup>+</sup>).`;
+  fr.push(F);
+  F=Fr();
+  eSkel(F,g,EG.cat,{X, aCh:1, xb:false, xo:{ch:-1}});
+  nuAt(F,nu,BASE_POS[0],BASE_POS[1],BASE_TH,"n","free");
+  F.R.push({f:{lp:"n"},t:{a:"h"},bend:-1},{f:{b:["b","h"]},t:{b:["a","b"]},bend:-1});
+  F.cap=`<b>Schritt 2 – Deprotonierung:</b> Das ${bN} wirkt als Base und spaltet ein Proton vom β-C-Atom ab. Das C–H-Bindungselektronenpaar bildet die π-Bindung.` + (p.sub==="sec" ? " Es entsteht bevorzugt das höher substituierte Alken (Saizew-Regel)." : "");
+  fr.push(F);
+  F=Fr();
+  eSkel(F,g,EG.alk,{X, ab:2, hb:false, xb:false, xo:{ch:-1}});
+  nuAt(F,nu,BASE_POS[0],BASE_POS[1],BASE_TH,"n","acid"); bd(F,"n","h");
+  F.cap=`<b>Produkte:</b> ${esc(pe)}, ${esc(NU[nu].acid)} und ein ${LG[X].ion}.`;
+  fr.push(F);
+  const g1=gOf(m.k1);
+  return {frames:fr, pts:[{E:0,l:"Edukte"},{E:g1,l:"ÜZ 1",ts:1},{E:g1-20,l:"Carbokation"},{E:g1-8,l:"ÜZ 2",ts:1},{E:-12,l:"Produkte"}], dots:[0,2,2,4]};
+}
+function buildMech(p,mech){
+  const m=model(p);
+  return mech==="SN2"?buildSN2(p,m) : mech==="SN1"?buildSN1(p,m) : mech==="E2"?buildE2(p,m) : buildE1(p,m);
+}
+
+/* ---------- Layout ---------- */
+const adist=(a,b)=>{ const d=Math.abs(a-b)%360; return Math.min(d,360-d); };
+const AC = {};
+function chooseAngles(fixed,n){
+  const key=fixed.slice().sort((a,b)=>a-b).join(",")+"|"+n;
+  if(AC[key]) return AC[key].slice();
+  const C=[]; for(let a=0;a<360;a+=15) C.push(a);
+  let best=null, bs=-1, bt=-1;
+  const rec=(start,ch)=>{
+    if(ch.length===n){
+      const all=fixed.concat(ch); let mn=360;
+      for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++) mn=Math.min(mn,adist(all[i],all[j]));
+      const ax=ch.filter(a=>a%90===0).length;
+      if(mn>bs || (mn===bs && ax>bt)){ bs=mn; bt=ax; best=ch.slice(); }
+      return;
+    }
+    for(let k=start;k<C.length;k++){ ch.push(C[k]); rec(k+1,ch); ch.pop(); }
+  };
+  rec(0,[]);
+  AC[key]=best.slice();
+  return best;
+}
+function layout(F){
+  const lobeId = F.lobes ? F.lobes.id : null;
+  const M={};
+  F.A.forEach(a=>{ M[a.id]=Object.assign({}, a, {nb:[]}); });
+  F.B.forEach(b=>{ M[b.i].nb.push(b); M[b.j].nb.push(b); });
+  const L={};
+  Object.keys(M).forEach(id=>{
+    const a=M[id];
+    const o={id, el:a.el, x:a.x*U, y:a.y*U, grp:!!a.grp};
+    const angs=a.nb.map(b=>{ const q=M[b.i===id?b.j:b.i]; return (Math.round(Math.atan2(q.y-a.y,q.x-a.x)/D)+360)%360; });
+    if(a.grp){
+      const q=a.nb.length ? M[a.nb[0].i===id?a.nb[0].j:a.nb[0].i] : null;
+      const left = q && q.x > a.x+0.2;
+      const G=GRP[a.el];
+      o.lab = left ? {t:G.L, anc:"end", dx:G.dl} : {t:G.R, anc:"start", dx:-6};
+    } else o.lab={t:a.el, anc:"middle", dx:0};
+    o.lp=[];
+    const ve=VE[a.el];
+    if(ve!=null && !a.grp){
+      const bsum=a.nb.reduce((s,b)=>s+(b.s==="p"?0:Math.floor(b.o)),0);
+      const n = a.lp!=null ? a.lp : Math.max(0, Math.floor((ve-(a.ch||a.lpch||0)-bsum)/2));
+      if(n) o.lp=chooseAngles(angs,n);
+    }
+    if(a.ch || a.d){
+      const occ=angs.concat(o.lp, id===lobeId?[0,180,20,160,200,340]:[]);
+      let best=315, bs=-1e9;
+      for(let t=0;t<360;t+=15){
+        const md = occ.length ? Math.min(...occ.map(f=>adist(f,t))) : 180;
+        const sc = Math.min(md,80) - 0.12*adist(t,315);
+        if(sc>bs){ bs=sc; best=t; }
+      }
+      o.chg={t: a.ch ? (a.ch>0?"+":"−") : a.d, k: a.ch?"c":"d", ang:best};
+    }
+    L[id]=o;
+  });
+  return L;
+}
+function labWidth(o){ return o.grp ? o.lab.t.length*8.6 : 2*(HW[o.el]||6); }
+function bboxOfFrames(frames, lays){
+  const bb={x0:Infinity,x1:-Infinity,y0:Infinity,y1:-Infinity};
+  const ext=(x0,x1,y0,y1)=>{ bb.x0=Math.min(bb.x0,x0); bb.x1=Math.max(bb.x1,x1); bb.y0=Math.min(bb.y0,y0); bb.y1=Math.max(bb.y1,y1); };
+  frames.forEach((F,i)=>{
+    const L=lays[i]; let fb={x0:Infinity,x1:-Infinity,y0:Infinity,y1:-Infinity};
+    Object.values(L).forEach(o=>{
+      let x0,x1;
+      if(o.grp){ if(o.lab.anc==="end"){ x1=o.x+o.lab.dx+2; x0=x1-labWidth(o); } else { x0=o.x+o.lab.dx-2; x1=x0+labWidth(o); } }
+      else { x0=o.x-(HW[o.el]||6)-14; x1=o.x+(HW[o.el]||6)+14; }
+      const y0=o.y-22, y1=o.y+22;
+      ext(x0,x1,y0,y1);
+      fb.x0=Math.min(fb.x0,x0); fb.x1=Math.max(fb.x1,x1); fb.y0=Math.min(fb.y0,y0); fb.y1=Math.max(fb.y1,y1);
+    });
+    if(F.brk) ext(fb.x0-14, fb.x1+30, fb.y0-14, fb.y1+10);
+    F.T.forEach(t=>ext(t.x*U-100, t.x*U+100, t.y*U-12, t.y*U+12));
+  });
+  return bb;
+}
+
+/* ---------- SVG-Bausteine ---------- */
+const line=(x1,y1,x2,y2,c)=>`<line${c?` class="${c}"`:""} x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`;
+const wrapOp=(h,op)=> op>=0.999 ? h : (op<=0.001 ? "" : `<g opacity="${op.toFixed(3)}">${h}</g>`);
+const hwOf = o => o.grp ? 9 : (HW[o.el]||6);
+function shorten(o,dx,dy){
+  if(o.grp) return 10;
+  const rx=hwOf(o)+3.5, ry=9.5;
+  return 1/Math.sqrt((dx/rx)**2+(dy/ry)**2);
+}
+function bondSVG(A,B,b){
+  let x1=A.x,y1=A.y,x2=B.x,y2=B.y;
+  const len=Math.hypot(x2-x1,y2-y1)||1, dx=(x2-x1)/len, dy=(y2-y1)/len;
+  const s1=shorten(A,dx,dy), s2=shorten(B,dx,dy);
+  x1+=dx*s1; y1+=dy*s1; x2-=dx*s2; y2-=dy*s2;
+  const nx=-dy, ny=dx;
+  if(b.s==="w") return `<polygon class="wd" points="${f1(x1)},${f1(y1)} ${f1(x2+nx*4.2)},${f1(y2+ny*4.2)} ${f1(x2-nx*4.2)},${f1(y2-ny*4.2)}"/>`;
+  if(b.s==="h"){ let h=""; for(let k=1;k<=6;k++){ const t=k/6.4, w=0.6+3.8*t, px=x1+(x2-x1)*t, py=y1+(y2-y1)*t; h+=line(px+nx*w,py+ny*w,px-nx*w,py-ny*w); } return h; }
+  if(b.s==="p") return line(x1,y1,x2,y2,"pb");
+  const offs = b.o===2?[-2.8,2.8] : b.o===3?[-3.8,0,3.8] : b.o===1.5?[-2.6,2.6] : [0];
+  return offs.map((of,k)=>line(x1+nx*of,y1+ny*of,x2+nx*of,y2+ny*of,(b.o===1.5&&k===1)?"pb":"")).join("");
+}
+function textSVG(o){
+  return `<text x="${f1(o.x+o.lab.dx)}" y="${f1(o.y)}" text-anchor="${o.lab.anc}" dominant-baseline="central" class="${o.grp?"g ":""}${ELC[o.el]||""}">${esc(o.lab.t)}</text>`;
+}
+function lpSVG(o,angs){
+  const rx=hwOf(o)+7.5, ry=12.5, cls="lp "+(ELC[o.el]||"");
+  return angs.map(t=>{ const c=Math.cos(t*D), s=Math.sin(t*D), px=o.x+rx*c, py=o.y+ry*s, h=4.6; return line(px-s*h,py+c*h,px+s*h,py-c*h,cls); }).join("");
+}
+function chgSVG(o,chg,ang){
+  const rx=hwOf(o)+5.5, ry=12, c=Math.cos(ang*D), s=Math.sin(ang*D);
+  if(chg.k==="c"){
+    const px=o.x+(rx+12)*c, py=o.y+(ry+9)*s;
+    return `<circle class="chc" cx="${f1(px)}" cy="${f1(py)}" r="6.6"/><text class="cht" x="${f1(px)}" y="${f1(py+0.5)}" text-anchor="middle" dominant-baseline="central">${chg.t}</text>`;
+  }
+  const px=o.x+(rx+9)*c, py=o.y+(ry+6)*s;
+  return `<text class="dl" x="${f1(px)}" y="${f1(py)}" text-anchor="middle" dominant-baseline="central">${chg.t}</text>`;
+}
+function arrowSVG(ar,P){
+  const mid=(A,B)=>({x:(A.x+B.x)/2, y:(A.y+B.y)/2});
+  const T = ar.t.a ? P[ar.t.a] : mid(P[ar.t.b[0]],P[ar.t.b[1]]);
+  let S;
+  if(ar.f.lp){
+    const o=P[ar.f.lp], dir=(Math.atan2(T.y-o.y,T.x-o.x)/D+360)%360;
+    let best=dir, bdv=999;
+    (o.lpCur||[]).forEach(t=>{ const d=adist(t,dir); if(d<bdv){ bdv=d; best=t; } });
+    const rx=hwOf(o)+9.5, ry=15;
+    S={x:o.x+rx*Math.cos(best*D), y:o.y+ry*Math.sin(best*D)};
+  } else S=mid(P[ar.f.b[0]],P[ar.f.b[1]]);
+  let E={x:T.x, y:T.y};
+  const dx=E.x-S.x, dy=E.y-S.y, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len;
+  if(ar.f.b){ S.x+=nx*ar.bend*5; S.y+=ny*ar.bend*5; }
+  if(!ar.t.a){ E.x+=nx*ar.bend*6; E.y+=ny*ar.bend*6; }
+  if(ar.f.b && ar.t.a){ const o=P[ar.t.a]; E={x:T.x+nx*ar.bend*17-dx/len*3, y:T.y+ny*ar.bend*17-dy/len*3}; }
+  const k=ar.bend*(ar.f.b && ar.t.a ? Math.max(16,len*0.3) : ar.f.b ? Math.max(22,len*0.5) : Math.max(20,len*0.42));
+  const C={x:(S.x+E.x)/2+nx*k, y:(S.y+E.y)/2+ny*k};
+  if(ar.t.a && !ar.f.b){ const o=P[ar.t.a], tx=E.x-C.x, ty=E.y-C.y, tl=Math.hypot(tx,ty)||1, r=hwOf(o)+9; E={x:E.x-tx/tl*r, y:E.y-ty/tl*r}; }
+  const tx=E.x-C.x, ty=E.y-C.y, tl=Math.hypot(tx,ty)||1, ux=tx/tl, uy=ty/tl;
+  const hl=9, hw2=4.2, bx=E.x-ux*hl, by=E.y-uy*hl;
+  const Ee={x:E.x-ux*4, y:E.y-uy*4};
+  return `<path class="ea" d="M${f1(S.x)} ${f1(S.y)} Q${f1(C.x)} ${f1(C.y)} ${f1(Ee.x)} ${f1(Ee.y)}"/><polygon class="eh" points="${f1(E.x)},${f1(E.y)} ${f1(bx-uy*hw2)},${f1(by+ux*hw2)} ${f1(bx+uy*hw2)},${f1(by-ux*hw2)}"/>`;
+}
+function bracketSVG(F,P,ids){
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+  ids.forEach(id=>{ const o=P[id]; if(!o) return; let a=o.x-hwOf(o)-14, b=o.x+hwOf(o)+14;
+    if(o.grp){ if(o.lab.anc==="end"){ b=o.x+o.lab.dx+4; a=b-labWidth(o)-4; } else { a=o.x+o.lab.dx-4; b=a+labWidth(o)+4; } }
+    x0=Math.min(x0,a); x1=Math.max(x1,b); y0=Math.min(y0,o.y-22); y1=Math.max(y1,o.y+22); });
+  x0-=6; x1+=6; y0-=4; y1+=4;
+  let h=`<path class="br" d="M${f1(x0+7)} ${f1(y0)} H${f1(x0)} V${f1(y1)} H${f1(x0+7)}"/><path class="br" d="M${f1(x1-7)} ${f1(y0)} H${f1(x1)} V${f1(y1)} H${f1(x1-7)}"/>`;
+  h+=`<text class="bk" x="${f1(x1+5)}" y="${f1(y0+4)}" dominant-baseline="central">‡${F.brk.ch?" "+F.brk.ch:""}</text>`;
+  return h;
+}
+function lobesSVG(o){
+  return `<ellipse class="lobe" cx="${f1(o.x-21)}" cy="${f1(o.y)}" rx="15" ry="9.5"/><ellipse class="lobe" cx="${f1(o.x+21)}" cy="${f1(o.y)}" rx="15" ry="9.5"/>`;
+}
+const lerp=(a,b,t)=>a+(b-a)*t;
+function lerpAng(a,b,t){ let d=((b-a)%360+540)%360-180; return (a+d*t+360)%360; }
+function matchLP(A,B){
+  const a=A.slice().sort((x,y)=>x-y), b=B.slice().sort((x,y)=>x-y), n=a.length;
+  let best=0, bv=Infinity;
+  for(let s=0;s<n;s++){ let v=0; for(let i=0;i<n;i++) v+=adist(a[i],b[(i+s)%n]); if(v<bv){ bv=v; best=s; } }
+  return a.map((x,i)=>[x,b[(i+best)%n]]);
+}
+
+/* Szene zeichnen: Frame i, optional Übergang zu Frame j mit t ∈ [0,1] */
+function sceneSVG(frames,lays,i,j,t){
+  const FA=frames[i], LA=lays[i], FB=j!=null?frames[j]:null, LB=j!=null?lays[j]:null;
+  if(!FB) t=0;
+  const P={}, ids=new Set(Object.keys(LA).concat(LB?Object.keys(LB):[]));
+  const opA={}, both={};
+  ids.forEach(id=>{
+    const a=LA[id], b=LB?LB[id]:null;
+    if(a && b){ P[id]=Object.assign({}, t<0.5?a:b, {x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t)}); both[id]=1; }
+    else P[id]=Object.assign({}, a||b);
+    if(a && b && a.lp.length===b.lp.length) P[id].lpCur=matchLP(a.lp,b.lp).map(([x,y])=>lerpAng(x,y,t));
+    else P[id].lpCur=(t<0.5 && a ? a.lp : (b||a).lp);
+    opA[id] = (a&&b) ? 1 : a ? 1-t : t;
+  });
+  const out=[];
+  // Orbitallappen
+  if(FA.lobes && (!FB || !FB.lobes)) out.push(wrapOp(lobesSVG(P[FA.lobes.id]),1-t));
+  if(FB && FB.lobes) out.push(wrapOp(lobesSVG(P[FB.lobes.id]), FA.lobes?1:t));
+  // Bindungen
+  const key=b=>[b.i,b.j].sort().join("|")+"";
+  const bmA={}, bmB={};
+  FA.B.forEach(b=>bmA[key(b)]=b); if(FB) FB.B.forEach(b=>bmB[key(b)]=b);
+  Object.keys(bmA).forEach(k=>{
+    const a=bmA[k], b=bmB[k];
+    if(FB && b && a.o===b.o && a.s===b.s){ out.push(bondSVG(P[a.i],P[a.j],a)); }
+    else out.push(wrapOp(bondSVG(P[a.i],P[a.j],a), FB?1-t:1));
+  });
+  if(FB) Object.keys(bmB).forEach(k=>{
+    const a=bmA[k], b=bmB[k];
+    if(a && a.o===b.o && a.s===b.s) return;
+    out.push(wrapOp(bondSVG(P[b.i],P[b.j],b), t));
+  });
+  // Atome, freie Elektronenpaare, Ladungen
+  ids.forEach(id=>{
+    const o=P[id], a=LA[id], b=LB?LB[id]:null, op=opA[id];
+    out.push(wrapOp(textSVG(o),op));
+    if(a && b){
+      if(a.lp.length===b.lp.length) out.push(lpSVG(o,o.lpCur));
+      else { out.push(wrapOp(lpSVG(o,a.lp),1-t)); out.push(wrapOp(lpSVG(o,b.lp),t)); }
+      const ca=a.chg, cb=b.chg;
+      if(ca && cb && ca.t===cb.t) out.push(chgSVG(o,ca,lerpAng(ca.ang,cb.ang,t)));
+      else { if(ca) out.push(wrapOp(chgSVG(o,ca,ca.ang),1-t)); if(cb) out.push(wrapOp(chgSVG(o,cb,cb.ang),t)); }
+    } else {
+      const s=a||b;
+      out.push(wrapOp(lpSVG(o,s.lp),op));
+      if(s.chg) out.push(wrapOp(chgSVG(o,s.chg,s.chg.ang),op));
+    }
+  });
+  // Klammern
+  if(FA.brk) out.push(wrapOp(bracketSVG(FA,P,Object.keys(LA)), FB?1-t:1));
+  if(FB && FB.brk) out.push(wrapOp(bracketSVG(FB,P,Object.keys(LB)), t));
+  // Texte
+  FA.T.forEach(x=>out.push(wrapOp(`<text class="${x.c}" x="${f1(x.x*U)}" y="${f1(x.y*U)}" text-anchor="middle" dominant-baseline="central">${esc(x.t)}</text>`, FB?1-t:1)));
+  if(FB) FB.T.forEach(x=>out.push(wrapOp(`<text class="${x.c}" x="${f1(x.x*U)}" y="${f1(x.y*U)}" text-anchor="middle" dominant-baseline="central">${esc(x.t)}</text>`, t)));
+  // Pfeile
+  const aop = FB ? Math.max(0,1-4*t) : 1;
+  if(aop>0) out.push(wrapOp(FA.R.map(ar=>arrowSVG(ar,P)).join(""), aop));
+  return out.join("");
+}
+function staticSVG(F,maxH,sc){
+  const L=layout(F), bb=bboxOfFrames([F],[L]), pad=10;
+  const W=bb.x1-bb.x0+2*pad, H=bb.y1-bb.y0+2*pad;
+  return `<svg class="mol" viewBox="${f1(bb.x0-pad)} ${f1(bb.y0-pad)} ${f1(W)} ${f1(H)}" width="${f1(W*(sc||1.15))}" style="max-height:${maxH||300}px" role="img" aria-label="Valenzstrichformel">${sceneSVG([F],[L],0,null,0)}</svg>`;
+}
+
+/* =====================================================================
+   Simulation – Zustand & Oberfläche
+   ===================================================================== */
+const P = {sub:"prim", lg:"Br", nu:"OH", solv:"protic", T:25, cRX:0.5, cNu:1.0};
+const S = {mech:"SN2", built:null, lays:null, step:0, anim:null, playing:false, speed:1};
+const scene=$("scene");
+
+function setStatus(txt,run){ $("statusText").textContent=txt; $("statusBadge").classList.toggle("running",!!run); }
+
+function readParams(){
+  P.sub=$("subSel").value; P.lg=$("lgSel").value; P.nu=$("nuSel").value;
+  P.T=+$("tSl").value; P.cRX=+$("cRXSl").value; P.cNu=+$("cNuSl").value;
+}
+function updateSideLabels(){
+  $("subName").textContent = subName(P.sub,P.lg,true) + " · " + SUB[P.sub].kind;
+  $("tVal").textContent = P.T+" °C";
+  $("cRXVal").textContent = deNum(P.cRX,2)+" mol/L";
+  const solvent = NU[P.nu].solvent;
+  $("cNuSl").disabled = solvent;
+  $("cNuVal").textContent = solvent ? "55,5 mol/L" : deNum(P.cNu,1)+" mol/L";
+  $("cNuLab").textContent = solvent ? "c(Wasser) – Lösemittel" : "c₀(Nucleophil/Base)";
+  document.querySelectorAll("#solvToggle button").forEach(b=>{
+    b.classList.toggle("active", solvent ? b.dataset.s==="protic" : b.dataset.s===P.solv);
+    b.disabled = solvent && b.dataset.s==="aprotic";
+  });
+  $("solvNote").textContent = solvent ? "Wasser ist selbst ein polar protisches Lösemittel." :
+    (P.solv==="protic" ? "z. B. Wasser, Ethanol – bilden Wasserstoffbrücken." : "z. B. Aceton, DMSO – keine O–H- oder N–H-Bindungen.");
+}
+
+function rebuild(keepMech){
+  readParams(); updateSideLabels();
+  const m=model(P), dom=domOf(m);
+  if(!keepMech || (P.sub==="methyl" && (S.mech==="E2"||S.mech==="E1"))) S.mech=dom;
+  renderMechButtons(m,dom);
+  buildScene();
+  renderDist(m);
+  renderFactors(m);
+  renderEnergy();
+  updateKinInfo();
+}
+function renderMechButtons(m,dom){
+  $("mechBtns").innerHTML = MECHS.map(k=>{
+    const dis = P.sub==="methyl" && (k==="E2"||k==="E1");
+    return `<button data-m="${k}" class="${k===S.mech?"active ":""}${k===dom?"dom":""}"${dis?" disabled title=\"Kein β-H-Atom vorhanden\"":""}><span class="mn">${MN[k]}</span><span class="ms">${dis?"–":pct(m.share[k])}</span></button>`;
+  }).join("");
+  $("mechBtns").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ if(b.disabled) return; S.mech=b.dataset.m; rebuild(true); }));
+}
+function buildScene(){
+  stopAnim();
+  S.built = buildMech(P,S.mech);
+  S.lays = S.built.frames.map(layout);
+  S.step = 0;
+  const bb=bboxOfFrames(S.built.frames,S.lays), pad=12;
+  scene.setAttribute("viewBox", `${f1(bb.x0-pad)} ${f1(bb.y0-pad)} ${f1(bb.x1-bb.x0+2*pad)} ${f1(bb.y1-bb.y0+2*pad)}`);
+  drawStep();
+  const m=model(P), sh=m.share[S.mech];
+  const warn=$("mechWarn");
+  if(sh<0.01){ warn.hidden=false; warn.innerHTML=`Unter den gewählten Bedingungen läuft der ${MN[S.mech]}-Mechanismus praktisch nicht ab (Anteil ${pct(sh)}). ${whyNot(S.mech,P)} Die Animation zeigt ihn trotzdem.`; }
+  else warn.hidden=true;
+}
+function drawStep(i,j,t){
+  i = i==null?S.step:i;
+  scene.innerHTML = sceneSVG(S.built.frames,S.lays,i,j,t||0);
+  const n=S.built.frames.length, cur = j!=null && t>0.5 ? j : i;
+  $("caption").innerHTML = S.built.frames[cur].cap;
+  $("stepDots").innerHTML = S.built.frames.map((_,k)=>`<i class="${k<=cur?"on":""}"></i>`).join("");
+  $("roMech").innerHTML = MN[S.mech];
+  $("roStep").textContent = (cur+1)+" / "+n;
+  $("roLaw").innerHTML = (S.mech==="SN2") ? "v = k · c(RX) · c(Nu)" : (S.mech==="E2") ? "v = k · c(RX) · c(Base)" : "v = k · c(RX)";
+  $("roStereo").textContent = stereoOf(P,S.mech);
+  $("roProd").textContent = prodOf(P,S.mech,true);
+  $("btnPrev").disabled = S.step===0 && !S.anim;
+  $("btnNext").disabled = S.step>=n-1 && !S.anim;
+  energyDot(i,j,t||0);
+}
+function stopAnim(){ if(S.anim) cancelAnimationFrame(S.anim.raf); S.anim=null; S.playing=false; $("btnPlay").textContent="Abspielen"; setStatus("bereit",false); }
+function animateTo(target,cb){
+  if(S.anim) return;
+  const from=S.step, dur=1500/S.speed, t0=performance.now();
+  setStatus("Animation läuft",true);
+  const tick=now=>{
+    let t=Math.min(1,(now-t0)/dur); const e=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    drawStep(from,target,e);
+    if(t<1) S.anim.raf=requestAnimationFrame(tick);
+    else { S.anim=null; S.step=target; drawStep(); if(cb) cb(); else if(!S.playing) setStatus("bereit",false); }
+  };
+  S.anim={raf:requestAnimationFrame(tick)};
+}
+function playAll(){
+  if(S.playing){ stopAnim(); drawStep(); return; }
+  if(S.step>=S.built.frames.length-1){ S.step=0; drawStep(); }
+  S.playing=true; $("btnPlay").textContent="Anhalten";
+  const next=()=>{
+    if(!S.playing) return;
+    if(S.step>=S.built.frames.length-1){ S.playing=false; $("btnPlay").textContent="Abspielen"; setStatus("bereit",false); return; }
+    animateTo(S.step+1,()=>{ setTimeout(next, 900/S.speed); });
+  };
+  next();
+}
+$("btnNext").addEventListener("click",()=>{ if(S.playing) stopAnim(); if(S.step<S.built.frames.length-1) animateTo(S.step+1); });
+$("btnPrev").addEventListener("click",()=>{ if(S.playing||S.anim) stopAnim(); if(S.step>0){ S.step--; drawStep(); } });
+$("btnPlay").addEventListener("click",playAll);
+$("btnRestart").addEventListener("click",()=>{ stopAnim(); S.step=0; drawStep(); });
+document.querySelectorAll("#speedGroup button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#speedGroup button").forEach(x=>x.classList.toggle("active",x===b)); S.speed=+b.dataset.s;
+}));
+
+/* ---------- Produktverteilung ---------- */
+function renderDist(m){
+  $("distBar").innerHTML = MECHS.map(k=>{ const w=m.share[k]*100; return w<0.05?"":`<div style="width:${w}%;background:${MCOL[k]}" title="${k}">${w>=7?k.replace("SN","S<sub>N</sub>")+" "+deNum(w,0)+" %":""}</div>`; }).join("");
+  const agg={};
+  MECHS.forEach(k=>{ if(m.share[k]<0.0005) return; const n=prodOf(P,k,false); agg[n]=(agg[n]||0)+m.share[k]; });
+  const main=Object.keys(agg).sort((a,b)=>agg[b]-agg[a]);
+  const tot = m.tot;
+  const tHalf = tot>0 ? Math.log(2)/(tot/P.cRX) : Infinity;
+  $("distMain").innerHTML = `Hauptprodukt: <b>${esc(main[0])}</b> (${pct(agg[main[0]])})` + (main[1]?` · Nebenprodukt: ${esc(main[1])} (${pct(agg[main[1]])})`:"") +
+    ` · Anfangsgeschwindigkeit v₀ = ${sci(tot)} mol/(L·s)` + (tHalf>3.15e7 ? " · <span style=\"color:var(--danger)\">praktisch keine Reaktion</span>" : "");
+  $("distBody").innerHTML = MECHS.filter(k=>!(P.sub==="methyl"&&k[0]==="E")).map(k=>{
+    const sh=m.share[k];
+    return `<tr style="${sh<0.001?"color:var(--text-faint)":""}"><td><span class="sw-dot" style="background:${MCOL[k]}"></span>${MN[k]}</td><td class="mono">${pct(sh)}</td><td>${esc(prodOf(P,k,true))}</td><td>${esc(stereoOf(P,k))}</td><td>${esc(byproducts(P,k))}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- Einflussfaktoren ---------- */
+const chip=(k,dir)=>`<span class="chip ${dir>0?"up":"dn"}">${MN[k]} ${dir>0?"↑":"↓"}</span>`;
+function renderFactors(m){
+  const s=P.sub, n=P.nu, apr=P.solv==="aprotic" && !NU[n].solvent, F=[];
+  const SUBX={
+    methyl:["Kaum sterische Hinderung – der Rückseitenangriff ist leicht. Ein Methyl-Kation wäre extrem instabil, und es gibt kein β-H-Atom.", chip("SN2",1)+chip("SN1",-1)],
+    prim:["Geringe sterische Hinderung – S<sub>N</sub>2 ist bevorzugt. Primäre Carbokationen sind zu instabil für S<sub>N</sub>1/E1. Mit sperrigen Basen tritt E2 in den Vordergrund.", chip("SN2",1)+chip("SN1",-1)],
+    sec:["Grenzfall: Der Rückseitenangriff ist deutlich behindert, das sekundäre Carbokation nur mäßig stabil. Je nach Nucleophil, Lösemittel und Temperatur laufen alle vier Mechanismen – mit starken Basen vor allem E2.", chip("E2",1)],
+    tert:["Drei Alkylgruppen schirmen die Rückseite ab – kein S<sub>N</sub>2. Das tertiäre Carbokation ist durch +I-Effekt und Hyperkonjugation gut stabilisiert: S<sub>N</sub>1/E1, mit starken Basen E2.", chip("SN2",-1)+chip("SN1",1)+chip("E2",1)]
+  };
+  F.push({k:"Substrat", v:SUB[s].kind+" – "+subName(s,P.lg,true), x:SUBX[s][0], c:SUBX[s][1]});
+  const NUX={
+    OH:["Starkes Nucleophil und starke Base. Begünstigt S<sub>N</sub>2 – bei sekundären/tertiären Substraten aber auch E2.", chip("SN2",1)+chip("E2",1)],
+    CN:["Starkes Nucleophil, aber schwache Base – ideal für S<sub>N</sub>2, kaum Eliminierung.", chip("SN2",1)+chip("E2",-1)],
+    I:["Sehr gutes Nucleophil (groß, gut polarisierbar), praktisch keine Base – keine E2.", chip("SN2",1)+chip("E2",-1)],
+    H2O:["Schwaches Nucleophil, sehr schwache Base und zugleich Lösemittel (Solvolyse). Begünstigt Mechanismen über Carbokationen; bimolekulare Reaktionen sind sehr langsam.", chip("SN1",1)+chip("E1",1)+chip("SN2",-1)],
+    tBuO:["Starke, aber sterisch anspruchsvolle Base: Der Angriff am C-Atom ist behindert, ein randständiges H-Atom ist leicht erreichbar → E2, bei 2-Halogenbutan bevorzugt das Hofmann-Produkt But-1-en.", chip("E2",1)+chip("SN2",-1)]
+  };
+  F.push({k:"Nucleophil / Base", v:NU[n].name+" ("+NU[n].f+")", x:NUX[n][0], c:NUX[n][1]});
+  const LGX={F:"Fluorid ist eine sehr schlechte Abgangsgruppe (starke C–F-Bindung, kleines, stark basisches Ion) – alle Reaktionen sind extrem langsam.",
+    Cl:"Chlorid ist eine mäßige Abgangsgruppe.", Br:"Bromid ist eine gute Abgangsgruppe.", I:"Iodid ist die beste Abgangsgruppe: schwächste C–X-Bindung, großes, gut polarisierbares Ion, sehr schwache Base."};
+  F.push({k:"Abgangsgruppe", v:LG[P.lg].f, x:LGX[P.lg]+" Die Abgangsgruppe beschleunigt oder bremst alle vier Mechanismen gleichermaßen.", c:""});
+  F.push({k:"Lösemittel", v: NU[n].solvent ? "Wasser (polar protisch)" : (apr?"polar aprotisch":"polar protisch"),
+    x: apr ? "Anionen werden nicht durch Wasserstoffbrücken solvatisiert und bleiben „nackt“ und reaktiv – S<sub>N</sub>2 und E2 werden stark beschleunigt. Carbokationen und Abgangsgruppe werden schlecht stabilisiert." :
+             "Wasserstoffbrücken umhüllen anionische Nucleophile und schwächen sie. Gleichzeitig werden Carbokation und Abgangsgruppe gut solvatisiert – das begünstigt S<sub>N</sub>1/E1.",
+    c: apr ? chip("SN2",1)+chip("E2",1)+chip("SN1",-1) : chip("SN1",1)+chip("E1",1)});
+  F.push({k:"Temperatur", v:P.T+" °C", x:"Eliminierungen haben eine höhere Aktivierungsenergie und erhöhen die Teilchenzahl (Entropiegewinn). Mit steigender Temperatur nimmt deshalb der Anteil der Eliminierung zu; alle Reaktionen werden schneller.", c: P.T>=50 ? chip("E2",1)+chip("E1",1) : ""});
+  F.push({k:"Konzentration des Nucleophils", v: NU[n].solvent?"Lösemittel (55,5 mol/L)":deNum(P.cNu,1)+" mol/L", x:"Eine höhere Konzentration beschleunigt S<sub>N</sub>2 und E2 (bimolekular). S<sub>N</sub>1 und E1 sind davon unabhängig – ihr Anteil sinkt deshalb.", c: P.cNu>=1 && !NU[n].solvent ? chip("SN2",1)+chip("E2",1) : ""});
+  $("factorList").innerHTML = F.map(f=>`<div class="factor"><div class="fh"><span class="fk">${f.k}</span><span class="fv">${esc(f.v)}</span><span class="chips">${f.c}</span></div><div class="fx">${f.x}</div></div>`).join("");
+}
+function whyNot(mech,p){
+  const s=p.sub, n=p.nu, apr=p.solv==="aprotic" && !NU[n].solvent;
+  if(mech==="SN2"){ if(s==="tert") return "Am tertiären C-Atom ist der Rückseitenangriff sterisch blockiert."; if(n==="H2O") return "Wasser ist ein zu schwaches Nucleophil."; if(n==="tBuO") return "tert-Butanolat ist zu sperrig, um das C-Atom anzugreifen."; return "Andere Mechanismen sind unter diesen Bedingungen schneller."; }
+  if(mech==="SN1"||mech==="E1"){ if(s==="methyl"||s==="prim") return "Methyl- und primäre Carbokationen sind zu instabil."; if(apr) return "Aprotische Lösemittel stabilisieren Carbokation und Abgangsgruppe kaum."; return "Die bimolekularen Mechanismen mit dem starken Nucleophil bzw. der starken Base sind schneller."; }
+  if(mech==="E2"){ if(s==="methyl") return "Es gibt kein β-H-Atom."; if(n==="I"||n==="H2O"||n==="CN") return NU[n].name+" ist eine zu schwache Base."; return "Die Substitution ist unter diesen Bedingungen schneller."; }
+  return "";
+}
+
+/* ---------- Energiediagramm ---------- */
+function curveE(pts,u){ // u: Fließkomma-Index
+  const n=pts.length-1; if(u<=0) return pts[0].E; if(u>=n) return pts[n].E;
+  const i=Math.floor(u), f=u-i, a=pts[i].E, b=pts[i+1].E;
+  return a+(b-a)*(1-Math.cos(Math.PI*f))/2;
+}
+let EGEO=null;
+function renderEnergy(){
+  const pts=S.built.pts, n=pts.length-1, W=680, H=300, x0=70, x1=640, yTop=34, yBot=262;
+  const Es=pts.map(p=>p.E), Emax=Math.max(...Es,60), Emin=Math.min(...Es,-30);
+  const X=u=>x0+(x1-x0)*u/n, Y=E=>yBot-(E-Emin)/(Emax-Emin)*(yBot-yTop);
+  EGEO={X,Y,pts};
+  let d=""; for(let k=0;k<=n*40;k++){ const u=k/40; d+=(k?"L":"M")+f1(X(u))+" "+f1(Y(curveE(pts,u))); }
+  let h=`<line x1="${x0-28}" y1="${yBot+14}" x2="${x1+10}" y2="${yBot+14}" stroke="#5f6870"/><line x1="${x0-28}" y1="${yBot+14}" x2="${x0-28}" y2="${yTop-14}" stroke="#5f6870"/>`;
+  h+=`<polygon points="${x0-28},${yTop-20} ${x0-32},${yTop-10} ${x0-24},${yTop-10}" fill="#5f6870"/><polygon points="${x1+16},${yBot+14} ${x1+6},${yBot+10} ${x1+6},${yBot+18}" fill="#5f6870"/>`;
+  h+=`<text x="${x0-36}" y="${(yTop+yBot)/2}" fill="#9aa2a9" font-size="12" text-anchor="middle" transform="rotate(-90 ${x0-36} ${(yTop+yBot)/2})">Energie</text>`;
+  h+=`<text x="${(x0+x1)/2}" y="${yBot+32}" fill="#9aa2a9" font-size="12" text-anchor="middle">Reaktionskoordinate</text>`;
+  h+=`<path d="${d}" fill="none" stroke="${MCOL[S.mech]}" stroke-width="2.4"/>`;
+  // höchster Übergangszustand
+  let iMax=0; pts.forEach((p,k)=>{ if(p.ts && p.E>pts[iMax].E) iMax=k; });
+  h+=`<line x1="${X(0)-6}" y1="${Y(0)}" x2="${X(iMax)+30}" y2="${Y(0)}" stroke="#5f6870" stroke-dasharray="3 3"/>`;
+  h+=`<line x1="${X(iMax)+22}" y1="${Y(0)-2}" x2="${X(iMax)+22}" y2="${Y(pts[iMax].E)+6}" stroke="#ffb454" stroke-width="1.4"/><polygon points="${X(iMax)+22},${Y(pts[iMax].E)+2} ${X(iMax)+18},${Y(pts[iMax].E)+10} ${X(iMax)+26},${Y(pts[iMax].E)+10}" fill="#ffb454"/>`;
+  h+=`<text x="${X(iMax)+28}" y="${(Y(0)+Y(pts[iMax].E))/2}" fill="#ffb454" font-size="12" dominant-baseline="central">E<tspan baseline-shift="sub" font-size="9">A</tspan></text>`;
+  pts.forEach((p,k)=>{
+    if(!p.l) return;
+    const low = !p.ts && p.E===Emin && Y(p.E)>yBot-20;
+    const y = p.ts ? Y(p.E)-12 : low ? Y(p.E)-12 : Y(p.E)+18;
+    h+=`<text x="${X(k)-(low&&k===n?34:0)}" y="${y}" fill="${p.ts?"#e7e4dd":"#9aa2a9"}" font-size="12" text-anchor="middle">${esc(p.l)}${p.ts?" ‡":""}</text>`;
+  });
+  if(pts.filter(p=>p.ts).length>1) h+=`<text x="${X(iMax)}" y="${Y(pts[iMax].E)-27}" fill="#ffb454" font-size="11" text-anchor="middle">geschwindigkeitsbestimmend</text>`;
+  h+=`<circle id="eDot" r="6.5" fill="#ffb454" stroke="#0e1113" stroke-width="2" cx="${X(0)}" cy="${Y(pts[0].E)}"/>`;
+  $("energy").innerHTML=h;
+  const m=model(P);
+  $("energyNote").innerHTML = `Energieverlauf für ${MN[S.mech]} (qualitativ). ` + ({
+    SN2:"Ein einziger Übergangszustand, keine Zwischenstufe.",
+    SN1:"Zwei Übergangszustände; das Carbokation ist eine Zwischenstufe im lokalen Minimum. Der erste Schritt hat die höhere Aktivierungsenergie und bestimmt die Geschwindigkeit.",
+    E2:"Ein einziger Übergangszustand, in dem C–H- und C–X-Bindung gleichzeitig gelöst werden.",
+    E1:"Wie S<sub>N</sub>1 mit Carbokation als Zwischenstufe – S<sub>N</sub>1 und E1 haben denselben geschwindigkeitsbestimmenden Schritt."
+  })[S.mech] + ` Anteil unter den gewählten Bedingungen: ${pct(m.share[S.mech])}.`;
+}
+function energyDot(i,j,t){
+  const dot=document.getElementById("eDot"); if(!dot||!EGEO) return;
+  const ds=S.built.dots, ui=ds[i], uj=j!=null?ds[j]:ui, u=ui+(uj-ui)*t;
+  dot.setAttribute("cx",f1(EGEO.X(u))); dot.setAttribute("cy",f1(EGEO.Y(curveE(EGEO.pts,u))));
+}
+
+/* ---------- Kinetik ---------- */
+const RUNCOL=["#4fd1c5","#ffb454","#8fb4ff","#ff8a7a","#9bd88f","#c9a2ff","#f0e68c","#ff9ed8"];
+const KIN={runs:[], anim:null};
+const kc=$("kin"), kctx=kc.getContext("2d");
+function fitKin(){ const r=kc.getBoundingClientRect(), dpr=window.devicePixelRatio||1; kc.width=Math.max(300,r.width)*dpr; kc.height=300*dpr; kctx.setTransform(dpr,0,0,dpr,0,0); drawKin(); }
+function simulateRun(p){
+  const m=model(p), kB=m.k2+m.kE2, k1=m.k1, solvent=NU[p.nu].solvent;
+  let A=p.cRX, B=m.cNu;
+  const kinit=k1+kB*B; if(!(kinit>0)) return null;
+  const v0=kinit*A, tMax=8/kinit;
+  const f=(a,b)=>{ const r=(k1+kB*b)*a; return [-r, solvent?0:-r]; };
+  const pts=[[0,A]]; let t=0, dt=tMax/1500;
+  for(let n=0;n<1500;n++){
+    const [a1,b1]=f(A,B), [a2,b2]=f(A+a1*dt/2,B+b1*dt/2), [a3,b3]=f(A+a2*dt/2,B+b2*dt/2), [a4,b4]=f(A+a3*dt,B+b3*dt);
+    A=Math.max(0,A+dt/6*(a1+2*a2+2*a3+a4)); B=Math.max(0,B+dt/6*(b1+2*b2+2*b3+b4)); t+=dt;
+    pts.push([t,A]);
+  }
+  let th=Infinity;
+  for(let k=1;k<pts.length;k++) if(pts[k][1]<=p.cRX/2){ const [ta,ca]=pts[k-1],[tb,cb]=pts[k]; th=ta+(ca-p.cRX/2)/(ca-cb)*(tb-ta); break; }
+  return {p:Object.assign({},p), v0, th, tMax, pts, m};
+}
+function updateKinInfo(){
+  const m=model(P), th=m.tot>0?Math.log(2)/(m.tot/P.cRX):Infinity;
+  $("kinInfo").innerHTML = th>3.15e7*5 ? "Unter diesen Bedingungen läuft praktisch keine Reaktion ab." : `aktuell: v₀ ≈ ${sci(m.tot)} mol/(L·s)`;
+}
+function startRun(){
+  if(KIN.anim) return;
+  const r=simulateRun(P);
+  if(!r || r.th>3.15e7*5){ $("kinInfo").textContent="Keine messbare Reaktion – wähle andere Bedingungen."; return; }
+  if(KIN.runs.length>=8) KIN.runs.shift();
+  r.col=RUNCOL[(KIN.runs.length? (RUNCOL.indexOf(KIN.runs[KIN.runs.length-1].col)+1):0)%8];
+  r.prog=0; KIN.runs.push(r);
+  setStatus("Messung läuft",true); $("btnRun").disabled=true;
+  const t0=performance.now();
+  const tick=now=>{ r.prog=Math.min(1,(now-t0)/2600); drawKin(); if(r.prog<1) KIN.anim=requestAnimationFrame(tick); else { KIN.anim=null; $("btnRun").disabled=false; setStatus("bereit",false); renderRuns(); } };
+  KIN.anim=requestAnimationFrame(tick);
+  renderRuns();
+}
+function drawKin(){
+  const W=kc.width/(window.devicePixelRatio||1), H=300, g=kctx;
+  g.clearRect(0,0,W,H);
+  const L=60,R=18,T=16,B=42, pw=W-L-R, ph=H-T-B;
+  const cMax=Math.max(1, ...KIN.runs.map(r=>r.p.cRX));
+  const tEnd0=KIN.runs.length ? Math.max(...KIN.runs.map(r=>Math.min(r.tMax, (isFinite(r.th)?r.th*6:r.tMax)))) : 60;
+  const unit = tEnd0<180?["s",1] : tEnd0<10800?["min",60] : tEnd0<3e5?["h",3600] : ["d",86400];
+  const raw=tEnd0/unit[1]/6, mag=Math.pow(10,Math.floor(Math.log10(raw))), stp=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw), tEnd=stp*6*unit[1];
+  g.strokeStyle="#233029"; g.lineWidth=1; g.font="11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; g.fillStyle="#5f6870";
+  for(let k=0;k<=5;k++){ const y=T+ph*k/5; g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke(); g.textAlign="right"; g.fillText(deNum(cMax*(1-k/5),2),L-6,y+4); }
+  for(let k=0;k<=6;k++){ const x=L+pw*k/6; g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+ph); g.stroke(); g.textAlign="center"; const v=stp*k; g.fillText(deNum(v, (stp%1)?1:0),x,T+ph+16); }
+  g.fillStyle="#9aa2a9"; g.textAlign="center"; g.fillText("t in "+unit[0],L+pw/2,H-6);
+  g.save(); g.translate(14,T+ph/2); g.rotate(-Math.PI/2); g.fillText("c(Halogenalkan) in mol/L",0,0); g.restore();
+  if(!KIN.runs.length){ g.fillStyle="#5f6870"; g.fillText("Noch keine Messung",L+pw/2,T+ph/2); return; }
+  KIN.runs.forEach(r=>{
+    g.strokeStyle=r.col; g.lineWidth=2; g.beginPath();
+    const tShow=tEnd*r.prog; let first=true;
+    for(const [t,c] of r.pts){ if(t>tShow) break; if(t>tEnd) break; const x=L+pw*t/tEnd, y=T+ph*(1-c/cMax); if(first){g.moveTo(x,y); first=false;} else g.lineTo(x,y); }
+    g.stroke();
+  });
+}
+function renderRuns(){
+  $("runLegend").innerHTML = KIN.runs.map((r,k)=>`<span><i style="background:${r.col}"></i>Messung ${k+1}</span>`).join("");
+  $("runBody").innerHTML = KIN.runs.length ? KIN.runs.map((r,k)=>`<tr><td><span class="sw-dot" style="background:${r.col}"></span>${k+1}</td><td style="text-align:left">${esc(subName(r.p.sub,r.p.lg,false))} + ${esc(NU[r.p.nu].f)}, ${NU[r.p.nu].solvent?"Wasser":(r.p.solv==="protic"?"protisch":"aprotisch")}, ${r.p.T} °C</td><td class="mono">${deNum(r.p.cRX,2)}</td><td class="mono">${NU[r.p.nu].solvent?"55,5 (LM)":deNum(r.p.cNu,1)}</td><td class="mono">${sci(r.v0,2)}</td><td class="mono">${fmtTime(r.th)}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="empty-hint">Noch keine Messung. Stelle die Bedingungen ein und starte eine Messung.</td></tr>`;
+}
+$("btnRun").addEventListener("click",startRun);
+$("btnClearRuns").addEventListener("click",()=>{ if(KIN.anim){ cancelAnimationFrame(KIN.anim); KIN.anim=null; $("btnRun").disabled=false; setStatus("bereit",false); } KIN.runs=[]; drawKin(); renderRuns(); });
+
+/* ---------- Steuerelemente ---------- */
+["subSel","lgSel","nuSel"].forEach(id=>$(id).addEventListener("change",()=>rebuild(false)));
+["tSl","cRXSl","cNuSl"].forEach(id=>$(id).addEventListener("input",()=>rebuild(true)));
+["tSl","cRXSl","cNuSl"].forEach(id=>$(id).addEventListener("change",()=>rebuild(false)));
+document.querySelectorAll("#solvToggle button").forEach(b=>b.addEventListener("click",()=>{ if(b.disabled) return; P.solv=b.dataset.s; rebuild(false); }));
+document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active",p.id===b.dataset.tab));
+  if(b.dataset.tab==="tKin") fitKin();
+}));
+window.addEventListener("resize",()=>{ if($("tKin").classList.contains("active")) fitKin(); });
+
+/* =====================================================================
+   Trainer
+   ===================================================================== */
+const stats={solved:0, first:0, streak:0, shown:0};
+let TK=null, taskNo=0;
+
+function substrateFrame(p){ const F=Fr(); at(F,"c","C",0,0); subs(F,"c",0,0,SUB[p.sub].R,P_IN,""); at(F,"x",p.lg,1.5,0); bd(F,"c","x"); return F; }
+function condHTML(p,showC){
+  const n=NU[p.nu];
+  let h=`<div class="cond"><span>Substrat</span><span><b>${esc(subName(p.sub,p.lg,true))}</b></span><span>Nucleophil</span><span>${esc(n.name)} (${esc(n.f)})</span>`;
+  h+=`<span>Lösemittel</span><span>${n.solvent?"Wasser (polar protisch)":(p.solv==="protic"?"polar protisch (Ethanol/Wasser)":"polar aprotisch (Aceton/DMSO)")}</span><span>Temperatur</span><span>${p.T} °C</span>`;
+  if(showC && !n.solvent) h+=`<span>c(Nucleophil)</span><span>${deNum(p.cNu,1)} mol/L</span>`;
+  return h+"</div>";
+}
+const O=(id,html,why)=>({id,html,why:why||""});
+
+function genMech(){
+  for(let tries=0;tries<800;tries++){
+    const sub=pick(["methyl","prim","prim","sec","sec","sec","tert","tert"]);
+    const p={sub, lg:pick(["Cl","Br","I"]), nu:pick(sub==="methyl"?["OH","CN","I","H2O","tBuO"]:["OH","CN","I","H2O"]), solv:pick(["protic","aprotic"]), T:pick([20,25,40]), cRX:0.5, cNu:1.0};
+    if(p.nu==="H2O") p.solv="protic";
+    if(p.nu==="I" && p.lg==="I") continue;
+    const m=model(p), tot=m.share.SN1+m.share.SN2;
+    if(!(tot>0)) continue;
+    const r2=m.share.SN2/tot, r1=1-r2;
+    if(Math.max(r1,r2)<0.8) continue;
+    const ans = r2>r1 ? "SN2" : "SN1";
+    const name=prodSN(p.sub,p.nu), chiral=SUB[p.sub].chiral;
+    const nuEff = p.nu==="H2O" ? "OH" : p.nu;
+    const others = shuffle(["OH","CN","I"].filter(k=>k!==nuEff)).map(k=>PSN[k][SIDX[p.sub]]);
+    const whyOther="Dieses Produkt enthält eine andere funktionelle Gruppe, als das eingesetzte Nucleophil liefern kann.";
+    let pOpts, pAns;
+    if(chiral){
+      pAns = ans==="SN2" ? "S" : "rac";
+      pOpts=[
+        O("S","(S)-"+esc(name), ans==="SN1"?"Die (S)-Form entsteht, aber nicht allein: Das planare Carbokation wird von beiden Seiten gleich häufig angegriffen.":""),
+        O("R","(R)-"+esc(name), ans==="SN2"?"Beim Rückseitenangriff klappen die Substituenten um – die Konfiguration kehrt sich um. Die neue Gruppe erhält dieselbe Priorität wie zuvor das Halogen.":"Die (R)-Form entsteht, aber nicht allein: Das planare Carbokation wird von beiden Seiten gleich häufig angegriffen."),
+        O("rac",esc(name)+" als Racemat (R : S = 1 : 1)", ans==="SN2"?"Ein Racemat entsteht nur über ein planares Carbokation (S<sub>N</sub>1). Beim S<sub>N</sub>2-Mechanismus entsteht ein einziges Enantiomer.":""),
+        O("oth",esc(others[0]), whyOther)
+      ];
+    } else {
+      pAns="p";
+      pOpts=shuffle([O("p",esc(name)), O("o1",esc(others[0]),whyOther), O("o2",esc(others[1]),whyOther)]);
+    }
+    const apr = p.solv==="aprotic";
+    const whySN2 = p.sub==="tert" ? "Am tertiären C-Atom ist der Rückseitenangriff sterisch blockiert."
+      : p.nu==="H2O" ? "Wasser ist ein schwaches Nucleophil. Das "+SUB[p.sub].kind+"e Carbokation ist dagegen ausreichend stabil."
+      : "Das "+SUB[p.sub].kind+"e Carbokation wird im protischen Lösemittel gut stabilisiert, während Wasserstoffbrücken das Nucleophil schwächen.";
+    const whySN1 = (p.sub==="methyl"||p.sub==="prim") ? "Methyl- und primäre Carbokationen sind zu instabil – sie entstehen praktisch nicht."
+      : apr ? "Aprotische Lösemittel stabilisieren Carbokation und Abgangsgruppe kaum; das „nackte“ Nucleophil greift direkt an."
+      : "Das starke Nucleophil greift das C-Atom direkt von der Rückseite an, bevor sich ein Carbokation bilden kann.";
+    const reason = ans==="SN2"
+      ? `${p.sub==="methyl"?"Methylhalogenide sind":"Ein "+SUB[p.sub].kind+"es Substrat ist"} am C-Atom wenig abgeschirmt${apr?" und im aprotischen Lösemittel bleibt das Nucleophil besonders reaktiv":""}; ${esc(NU[p.nu].name)} greift direkt von der Rückseite an.`
+      : `Das ${SUB[p.sub].kind}e Carbokation ist ausreichend stabil, ${p.nu==="H2O"?"Wasser ist ein schwaches Nucleophil":p.sub==="tert"?"ein Rückseitenangriff ist sterisch blockiert":"das Nucleophil wird im protischen Lösemittel geschwächt"}, und das protische Lösemittel stabilisiert die entstehenden Ionen.`;
+    const stereo = chiral ? (ans==="SN2" ? " Rückseitenangriff → Inversion: aus (R) wird (S)." : " Das planare Carbokation wird von beiden Seiten angegriffen → Racemat.") : "";
+    return {
+      type:"mech", chip:"Mechanismus & Hauptprodukt", mech:ans,
+      ctx:`Nach welchem Mechanismus verläuft die Substitution unter diesen Bedingungen überwiegend? <span style="color:var(--text-faint)">(Eliminierungen bleiben hier unberücksichtigt.)</span>${condHTML(p,true)}<div class="fig">${staticSVG(substrateFrame(p),170)}</div>`,
+      groups:[
+        {q:"Welcher Mechanismus <b>überwiegt</b>?", ans, opts:[O("SN2",MN.SN2, ans==="SN1"?whySN2:""), O("SN1",MN.SN1, ans==="SN2"?whySN1:"")]},
+        {q:"Welches <b>Hauptprodukt</b> entsteht?", ans:pAns, opts:pOpts}
+      ],
+      hint:"Prüfe nacheinander: Ist das Substrat Methyl, primär, sekundär oder tertiär? Ist das Nucleophil stark (OH⁻, CN⁻, I⁻) oder schwach (H₂O)? Ist das Lösemittel protisch oder aprotisch?"+(chiral?" Denk beim Produkt an die Stereochemie.":""),
+      expl:`${reason}${stereo} Modell (nur Substitution): S<sub>N</sub>2 ${pct(r2)}, S<sub>N</sub>1 ${pct(r1)}.`,
+      sim:p
+    };
+  }
+}
+
+
+/* ---------- Aufgabentyp 2: Mechanismus gegeben → Typ bestimmen ---------- */
+function randSubst(){
+  for(let tries=0;tries<800;tries++){
+    const sub=pick(["prim","prim","sec","sec","sec","tert","tert","methyl"]);
+    const p={sub, lg:pick(["Cl","Br","I"]), nu:pick(["OH","CN","I","H2O"]), solv:pick(["protic","aprotic"]), T:25, cRX:0.5, cNu:1.0};
+    if(p.nu==="H2O") p.solv="protic";
+    if(p.nu==="I" && p.lg==="I") continue;
+    const m=model(p), tot=m.share.SN1+m.share.SN2; if(!(tot>0)) continue;
+    const r2=m.share.SN2/tot; if(Math.max(r2,1-r2)<0.8) continue;
+    return {p, mech: r2>0.5?"SN2":"SN1"};
+  }
+}
+function genType(){
+  const {p,mech}=randSubst();
+  const built=buildMech(p,mech), fr=built.frames, chiral=SUB[p.sub].chiral;
+  const full=Math.random()<0.5;
+  let fig, idx;
+  if(full){
+    fig=`<div class="seq">${fr.map((F,k)=>(k?`<span class="ar">⟶</span>`:"")+`<div class="st"><span class="sn">${k+1}</span>${staticSVG(F,210,0.9)}</div>`).join("")}</div>`;
+  } else {
+    idx = mech==="SN2" ? pick([0,1]) : pick([0,2]);
+    fig=`<div class="fig">${staticSVG(fr[idx],240)}</div>`;
+  }
+  const W={
+    SN1: full ? "Hier tritt kein Carbokation auf: Das Nucleophil bindet, während die Abgangsgruppe austritt – ein einziger Schritt mit Übergangszustand ‡."
+         : idx===0 ? "Das Nucleophil greift bereits an, während die Abgangsgruppe austritt – bei S<sub>N</sub>1 würde sich zuerst nur die Abgangsgruppe lösen."
+         : "Die eckige Klammer mit ‡ zeigt einen Übergangszustand mit gleichzeitig gebildeter und gelöster Bindung – kein Carbokation.",
+    SN2: full ? "Die Abgangsgruppe löst sich zuerst, es entsteht ein Carbokation als Zwischenstufe – zwei Schritte."
+         : idx===0 ? "Nur die Abgangsgruppe tritt aus, ein Nucleophil ist an diesem Schritt nicht beteiligt – es entsteht ein Carbokation."
+         : "Das Nucleophil greift ein planares Carbokation an, und zwar von beiden Seiten – die Abgangsgruppe hat das Molekül schon verlassen."
+  };
+  const feat={
+    conc:"Bindungsbildung und Bindungsbruch erfolgen gleichzeitig – ein Schritt über einen Übergangszustand",
+    cat:"Zuerst löst sich die Abgangsgruppe – es entsteht ein Carbokation als Zwischenstufe",
+    h:"Das Nucleophil greift ein H-Atom am benachbarten C-Atom an",
+    rad:"Die Bindung zur Abgangsgruppe wird homolytisch gespalten – es entstehen Radikale"
+  };
+  const fAns = mech==="SN2" ? "conc" : "cat";
+  const fWhy={
+    conc: mech==="SN1" ? "Prüfe, ob ein positiv geladenes, planares C-Atom (Carbokation) auftritt." : "",
+    cat: mech==="SN2" ? "Es tritt kein Carbokation auf – die Pfeile für Angriff und Austritt gehören zum selben Schritt." : "",
+    h: "Die Pfeile des Nucleophils zeigen auf das C-Atom, nicht auf ein H-Atom – das wäre eine Eliminierung.",
+    rad: "Die Pfeile haben eine volle Spitze: Ganze Elektronenpaare verschieben sich, die Spaltung ist heterolytisch – es entstehen Ionen."
+  };
+  const cKind = pick(chiral ? ["law","stereo","stereo"] : ["law","order"]);
+  let g3;
+  if(cKind==="law") g3={q:"Welches <b>Geschwindigkeitsgesetz</b> gilt?", ans: mech==="SN2"?"b":"a", opts:[
+    O("a","v = k · c(RX)", mech==="SN2"?"Am einzigen, geschwindigkeitsbestimmenden Schritt sind Substrat und Nucleophil beteiligt.":""),
+    O("b","v = k · c(RX) · c(Nu)", mech==="SN1"?"Am langsamen ersten Schritt (Ionisierung) ist nur das Substrat beteiligt.":""),
+    O("c","v = k · c(Nu)","Das Substrat ist in jedem Fall am geschwindigkeitsbestimmenden Schritt beteiligt.")]};
+  else if(cKind==="order") g3={q:"Welche <b>Reaktionsordnung</b> hat die Reaktion?", ans: mech==="SN2"?"2":"1", opts:[
+    O("0","0. Ordnung","Die Geschwindigkeit hängt mindestens von der Konzentration des Halogenalkans ab."),
+    O("1","1. Ordnung", mech==="SN2"?"Am geschwindigkeitsbestimmenden Schritt sind zwei Teilchen beteiligt: v = k · c(RX) · c(Nu) – die Exponenten addieren sich zu 2.":""),
+    O("2","2. Ordnung", mech==="SN1"?"Am langsamen ersten Schritt (Ionisierung) ist nur das Halogenalkan beteiligt: v = k · c(RX).":""),
+    O("3","3. Ordnung","Am geschwindigkeitsbestimmenden Schritt sind höchstens zwei Teilchen beteiligt.")]};
+  else g3={q:"Welche <b>Stereochemie</b> zeigt das Produkt (Edukt: (R)-Konfiguration)?", ans: mech==="SN2"?"inv":"rac", opts:[
+    O("inv","Inversion – es entsteht nur das (S)-Produkt", mech==="SN1"?"Ein planares Carbokation wird von beiden Seiten gleich häufig angegriffen.":""),
+    O("rac","Racemat – (R)- und (S)-Produkt im Verhältnis 1 : 1", mech==="SN2"?"Beim Rückseitenangriff entsteht ein einziges Enantiomer – die Substituenten klappen um.":""),
+    O("ret","Retention – die (R)-Konfiguration bleibt erhalten","Bei der Substitution wird eine Bindung zum Stereozentrum gelöst und eine neue gebildet; reine Retention tritt hier nicht auf.")]};
+  const expl = mech==="SN2"
+    ? "S<sub>N</sub>2: ein Schritt – das Nucleophil greift von der Rückseite an, während die Abgangsgruppe austritt (Übergangszustand ‡, keine Zwischenstufe). v = k · c(RX) · c(Nu); Inversion der Konfiguration (Walden-Umkehr)."
+    : "S<sub>N</sub>1: zwei Schritte – langsame Ionisierung zum planaren Carbokation, dann schneller Angriff des Nucleophils von beiden Seiten. v = k · c(RX); bei einem Stereozentrum entsteht ein Racemat.";
+  return {
+    type:"type", chip:"Mechanismustyp bestimmen", mech,
+    ctx:`Dargestellt ist ${full?"der vollständige Mechanismus":"ein Ausschnitt aus dem Mechanismus"} der Reaktion von <b>${esc(subName(p.sub,p.lg,true))}</b> mit <b>${esc(NU[p.nu].name)} (${esc(NU[p.nu].f)})</b>.${fig}`,
+    groups:[
+      {q:"Um welchen <b>Mechanismustyp</b> handelt es sich?", ans:mech, opts:[O("SN2",MN.SN2,W.SN2), O("SN1",MN.SN1,W.SN1)]},
+      {q:"Woran erkennst du das?", ans:fAns, opts:shuffle(Object.keys(feat)).map(k=>O(k,esc(feat[k]),fWhy[k]))},
+      g3
+    ].map(g=>{ g.opts.forEach(o=>{ if(o.id===g.ans) o.why=""; }); return g; }),
+    hint:"Achte darauf, ob ein Carbokation (C mit ⊕, planar) auftritt und ob Angriff des Nucleophils und Austritt der Abgangsgruppe in einem oder in zwei Schritten erfolgen.",
+    expl, sim:p
+  };
+}
+const TT=[{id:"mech",name:"Mechanismus & Hauptprodukt vorhersagen"},{id:"type",name:"Mechanismustyp aus der Darstellung bestimmen"}];
+const GEN={mech:genMech, type:genType};
+$("typeList").innerHTML = TT.map(t=>`<label><input type="checkbox" value="${t.id}" checked>${t.name}</label>`).join("");
+
+function newTask(){
+  const types=[...document.querySelectorAll("#typeList input:checked")].map(i=>i.value);
+  const t=pick(types.length?types:TT.map(x=>x.id));
+  TK=GEN[t](); TK.tries=0; TK.sel={}; TK.done=false; TK.shown=false; taskNo++;
+  $("taskNum").textContent="Aufgabe "+taskNo; $("taskChip").textContent=TK.chip;
+  $("ctx").innerHTML=TK.ctx;
+  $("groups").innerHTML = TK.groups.map((g,gi)=>`
+    <div class="q-group" data-g="${gi}">
+      <div class="q">${TK.groups.length>1?`<span class="qn">${String.fromCharCode(97+gi)})</span>`:""}${g.q}<span class="mark"></span></div>
+      <div class="choices">${g.opts.map(o=>`<button class="opt" data-o="${esc(o.id)}">${o.html}</button>`).join("")}</div>
+      <div class="why" hidden></div>
+    </div>`).join("");
+  $("groups").querySelectorAll(".q-group").forEach(el=>{
+    const gi=+el.dataset.g;
+    el.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
+      if(TK.shown) return;
+      TK.sel[gi]=b.dataset.o;
+      el.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel",x===b));
+      el.classList.remove("ok","bad","done"); el.querySelector(".why").hidden=true;
+    }));
+  });
+  $("feedback").innerHTML=""; $("btnCheck").disabled=false;
+}
+function check(){
+  if(!TK || TK.shown) return;
+  const fb=$("feedback");
+  if(TK.groups.some((g,gi)=>TK.sel[gi]==null)){ fb.innerHTML=`<div class="fb hint">Bitte beantworte zuerst alle Teilaufgaben.</div>`; return; }
+  TK.tries++;
+  let allOk=true;
+  $("groups").querySelectorAll(".q-group").forEach(el=>{
+    const gi=+el.dataset.g, g=TK.groups[gi], ok=TK.sel[gi]===g.ans, w=el.querySelector(".why");
+    el.classList.toggle("ok",ok); el.classList.toggle("bad",!ok); el.classList.add("done");
+    if(!ok){ allOk=false; const o=g.opts.find(x=>x.id===TK.sel[gi]); w.innerHTML=o&&o.why?o.why:""; w.hidden=!(o&&o.why); } else w.hidden=true;
+  });
+  if(allOk){
+    if(!TK.done){ stats.solved++; if(TK.tries===1) stats.first++; stats.streak++; TK.done=true; }
+    fb.innerHTML=`<div class="fb good"><b>Richtig!</b> ${TK.expl}</div>${simLink()}`;
+    bindSimLink();
+  } else {
+    stats.streak=0;
+    fb.innerHTML=`<div class="fb bad">Noch nicht alles richtig – die markierten Teilaufgaben enthalten einen Hinweis. Ändere deine Auswahl und prüfe erneut.</div>`;
+  }
+  renderStats();
+}
+function simLink(){ return TK.sim ? `<div class="fb info">Möchtest du die Reaktion genauer ansehen? <a href="#" id="toSim" style="color:var(--teal)">In der Simulation öffnen →</a></div>` : ""; }
+function bindSimLink(){
+  const a=$("toSim"); if(!a) return;
+  a.addEventListener("click",e=>{
+    e.preventDefault(); const p=TK.sim;
+    $("subSel").value=p.sub; $("lgSel").value=p.lg; $("nuSel").value=p.nu; P.solv=p.solv||"protic";
+    $("tSl").value=p.T||25; $("cRXSl").value=p.cRX||0.5; $("cNuSl").value=p.cNu||1;
+    setMode("sim"); rebuild(false);
+    if(TK.mech){ S.mech=TK.mech; rebuild(true); }
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+}
+function renderStats(){ $("roSolved").textContent=stats.solved; $("roFirst").textContent=stats.first; $("roStreak").textContent=stats.streak; $("roShown").textContent=stats.shown; }
+$("btnNew").addEventListener("click",newTask);
+$("btnCheck").addEventListener("click",check);
+$("btnHint").addEventListener("click",()=>{ if(!TK) return; const fb=$("feedback"); if(!fb.querySelector(".fb.hint.tip")) fb.insertAdjacentHTML("afterbegin",`<div class="fb hint tip"><b>Tipp:</b> ${TK.hint}</div>`); });
+$("btnSolve").addEventListener("click",()=>{
+  if(!TK || TK.shown) return;
+  TK.shown=true; stats.shown++; stats.streak=0;
+  $("groups").querySelectorAll(".q-group").forEach(el=>{
+    const gi=+el.dataset.g, g=TK.groups[gi];
+    el.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel",x.dataset.o===g.ans));
+    el.classList.remove("bad"); el.classList.add("ok","done"); el.querySelector(".why").hidden=true;
+  });
+  $("feedback").innerHTML=`<div class="fb info"><b>Lösung:</b> ${TK.expl}</div>${simLink()}`; bindSimLink();
+  $("btnCheck").disabled=true; renderStats();
+});
+
+/* ---------- Modus ---------- */
+function setMode(m){
+  document.querySelectorAll("#appMode button").forEach(b=>b.classList.toggle("active",b.dataset.m===m));
+  $("simSide").hidden = m!=="sim"; $("simMain").hidden = m!=="sim";
+  $("trainSide").hidden = m!=="train"; $("trainMain").hidden = m!=="train";
+  if(m==="train"){ stopAnim(); if(!TK) newTask(); }
+  else if($("tKin").classList.contains("active")) fitKin();
+}
+document.querySelectorAll("#appMode button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.m)));
+
+/* ---------- Anleitung & Versionshinweise ---------- */
+const guideBackdrop=$("guideBackdrop"), changelogBackdrop=$("changelogBackdrop");
+$("btnGuide").addEventListener("click",e=>{ e.preventDefault(); guideBackdrop.classList.add("open"); });
+$("closeGuide").addEventListener("click",()=>guideBackdrop.classList.remove("open"));
+guideBackdrop.addEventListener("click",e=>{ if(e.target===guideBackdrop) guideBackdrop.classList.remove("open"); });
+$("btnChangelog").addEventListener("click",e=>{ e.preventDefault(); changelogBackdrop.classList.add("open"); $("closeChangelog").focus(); });
+$("closeChangelog").addEventListener("click",()=>changelogBackdrop.classList.remove("open"));
+changelogBackdrop.addEventListener("click",e=>{ if(e.target===changelogBackdrop) changelogBackdrop.classList.remove("open"); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ guideBackdrop.classList.remove("open"); changelogBackdrop.classList.remove("open"); } });
+
+/* ---------- Init ---------- */
+rebuild(false);
+renderStats();
+})();
+</script>
+</body>
+</html>
