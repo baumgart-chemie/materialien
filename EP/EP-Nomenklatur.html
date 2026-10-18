@@ -298,6 +298,10 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       <button class="modal-close" id="closeCl" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
+      <div class="cl-ver"><span class="v">V2.1</span><span class="d">18.10.2026</span></div>
+      <ul>
+        <li>Fehlerbehebung: Im Freihand-Modus wird die Baukasten-Fläche zuverlässig ausgeblendet, bei „Neue Aufgabe“ wird die Zeichenfläche vollständig geleert.</li>
+      </ul>
       <div class="cl-ver"><span class="v">V2.0</span><span class="d">16.10.2026</span></div>
       <ul>
         <li><strong>Neuer Aufgabentyp „Formel zeichnen“:</strong> Der Name ist vorgegeben, die Formel wird gezeichnet. Ausgelegt für Tablet und Stift (z. B. iPad mit Apple Pencil). Sobald ein Stift erkannt wird, werden Berührungen mit der Hand ignoriert.</li>
@@ -484,7 +488,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Benennung nach den IUPAC-Regeln für acyclische Kohlenwasserstoffe und Alkohole. Die Strukturen werden zufällig erzeugt und automatisch benannt.</p>
-  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V2.0 (erstellt mit Claude Pro) · <a href="#" id="btnCl">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Nomenklatur-Trainer V2.1 (erstellt mit Claude Pro) · <a href="#" id="btnCl">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -997,14 +1001,14 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
       const ohOk = klasses.has("alkohol");
       $("kitTools").querySelector('[data-kt="oh"]').hidden = !ohOk;
       if(!ohOk && kitTool==="oh"){ kitTool = "chain"; $("kitTools").querySelectorAll("button").forEach(b=>b.classList.toggle("active", b.dataset.kt==="chain")); }
-      $("kitSvg").hidden = free; $("sketch").hidden = !free;
+      $("kitSvg").toggleAttribute("hidden", free); $("sketch").hidden = !free;   // SVG kennt .hidden nicht -> Attribut setzen
       $("board").classList.toggle("locked", t.done);
       $("boardInfo").hidden = free;
       $("boardNote").textContent = free
         ? "Zeichne frei mit dem Stift, z. B. die vollständige Strukturformel mit allen H-Atomen. „Vergleichen“ zeigt die Lösung zur Selbstkontrolle."
         : "Ziehe den Stift von Punkt zu Punkt (waagerecht oder senkrecht), um C–C-Bindungen zu zeichnen. Tippe auf eine Bindung für Doppel- und Dreifachbindung. Die Bindungen zu den H-Atomen werden automatisch ergänzt.";
       $("selfCheck").hidden = !(free && t.compared && !t.done);
-      if(free) sizeSketch(); else renderKit();
+      renderKit(); if(free) sizeSketch();
     }
     renderMc();
     $("btnCheck").textContent = free ? "Vergleichen" : "Prüfen";
@@ -1413,7 +1417,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
 
   function pushKitUndo(snap){ kitUndo.push(snap); if(kitUndo.length>80) kitUndo.shift(); }
   let kd = null; // laufende Eingabe im Baukasten
-  function kitLocked(){ return !task || task.type!=="draw" || task.done; }
+  function kitLocked(){ return !task || task.type!=="draw" || task.done || drawWith!=="kit"; }
   kitSvg.addEventListener("pointerdown", e=>{
     if(e.pointerType==="pen") penSeen = true;
     if(penSeen && e.pointerType==="touch") return;
@@ -1511,7 +1515,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
     e.preventDefault();
     sketch.setPointerCapture(e.pointerId);
     const pt = toBoard(e,sketch);
-    sd = {id:e.pointerId, snap: JSON.stringify(strokes), changed:false};
+    sd = {id:e.pointerId, snap: JSON.stringify(strokes), changed:false, task};
     task.touched = true;
     if(freeTool==="pen"){ sd.stroke = [{x:pt.x,y:pt.y,p:pressure(e)}]; strokes.push(sd.stroke); sd.changed = true; }
     else sketchErase(pt);
@@ -1530,7 +1534,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   });
   function endSketch(e){
     if(!sd || e.pointerId!==sd.id) return;
-    if(sd.changed){ sketchUndo.push(sd.snap); if(sketchUndo.length>80) sketchUndo.shift(); }
+    if(sd.changed && sd.task===task){ sketchUndo.push(sd.snap); if(sketchUndo.length>80) sketchUndo.shift(); }
     sd = null;
   }
   sketch.addEventListener("pointerup", endSketch);
@@ -1554,7 +1558,7 @@ footer .footer-credit{margin-top:8px; color:var(--text-dim);}
   }
   function resetBoard(){
     kit = {atoms:[], bonds:[], next:1}; kitUndo = []; kitBad.clear();
-    strokes = []; sketchUndo = [];
+    strokes = []; sketchUndo = []; sd = null; kd = null; preview = null;
   }
 
   // ---------- Prüfen im Zeichenmodus ----------

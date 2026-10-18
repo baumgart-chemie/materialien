@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Polymerisation &amp; Kunststoffe</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --oxy:#ff8a7a; --nitro:#8fb4ff; --hal:#9bd88f;
+  --bond:#b9c0c6;
+  --screen:#0e1113; --grid:#233029;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+header .status.shown .dot{background:var(--danger);}
+header .status.shown{color:var(--danger); border-color:var(--danger-dim);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px 16px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.formula-box{
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text);
+  background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px;
+  overflow-x:auto; white-space:nowrap;
+}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;
+}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+
+.type-list{display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
+.type-item{
+  display:flex; gap:10px; align-items:flex-start; padding:9px 11px; cursor:pointer;
+  border:1px solid var(--line); border-radius:4px; background:var(--panel);
+}
+.type-item:hover{border-color:var(--text-faint);}
+.type-item input{accent-color:var(--teal); width:16px; height:16px; margin:2px 0 0; flex:none;}
+.type-item .tt{font-size:13px; color:var(--text); font-weight:500;}
+.type-item .td{font-size:12px; color:var(--text-faint); line-height:1.45; margin-top:2px;}
+.type-item.on{border-color:var(--teal-dim); background:var(--panel-alt);}
+
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+.legend{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--text-dim);}
+.legend span.sw{display:inline-block; min-width:44px; font-weight:600;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);}
+.chip.tA{color:var(--teal); border-color:var(--teal-dim);}
+.chip.tB{color:var(--amber); border-color:var(--amber-dim);}
+.chip.tC{color:var(--good); border-color:#35573a;}
+.chip.tD{color:var(--oxy); border-color:var(--danger-dim);}
+.ctx{font-size:14px; color:var(--text); line-height:1.55; margin:4px 0 10px;}
+.ctx p{margin:0 0 8px;}
+.ctx .dim{color:var(--text-dim); font-size:13px;}
+.mol-row{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 4px 14px;
+  overflow-x:auto;
+}
+.mol-box{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.mol-box .cap{font-size:12.5px; color:var(--text-dim); text-align:center; max-width:280px;}
+.mol-row .plus{color:var(--text-faint); font-size:22px;}
+.eqline{
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:18px; color:var(--text);
+  padding:12px 2px 16px; line-height:1.5; overflow-x:auto; white-space:nowrap;
+}
+.eqline sub, .opt sub, .q sub{font-size:.68em;}
+.rad{color:var(--amber); font-weight:700;}
+.arr{color:var(--teal); margin:0 .5em;}
+@media (max-width:600px){ .eqline{font-size:15px;} }
+
+svg.mol{display:block; max-width:100%; height:auto; overflow:visible;}
+svg.mol line, svg.mol path, svg.mol polygon{stroke:var(--bond); stroke-width:1.5; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+svg.mol path.br{stroke:var(--text-dim); stroke-width:1.4;}
+svg.mol text{fill:var(--text); font-size:15px; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+svg.mol .ox{fill:var(--oxy);}
+svg.mol .ni{fill:var(--nitro);}
+svg.mol .hal{fill:var(--hal);}
+svg.mol text.nn{fill:var(--text-dim); font-size:13px; font-style:italic;}
+svg.mol text.ix{fill:var(--text-dim); font-size:11.5px;}
+svg.mol line.lp{stroke-width:1.7;}
+svg.mol line.lp.ox{stroke:var(--oxy);}
+svg.mol line.lp.ni{stroke:var(--nitro);}
+svg.mol line.lp.hal{stroke:var(--hal);}
+svg.mol circle.rd{fill:var(--amber); stroke:none;}
+svg.mol path.wv{stroke:var(--text-dim); stroke-width:1.4;}
+.eqs{display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; padding:8px 2px 12px;}
+.eqop{font-size:20px; color:var(--text-faint); line-height:1;}
+.eqop.arr{color:var(--teal); font-size:22px;}
+.eqop.co{color:var(--text); font-size:17px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; margin-right:-6px;}
+.opt .eqs{padding:2px 0;}
+.eqnum{display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--line-soft);}
+.eqnum:last-child{border-bottom:none;}
+.eqnum > span{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:15px; flex:none;}
+.formula-box .eqs{padding:2px 0;}
+
+svg.net{display:block; width:100%; max-width:340px; height:auto;}
+svg.net polyline{fill:none; stroke:var(--text-dim); stroke-width:2; stroke-linejoin:round; stroke-linecap:round;}
+svg.net line{stroke:var(--amber); stroke-width:3; stroke-linecap:round;}
+svg.net circle{fill:var(--amber);}
+
+/* Teilaufgaben */
+.q-group{border-top:1px solid var(--line-soft); padding:12px 0 12px;}
+.q-group .q{font-size:13.5px; color:var(--text-dim); margin-bottom:9px;}
+.q-group .q b{color:var(--text); font-weight:600;}
+.q-group .q .qn{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:11.5px; color:var(--amber); margin-right:7px;}
+.q-group.inline{display:grid; grid-template-columns:1fr auto; gap:8px 16px; align-items:center;}
+.q-group.inline .q{margin:0;}
+.q-group.inline .q.eqq{overflow-x:auto; min-width:0;}
+.q-group.inline .q.eqq .eqs{padding:2px 0;}
+@media (max-width:700px){ .q-group.inline{grid-template-columns:1fr;} }
+.choices{display:flex; flex-wrap:wrap; gap:8px;}
+.cards{display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(220px,1fr));}
+.cards.wide{grid-template-columns:1fr;}
+.cards.net3{grid-template-columns:repeat(auto-fill, minmax(190px,1fr));}
+.opt{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  border-radius:var(--radius); padding:8px 13px; min-height:38px; font-size:13.5px; font-family:inherit;
+  cursor:pointer; text-align:left; touch-action:manipulation;
+}
+.opt:hover{border-color:var(--text-faint);}
+.opt:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.opt.card{display:flex; align-items:center; justify-content:center; padding:12px 10px; min-height:96px; background:var(--panel); overflow-x:auto;}
+.opt.card.txt{justify-content:flex-start; min-height:52px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:14px; white-space:nowrap;}
+.opt.sel{border-color:var(--teal); background:var(--teal-dim);}
+.opt.card.sel{background:#16302d;}
+.q-group.ok .opt.sel{border-color:var(--good); background:#1d3322; box-shadow:0 0 0 1px #35573a;}
+.q-group.bad .opt.sel{border-color:var(--danger); background:#33201b; box-shadow:0 0 0 1px var(--danger-dim);}
+.q-group.done .opt:not(.sel){opacity:.55;}
+.mark{font-size:12px; margin-left:8px; font-weight:600;}
+.q-group.ok .mark::after{content:"✓ richtig"; color:var(--good);}
+.q-group.bad .mark::after{content:"✗ falsch"; color:var(--danger);}
+.why{font-size:12.5px; color:var(--danger); margin-top:8px; line-height:1.5;}
+.why sub{font-size:.75em;}
+
+.check-row{display:flex; justify-content:flex-end; padding:12px 0 2px; border-top:1px solid var(--line-soft);}
+.feedback{display:flex; flex-direction:column; gap:6px; margin:12px 0 4px;}
+.feedback:empty{display:none;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb sub{font-size:.75em;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.explain{font-size:13.5px; color:var(--text-dim); line-height:1.65; max-width:78ch;}
+.explain p{margin:0 0 10px;}
+.explain strong{color:var(--text); font-weight:600;}
+.explain .figure{background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:12px 14px; margin:6px 0 12px; overflow-x:auto;}
+.explain .figure .eqline{padding:4px 0; font-size:15px;}
+.explain ul{margin:0 0 10px; padding-left:18px;}
+.explain li{margin-bottom:4px;}
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+table.hist td sub{font-size:.72em;}
+table.hist tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:12px; background:var(--panel);}
+table.hist td.k{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); white-space:nowrap;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Polymerisation &amp; Kunststoffe</h1>
+  <span class="tag">Bildungsreaktionen, Mechanismus und Eigenschaften von Polymeren</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Kunststoffe bestehen aus <strong>Makromolekülen (Polymeren)</strong>, die aus vielen kleinen Bausteinen, den <strong>Monomeren</strong>, aufgebaut sind. Der Abschnitt, der sich in der Kette ständig wiederholt, heißt <strong>Wiederholungseinheit</strong>. In der Formel steht er in eckigen Klammern mit dem Index <em>n</em>.</p>
+
+      <h3>Drei Bildungsreaktionen</h3>
+      <p><strong>Polymerisation:</strong> Monomere mit einer C=C-Doppelbindung verknüpfen sich über C–C-Einfachbindungen. Es entsteht kein Nebenprodukt. Beispiele: PE, PP, PVC, PS.</p>
+      <div class="formula-box" id="guideEq"></div>
+      <p><strong>Polykondensation:</strong> Monomere mit zwei funktionellen Gruppen (z. B. –COOH, –OH, –NH₂) reagieren unter Abspaltung eines kleinen Moleküls, meist Wasser. Es entstehen Polyester oder Polyamide.</p>
+      <p><strong>Polyaddition:</strong> Ein Diisocyanat (–N=C=O) reagiert mit einem Diol. Das H-Atom der Hydroxygruppe lagert sich an das N-Atom an, es entsteht eine Urethangruppe ohne Nebenprodukt.</p>
+
+      <h3>Radikalische Polymerisation</h3>
+      <p><strong>Kettenstart:</strong> Ein Initiator, z. B. ein Peroxid R–O–O–R, zerfällt beim Erwärmen durch homolytische Spaltung in zwei Radikale. Ein Radikal addiert an die Doppelbindung des ersten Monomers.</p>
+      <p><strong>Kettenwachstum:</strong> Das entstandene Radikal addiert weitere Monomere. Die Zahl der Radikale bleibt dabei gleich.</p>
+      <p><strong>Kettenabbruch:</strong> Zwei Radikale reagieren miteinander, entweder durch Verknüpfung (Rekombination) oder durch Übertragung eines H-Atoms (Disproportionierung).</p>
+      <p>Alle Formeln sind <strong>Valenzstrichformeln</strong>: Striche am Atom sind freie Elektronenpaare, der orange Punkt <strong>•</strong> ist ein ungepaartes Elektron. Die Wellenlinie zeigt, dass die Polymerkette weitergeht, <strong>R</strong> steht für den organischen Rest des Initiators.</p>
+
+      <h3>Struktur und Eigenschaften</h3>
+      <p><strong>Thermoplaste</strong> bestehen aus unvernetzten Ketten. Sie werden beim Erwärmen weich, sind schmelzbar, schweißbar und löslich.</p>
+      <p><strong>Elastomere</strong> sind weitmaschig vernetzt. Sie sind gummielastisch, quellen in Lösungsmitteln und zersetzen sich beim starken Erhitzen.</p>
+      <p><strong>Duroplaste</strong> sind engmaschig vernetzt. Sie sind hart, auch beim Erwärmen formstabil und zersetzen sich, ohne zu schmelzen.</p>
+
+      <h3>Bedienung</h3>
+      <p>Links wählst du die <strong>Aufgabentypen</strong> aus, mehrere gleichzeitig sind möglich. „Neue Aufgabe“ wählt zufällig eine Aufgabe aus den markierten Typen. Über „Aufgabe gezielt wählen“ lässt sich jede Aufgabe direkt aufrufen, zum Beispiel für die Besprechung im Unterricht.</p>
+      <p>Jede Aufgabe besteht aus mehreren Teilaufgaben. Tippe jeweils eine Antwort an und drücke „Prüfen“. Richtige Antworten werden grün markiert, falsche rot, oft mit einem Hinweis auf den Denkfehler. Die Auswahl lässt sich danach ändern und erneut prüfen.</p>
+      <p>„Tipp“ gibt schrittweise Hinweise. „Lösung zeigen“ markiert alle richtigen Antworten, die Aufgabe zählt dann nicht als gelöst. Nach dem Lösen steht im Tab <strong>Erklärung</strong> eine Begründung. Der Tab <strong>Übersicht</strong> enthält die Kunststoffe der Übung, der <strong>Verlauf</strong> alle Aufgaben dieser Sitzung.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">18.10.2026</span></div>
+      <ul>
+        <li><strong>Valenzstrichformeln:</strong> Alle Formeln, auch die Reaktionsgleichungen zur radikalischen Polymerisation, sind als Strukturformeln mit freien Elektronenpaaren dargestellt. Ungepaarte Elektronen erscheinen als orange Punkte.</li>
+        <li>Der Aufgabentyp heißt jetzt <strong>Polymerisation, Polykondensation &amp; Polyaddition</strong>.</li>
+      </ul>
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">17.10.2026</span></div>
+      <ul>
+        <li>Erste Version mit vier Aufgabentypen: <strong>Monomer ↔ Polymer</strong>, <strong>radikalische Polymerisation</strong>, <strong>Polykondensation &amp; Polyaddition</strong> sowie <strong>Struktur &amp; Eigenschaften</strong>.</li>
+        <li>Strukturformeln von Monomeren und Wiederholungseinheiten, Mechanismus mit Kettenstart, Kettenwachstum und Kettenabbruch, Teilchenmodelle von Thermoplasten, Elastomeren und Duroplasten.</li>
+        <li>Mehrfachauswahl der Aufgabentypen, gezielte Aufgabenwahl, Tipps, Rückmeldung zu typischen Fehlern, Erklärung, Übersicht und Verlauf. Bedienbar mit iPad und Stift.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <section class="block">
+      <h2>Aufgabentypen</h2>
+      <div class="type-list" id="typeList"></div>
+      <p class="note">Mehrfachauswahl möglich. „Neue Aufgabe“ wählt zufällig aus den markierten Typen.</p>
+    </section>
+
+    <section class="block">
+      <h2>Aufgabe gezielt wählen</h2>
+      <div class="field-full">
+        <div style="display:flex; gap:6px;">
+          <select id="taskSelect" style="flex:1; min-width:0;" aria-label="Aufgabe gezielt wählen"></select>
+          <button class="btn ghost" id="btnLoad" style="flex:none;">Laden</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Farben in den Strukturformeln</h2>
+      <div class="legend">
+        <div><span class="sw" style="color:var(--oxy)">O</span>Sauerstoff</div>
+        <div><span class="sw" style="color:var(--nitro)">N</span>Stickstoff</div>
+        <div><span class="sw" style="color:var(--hal)">Cl, F</span>Halogene</div>
+        <div><span class="sw" style="color:var(--amber)">•</span>ungepaartes Elektron (Radikal)</div>
+        <div><span class="sw">|</span>freies Elektronenpaar</div>
+      </div>
+      <p class="note">Alle Formeln sind Valenzstrichformeln mit freien Elektronenpaaren. Bei langen CH₂-Ketten ist eine CH₂-Einheit ausgeschrieben und eingeklammert, der Index gibt die Anzahl an. Der Benzolring ist als Sechseck mit drei Doppelbindungen dargestellt, die Wellenlinie zeigt, dass die Kette weitergeht.</p>
+    </section>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskChip"></span>
+      </div>
+      <div class="ctx" id="ctx"></div>
+      <div id="groups"></div>
+
+      <div class="check-row">
+        <button class="btn" id="btnCheck">Prüfen</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="exp">Erklärung</button>
+      <button class="tabbtn" data-tab="ovw">Übersicht</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-exp">
+      <div id="expBox"><div class="empty-hint">Die Erklärung erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div></div>
+    </div>
+
+    <div class="tabpanel" id="tab-ovw">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>Kürzel</th><th>Polymer</th><th>Monomer(e)</th><th>Bildung</th><th>Verwendung</th></tr></thead>
+          <tbody id="ovwBody"></tbody>
+        </table>
+      </div>
+      <p class="note">PA 6 und PLA werden technisch durch Ringöffnung von Caprolactam bzw. Lactid hergestellt. Die Übung verwendet die zugrunde liegenden Monomere 6-Aminohexansäure und Milchsäure.</p>
+    </div>
+
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Typ</th><th>Aufgabe</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="4" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Valenzstrichformeln mit freien Elektronenpaaren; lange CH₂-Ketten als eingeklammerte CH₂-Einheit mit Index, Benzolring in Kekulé-Schreibweise. Teilchenmodelle schematisch.</p>
+  <p class="footer-credit">Bastian Baumgart · Polymerisation &amp; Kunststoffe V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const f1 = v => Math.round(v*10)/10;
+
+/* ============================================================
+   Formeln als Text (nur noch für Tipps): Ziffern → tiefgestellt
+   ============================================================ */
+function fm(s){
+  let h = esc(s).replace(/([A-Za-z\)])(\d+)/g, (m,a,d)=>a+"<sub>"+d+"</sub>");
+  h = h.replace(/•/g,'<span class="rad">•</span>').replace(/→/g,'<span class="arr">→</span>');
+  return h;
+}
+
+/* ============================================================
+   Valenzstrichformeln mit freien Elektronenpaaren
+   Ketten-Tokens (von links nach rechts):
+     "HO" "OH" "H2N" "NH2" "NH" "CH2" "C=O" "O=C=N" "N=C=O"
+     "(CH2)6"  → eine CH2-Einheit ausgeschrieben, in Klammern mit Index
+     "Ph"      → Benzolring in der Kette (1,4-verknüpft)
+     {l:"C", up:"H", down:"Cl", rad:1}  Atom mit Substituenten / Radikal
+        Substituenten: H, F, Cl, CH3, Ph, COOCH3, C≡N, =O
+     "="  nächste Bindung doppelt · "[" "]" Klammern mit n
+     "*"  offenes Bindungsende · "~" Polymerkette geht weiter
+   Freie Elektronenpaare (Striche) und Radikalelektronen (Punkte)
+   werden aus der Valenzelektronenzahl berechnet und so gesetzt,
+   dass sie möglichst weit von den Bindungen entfernt liegen.
+   ============================================================ */
+const U = 32, STEP = 1.35;
+const VE = {H:1, C:4, N:5, O:6, F:7, Cl:7};
+const ELCLS = {O:"ox", N:"ni", F:"hal", Cl:"hal"};
+
+function Mol(){ this.A=[]; this.B=[]; this.inner=[]; this.par=[]; this.brk=[]; }
+Mol.prototype.add = function(el,x,y,o){ o=o||{}; this.A.push({el, x, y, rad:o.rad?1:0, hide:!!o.hide}); return this.A.length-1; };
+Mol.prototype.bond = function(i,j,o){ this.B.push({i, j, o:o||1}); };
+
+function ring(m,cx,cy,r,rot){
+  const v=[];
+  for(let k=0;k<6;k++){ const t=(rot+k*60)*Math.PI/180; v.push(m.add("C", cx+r*Math.cos(t), cy+r*Math.sin(t), {hide:true})); }
+  for(let k=0;k<6;k++) m.bond(v[k], v[(k+1)%6]);
+  [1,3,5].forEach(k=>m.inner.push({cx, cy, a:v[k], b:v[(k+1)%6]}));
+  return v;
+}
+
+function sub(m,i,kind,d){
+  const a=m.A[i], x=a.x, y=a.y;
+  if(kind==="H"||kind==="F"||kind==="Cl"){ m.bond(i, m.add(kind,x,y+d)); return; }
+  if(kind==="=O"){ m.bond(i, m.add("O",x,y+d), 2); return; }
+  if(kind==="CH3"){
+    const c=m.add("C",x,y+d); m.bond(i,c);
+    [[0,1],[-0.71,0.71],[0.71,0.71]].forEach(([dx,dy])=>m.bond(c, m.add("H", x+dx, y+d+dy*d)));
+    return;
+  }
+  if(kind==="C≡N"){ const c=m.add("C",x,y+d); m.bond(i,c); m.bond(c, m.add("N",x,y+2*d), 3); return; }
+  if(kind==="Ph"){ const r=0.9, v=ring(m, x, y+d*(1+r), r, d>0?-90:90); m.bond(i, v[0]); return; }
+  if(kind==="COOCH3"){
+    const c=m.add("C",x,y+d); m.bond(i,c);
+    m.bond(c, m.add("O",x-0.87,y+1.5*d), 2);
+    const o2=m.add("O",x+0.87,y+1.5*d); m.bond(c,o2);
+    sub(m,o2,"CH3",d);
+  }
+}
+
+function expand(tokens){
+  const out=[];
+  const X = {
+    HO:[{l:"H"},{l:"O"}], OH:[{l:"O"},{l:"H"}],
+    H2N:[{l:"H"},{l:"N",up:"H"}], NH2:[{l:"N",up:"H"},{l:"H"}], NH:[{l:"N",up:"H"}],
+    CH2:[{l:"C",up:"H",down:"H"}], "C=O":[{l:"C",up:"=O"}],
+    "O=C=N":[{l:"O"},"=",{l:"C"},"=",{l:"N"}], "N=C=O":[{l:"N"},"=",{l:"C"},"=",{l:"O"}]
+  };
+  tokens.forEach(t=>{
+    if(typeof t==="object"){ out.push(t.l==="CH" ? Object.assign({}, t, {l:"C", up:t.up||"H"}) : t); return; }
+    const g=t.match(/^\(CH2\)(\d+)$/);
+    if(g) out.push({grp:g[1]});
+    else if(X[t]) out.push(...X[t]);
+    else if(["Ph","*","~","=","[","]"].includes(t)) out.push(t);
+    else out.push({l:t});
+  });
+  return out;
+}
+
+function piece(m,t,x0){
+  if(t==="*"||t==="~"){ const i=m.add(t,x0,0,{hide:true}); return {L:i,R:i}; }
+  if(t==="Ph"){ const r=0.9, v=ring(m,x0+r,0,r,180); return {L:v[0], R:v[3]}; }
+  if(t.grp){ const c=m.add("C",x0,0); sub(m,c,"H",-1); sub(m,c,"H",1); m.par.push({x:x0, k:t.grp}); return {L:c,R:c}; }
+  const i=m.add(t.l,x0,0,{rad:t.rad});
+  if(t.up) sub(m,i,t.up,-1);
+  if(t.down) sub(m,i,t.down,1);
+  return {L:i,R:i};
+}
+
+function chainMol(tokens){
+  const m=new Mol(), tk=expand(tokens);
+  const EXT = {COOCH3:[1.1,1.6], Ph:[0.8,0.8], CH3:[0.3,0.3]};
+  const reach = (t,side) => (t && typeof t==="object") ? Math.max(0, ...[t.up,t.down].map(k=>EXT[k]?EXT[k][side]:0)) : 0;
+  let prev=null, prevTok=null, ord=1, pend=[];
+  for(const t of tk){
+    if(t==="="){ ord=2; continue; }
+    if(t==="["||t==="]"){ pend.push(t); continue; }
+    let x0 = prev==null ? 0 : m.A[prev.R].x + Math.max(STEP + (((t&&t.grp)||(prevTok&&prevTok.grp))?0.2:0), reach(prevTok,1) + reach(t,0) + 0.75);
+    let closeX=null;
+    if(prev && pend.includes("]")){
+      const maxX=Math.max(...m.A.map(a=>a.x));
+      closeX=Math.max((m.A[prev.R].x+x0)/2, maxX+0.4);
+      x0=Math.max(x0, closeX+0.6);
+    }
+    const n0=m.A.length, p=piece(m,t,x0);
+    if(prev) m.bond(prev.R, p.L, ord);
+    if(pend.includes("[")){
+      const mn=Math.min(...m.A.slice(n0).map(a=>a.x));
+      const mid=prev ? (m.A[prev.R].x+x0)/2 : x0-0.6;
+      m.brk.push({t:"[", x:Math.min(mid, mn-0.4)});
+    }
+    if(closeX!=null) m.brk.push({t:"]", x:closeX});
+    pend=[]; ord=1; prev=p; prevTok=t;
+  }
+  if(pend.includes("]")) m.brk.push({t:"]", x:Math.max(...m.A.map(a=>a.x))+0.4});
+  return m;
+}
+
+const adist = (a,b)=>{ const d=Math.abs(a-b)%360; return Math.min(d,360-d); };
+function chooseAngles(fixed, n){
+  const C=[]; for(let a=0;a<360;a+=15) C.push(a);
+  let best=null, bs=-1, bt=-1;
+  const rec=(start, ch)=>{
+    if(ch.length===n){
+      const all=fixed.concat(ch); let mn=360;
+      for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++) mn=Math.min(mn, adist(all[i],all[j]));
+      const ax=ch.filter(a=>a%90===0).length;
+      if(mn>bs || (mn===bs && ax>bt)){ bs=mn; bt=ax; best=ch.slice(); }
+      return;
+    }
+    for(let k=start;k<C.length;k++){ ch.push(C[k]); rec(k+1,ch); ch.pop(); }
+  };
+  rec(0,[]);
+  return best;
+}
+
+function render(m,opt){
+  opt=opt||{};
+  const P = a=>[a.x*U, a.y*U];
+  const nb = m.A.map(()=>[]);
+  m.B.forEach(b=>{ nb[b.i].push(b); nb[b.j].push(b); });
+  const other = (b,i)=>m.A[b.i===i?b.j:b.i];
+  const out=[], bb={x0:Infinity, x1:-Infinity, y0:Infinity, y1:-Infinity};
+  const ext=(x,y,rx,ry)=>{ bb.x0=Math.min(bb.x0,x-rx); bb.x1=Math.max(bb.x1,x+rx); bb.y0=Math.min(bb.y0,y-ry); bb.y1=Math.max(bb.y1,y+ry); };
+  const hw = a=> a.el==="Cl" ? 8 : 5.5;
+  const er = (a,dx,dy)=>{ if(a.hide) return 0; const rx=hw(a)+3.5, ry=9.5; return 1/Math.sqrt((dx/rx)**2+(dy/ry)**2); };
+  const L = (x1,y1,x2,y2,c)=>{ out.push(`<line${c?` class="${c}"`:""} x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`); ext(x1,y1,0,0); ext(x2,y2,0,0); };
+
+  m.B.forEach(b=>{
+    const A=m.A[b.i], B=m.A[b.j]; let [x1,y1]=P(A), [x2,y2]=P(B);
+    const len=Math.hypot(x2-x1,y2-y1), dx=(x2-x1)/len, dy=(y2-y1)/len;
+    const s1=er(A,dx,dy), s2=er(B,dx,dy);
+    x1+=dx*s1; y1+=dy*s1; x2-=dx*s2; y2-=dy*s2;
+    const nx=-dy, ny=dx;
+    (b.o===2?[-2.8,2.8] : b.o===3?[-3.8,0,3.8] : [0]).forEach(o=>L(x1+nx*o, y1+ny*o, x2+nx*o, y2+ny*o));
+  });
+  m.inner.forEach(r=>{
+    const a=P(m.A[r.a]), b=P(m.A[r.b]), cx=r.cx*U, cy=r.cy*U, s=0.72, sh=0.8;
+    const ia=[cx+(a[0]-cx)*s, cy+(a[1]-cy)*s], ib=[cx+(b[0]-cx)*s, cy+(b[1]-cy)*s];
+    const mx=(ia[0]+ib[0])/2, my=(ia[1]+ib[1])/2;
+    L(mx+(ia[0]-mx)*sh, my+(ia[1]-my)*sh, mx+(ib[0]-mx)*sh, my+(ib[1]-my)*sh);
+  });
+  m.A.forEach((a,i)=>{
+    const [x,y]=P(a);
+    if(a.el==="~"){
+      const [ox,oy]=P(other(nb[i][0],i)), len=Math.hypot(x-ox,y-oy), dx=(x-ox)/len, dy=(y-oy)/len, nx=-dy, ny=dx;
+      let d=`M${f1(x-nx*8)} ${f1(y-ny*8)}`;
+      for(let k=1;k<=4;k++){ const t=-8+k*4, w=(k%2?1:-1)*3.2; d+=` Q${f1(x+nx*(t-2)+dx*w)} ${f1(y+ny*(t-2)+dy*w)} ${f1(x+nx*t)} ${f1(y+ny*t)}`; }
+      out.push(`<path class="wv" d="${d}"/>`); ext(x,y,5,9);
+      return;
+    }
+    if(a.hide){ ext(x,y,0,0); return; }
+    out.push(`<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central"${ELCLS[a.el]?` class="${ELCLS[a.el]}"`:""}>${esc(a.el)}</text>`);
+    ext(x,y,hw(a),9);
+    const ve=VE[a.el]; if(ve==null) return;
+    const bsum=nb[i].reduce((s,b)=>s+b.o,0);
+    const np=Math.max(0, Math.floor((ve-bsum-a.rad)/2)), n=np+a.rad;
+    if(!n) return;
+    const fixed=nb[i].map(b=>{ const o=other(b,i); return (Math.round(Math.atan2(o.y-a.y,o.x-a.x)*180/Math.PI)+360)%360; });
+    let ang=chooseAngles(fixed,n), radA=null;
+    if(a.rad){
+      let bi=0, bd=-1;
+      ang.forEach((t,k)=>{ const d=Math.min(360, ...fixed.map(f=>adist(f,t))); if(d>bd+0.1){ bd=d; bi=k; } });
+      radA=ang[bi]; ang=ang.filter((_,k)=>k!==bi);
+    }
+    const rx=hw(a)+5, ry=11.5, cls="lp"+(ELCLS[a.el]?" "+ELCLS[a.el]:"");
+    ang.forEach(t=>{
+      const c=Math.cos(t*Math.PI/180), s=Math.sin(t*Math.PI/180), px=x+rx*c, py=y+ry*s, h=4.6;
+      L(px-s*h, py+c*h, px+s*h, py-c*h, cls); ext(px,py,3,3);
+    });
+    if(radA!=null){
+      const c=Math.cos(radA*Math.PI/180), s=Math.sin(radA*Math.PI/180), px=x+(rx+1)*c, py=y+(ry+1)*s;
+      out.push(`<circle class="rd" cx="${f1(px)}" cy="${f1(py)}" r="2.7"/>`); ext(px,py,3,3);
+    }
+  });
+  m.par.forEach(p=>{
+    const x=p.x*U, h=1.34*U, w=0.6*U;
+    out.push(`<path class="br" d="M${f1(x-w+4)} ${f1(-h)} Q${f1(x-w-5)} 0 ${f1(x-w+4)} ${f1(h)}"/>`);
+    out.push(`<path class="br" d="M${f1(x+w-4)} ${f1(-h)} Q${f1(x+w+5)} 0 ${f1(x+w-4)} ${f1(h)}"/>`);
+    out.push(`<text class="ix" x="${f1(x+w+2)}" y="${f1(h-3)}" dominant-baseline="central">${esc(p.k)}</text>`);
+    ext(x,0,w+11,h);
+  });
+  if(m.brk.length){
+    const y0=bb.y0-4, y1=bb.y1+4;
+    m.brk.forEach(b=>{
+      const x=b.x*U;
+      if(b.t==="[") out.push(`<path class="br" d="M${f1(x+5)} ${f1(y0)} H${f1(x)} V${f1(y1)} H${f1(x+5)}"/>`);
+      else { out.push(`<path class="br" d="M${f1(x-5)} ${f1(y0)} H${f1(x)} V${f1(y1)} H${f1(x-5)}"/>`); out.push(`<text class="nn" x="${f1(x+4)}" y="${f1(y1+2)}" dominant-baseline="central">n</text>`); ext(x+13,y1+9,0,0); }
+      ext(x,y0,0,0); ext(x,y1,0,0);
+    });
+  }
+  if(opt.sym){ const e=Math.max(-bb.y0, bb.y1); bb.y0=-e; bb.y1=e; }
+  const P0=6, W=f1(bb.x1-bb.x0+2*P0), H=f1(bb.y1-bb.y0+2*P0);
+  return `<svg class="mol" viewBox="${f1(bb.x0-P0)} ${f1(bb.y0-P0)} ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Strukturformel">${out.join("")}</svg>`;
+}
+function chainSVG(tokens, opt){ return render(chainMol(tokens), opt); }
+
+/* Reaktionsgleichung aus Strukturformeln: Moleküle (Token-Arrays) und Zeichen "+", "→", Koeffizienten */
+function eqHTML(parts){
+  return `<div class="eqs">${parts.map(p=>{
+    if(Array.isArray(p)) return chainSVG(p,{sym:true});
+    if(p==="→") return '<span class="eqop arr">⟶</span>';
+    if(p==="+") return '<span class="eqop">+</span>';
+    return `<span class="eqop co">${esc(p)}</span>`;
+  }).join("")}</div>`;
+}
+
+/* Teilchenmodell: unvernetzt / weitmaschig / engmaschig vernetzt */
+function netSVG(kind, seed){
+  let s = seed % 2147483646 + 1;
+  const rnd = ()=>{ s = (s*16807) % 2147483647; return (s-1)/2147483646; };
+  const W=320, H=170, N=6, step=16, cols=Math.floor((W-20)/step)+1;
+  const amp = kind==="thermo"?14 : kind==="elasto"?9 : 4;
+  const chains=[];
+  for(let i=0;i<N;i++){
+    const base = 20+i*(H-40)/(N-1); let y = base + (rnd()-0.5)*amp; const pts=[];
+    for(let j=0;j<cols;j++){
+      y += (rnd()-0.5)*amp*1.5;
+      y = base + Math.max(-amp*1.8, Math.min(amp*1.8, y-base));
+      pts.push([10+j*step + (rnd()-0.5)*4, y]);
+    }
+    chains.push(pts);
+  }
+  let h = chains.map(c=>`<polyline points="${c.map(p=>f1(p[0])+","+f1(p[1])).join(" ")}"/>`).join("");
+  const nx = kind==="elasto"?6 : kind==="duro"?30 : 0;
+  const used = new Set(); let tries=0, made=0;
+  while(made<nx && tries<500){
+    tries++;
+    const i = Math.floor(rnd()*(N-1)), j = 1+Math.floor(rnd()*(cols-2));
+    const key=i+"-"+j; if(used.has(key)||used.has(i+"-"+(j-1))||used.has(i+"-"+(j+1))) continue;
+    used.add(key); made++;
+    const a=chains[i][j], b=chains[i+1][j];
+    h += `<line x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"/><circle cx="${f1(a[0])}" cy="${f1(a[1])}" r="2.6"/><circle cx="${f1(b[0])}" cy="${f1(b[1])}" r="2.6"/>`;
+  }
+  return `<svg class="net" viewBox="0 0 ${W} ${H}" role="img" aria-label="Teilchenmodell">${h}</svg>`;
+}
+
+/* ============================================================
+   DATEN
+   ============================================================ */
+const S = (u,d)=>({l:"C", up:u, down:d});
+/* s = [C1 oben, C1 unten, C2 oben, C2 unten] */
+const ADD = [
+  {k:"PE",   poly:"Polyethen",        mono:"Ethen",                          s:["H","H","H","H"],          use:"Folien, Tüten, Flaschen, Rohre"},
+  {k:"PP",   poly:"Polypropen",       mono:"Propen",                         s:["H","H","H","CH3"],        use:"Verpackungen, Autoteile, Fasern"},
+  {k:"PVC",  poly:"Polyvinylchlorid", mono:"Chlorethen (Vinylchlorid)",      s:["H","H","H","Cl"],         use:"Rohre, Fensterrahmen, Kabelisolierung"},
+  {k:"PS",   poly:"Polystyrol",       mono:"Styrol (Phenylethen)",           s:["H","H","H","Ph"],         use:"Joghurtbecher, Dämmstoff (Styropor)"},
+  {k:"PTFE", poly:"Polytetrafluorethen", mono:"Tetrafluorethen",             s:["F","F","F","F"],          use:"Antihaftbeschichtung, Dichtungen"},
+  {k:"PMMA", poly:"Polymethylmethacrylat", mono:"Methacrylsäuremethylester (MMA)", s:["H","H","CH3","COOCH3"], use:"Acrylglas, Linsen, Leuchten"},
+  {k:"PAN",  poly:"Polyacrylnitril",  mono:"Acrylnitril (Propennitril)",     s:["H","H","H","C≡N"],        use:"Textilfasern, Ausgangsstoff für Kohlenstofffasern"}
+];
+const monoT = s => [S(s[0],s[1]),"=",S(s[2],s[3])];
+const unitT = (s,dbl) => ["*","[",S(s[0],s[1])].concat(dbl?["="]:[], [S(s[2],s[3]),"]","*"]);
+const segT  = s => ["*",S(s[0],s[1]),S(s[2],s[3]),S(s[0],s[1]),S(s[2],s[3]),S(s[0],s[1]),S(s[2],s[3]),"*"];
+const bothS = s => [s[2],s[3],s[2],s[3]];
+const same  = (a,b) => JSON.stringify(a)===JSON.stringify(b);
+const addByK = k => ADD.find(m=>m.k===k);
+
+const M = {
+  tere:  {n:"Terephthalsäure (Benzol-1,4-dicarbonsäure)", t:["HO","C=O","Ph","C=O","OH"]},
+  glyk:  {n:"Ethan-1,2-diol (Glykol)",                    t:["HO","CH2","CH2","OH"]},
+  adip:  {n:"Hexandisäure (Adipinsäure)",                 t:["HO","C=O","(CH2)4","C=O","OH"]},
+  hmda:  {n:"Hexan-1,6-diamin",                           t:["H2N","(CH2)6","NH2"]},
+  sebcl: {n:"Decandisäuredichlorid (Sebacinsäuredichlorid)", t:["Cl","C=O","(CH2)8","C=O","Cl"]},
+  milch: {n:"Milchsäure (2-Hydroxypropansäure)",          t:["HO",{l:"CH",down:"CH3"},"C=O","OH"]},
+  amino: {n:"6-Aminohexansäure",                          t:["H2N","(CH2)5","C=O","OH"]},
+  hdi:   {n:"Hexan-1,6-diyldiisocyanat (HDI)",            t:["O=C=N","(CH2)6","N=C=O"]},
+  butd:  {n:"Butan-1,4-diol",                             t:["HO","(CH2)4","OH"]}
+};
+const wrapU = arr => ["*","["].concat(arr,["]","*"]);
+
+const TYPES = {poly:"Polymerisation", kond:"Polykondensation", add:"Polyaddition"};
+const LINKS = {cc:"keine – nur C–C-Einfachbindungen", ester:"Estergruppe", amid:"Amidgruppe", urethan:"Urethangruppe", ether:"Ethergruppe"};
+const BYS   = {h2o:"Wasser (H<sub>2</sub>O)", hcl:"Chlorwasserstoff (HCl)", none:"kein Nebenprodukt"};
+
+const COND = [
+  {k:"PET", poly:"Polyethylenterephthalat", monos:["tere","glyk"], type:"kond", link:"ester", by:"h2o", use:"Getränkeflaschen, Textilfasern (Polyester)",
+   unit:["O","CH2","CH2","O","C=O","Ph","C=O"],
+   d:[{u:["O","CH2","CH2","O","CH2","Ph","CH2"], why:"In dieser Einheit fehlen die C=O-Gruppen – das wären Ethergruppen. Die Carboxygruppen bleiben als Teil der Estergruppen –CO–O– erhalten."},
+      {u:["O","CH2","CH2"], why:"Diese Einheit enthält nur das Diol – das wäre ein Polyether. Ein Polyester entsteht aus beiden Monomeren im Wechsel."}],
+   ex:"Je eine Carboxygruppe der Terephthalsäure reagiert mit einer Hydroxygruppe des Ethan-1,2-diols. Aus –OH und –H wird Wasser abgespalten, es entsteht eine <strong>Estergruppe</strong> –CO–O–. Weil beide Monomere zwei funktionelle Gruppen tragen, wächst die Kette an beiden Enden weiter: Es entsteht ein <strong>Polyester</strong>."},
+  {k:"PA 6.6", poly:"Polyamid 6.6 (Nylon)", monos:["adip","hmda"], type:"kond", link:"amid", by:"h2o", use:"Textilfasern, Seile, technische Bauteile",
+   unit:["NH","(CH2)6","NH","C=O","(CH2)4","C=O"],
+   d:[{u:["O","(CH2)6","O","C=O","(CH2)4","C=O"], why:"Hier wären die N-Atome durch O-Atome ersetzt – das wäre ein Polyester. Das Diamin bringt NH-Gruppen in die Kette."},
+      {u:["NH","(CH2)6","NH","CH2","(CH2)4","CH2"], why:"In dieser Einheit fehlen die C=O-Gruppen. Die Amidgruppe –CO–NH– enthält die Carbonylgruppe der Säure."}],
+   ex:"Die Carboxygruppen der Hexandisäure reagieren mit den Aminogruppen des Hexan-1,6-diamins. Dabei wird Wasser abgespalten und es entstehen <strong>Amidgruppen</strong> –CO–NH–. Die Zahlen 6.6 geben die Anzahl der C-Atome im Diamin und in der Dicarbonsäure an."},
+  {k:"PA 6.10", poly:"Polyamid 6.10", monos:["sebcl","hmda"], type:"kond", link:"amid", by:"hcl", use:"Borsten, Fasern (Nylonseiltrick im Schulversuch)",
+   unit:["NH","(CH2)6","NH","C=O","(CH2)8","C=O"],
+   d:[{u:["NH","(CH2)6","NH","C=O","(CH2)4","C=O"], why:"Die Kettenlänge der Säure stimmt nicht: Decandisäure hat 10 C-Atome, zwischen den beiden C=O-Gruppen stehen also (CH<sub>2</sub>)<sub>8</sub>."},
+      {u:["NH","(CH2)6","NH","C=O","(CH2)8","C=O","Cl"], why:"Das Cl-Atom wird bei der Reaktion zusammen mit einem H-Atom der Aminogruppe als HCl abgespalten und ist nicht Teil der Kette."}],
+   ex:"Statt der Dicarbonsäure wird hier das reaktionsfreudigere <strong>Säurechlorid</strong> eingesetzt. Die –COCl-Gruppe reagiert mit der Aminogruppe, abgespalten wird <strong>Chlorwasserstoff</strong> (Cl + H → HCl). In der Kette entstehen wie bei PA 6.6 <strong>Amidgruppen</strong>. Diese Reaktion läuft schon bei Raumtemperatur an der Grenzfläche zweier Lösungen ab (Nylonseiltrick)."},
+  {k:"PLA", poly:"Polymilchsäure (Polylactid)", monos:["milch"], type:"kond", link:"ester", by:"h2o", use:"kompostierbare Verpackungen, Fäden in der Medizin, 3D-Druck",
+   unit:["O",{l:"CH",down:"CH3"},"C=O"],
+   d:[{u:["O",{l:"CH",down:"CH3"},"CH2"], why:"Hier fehlt die C=O-Gruppe – das wäre ein Polyether. Die Carboxygruppe wird Teil der Estergruppe."},
+      {u:["O","CH2","CH2","C=O"], why:"Die Methylgruppe sitzt in Milchsäure am C-Atom neben der Carboxygruppe (2-Hydroxypropansäure). Diese Einheit gehört zu 3-Hydroxypropansäure."}],
+   ex:"Milchsäure trägt <strong>beide</strong> funktionellen Gruppen in einem Molekül: eine Hydroxy- und eine Carboxygruppe. Die Carboxygruppe eines Moleküls reagiert mit der Hydroxygruppe des nächsten unter Abspaltung von Wasser zu einer <strong>Estergruppe</strong>. So entsteht ein Polyester aus nur einem Monomer."},
+  {k:"PA 6", poly:"Polyamid 6 (Perlon)", monos:["amino"], type:"kond", link:"amid", by:"h2o", use:"Strumpfhosen, Fasern, Zahnräder",
+   unit:["NH","(CH2)5","C=O"],
+   d:[{u:["NH","(CH2)6","NH","C=O","(CH2)4","C=O"], why:"Das ist die Wiederholungseinheit von PA 6.6 aus zwei verschiedenen Monomeren. Hier gibt es nur ein Monomer mit Amino- und Carboxygruppe."},
+      {u:["NH","(CH2)5","CH2"], why:"In dieser Einheit fehlt die C=O-Gruppe. Die Amidgruppe –CO–NH– enthält die Carbonylgruppe der Carboxygruppe."}],
+   ex:"6-Aminohexansäure trägt eine Amino- und eine Carboxygruppe. Die Carboxygruppe eines Moleküls reagiert mit der Aminogruppe des nächsten unter Abspaltung von Wasser zu einer <strong>Amidgruppe</strong>. Die Zahl 6 bezeichnet die sechs C-Atome der Wiederholungseinheit. Technisch wird PA 6 durch Ringöffnung von Caprolactam hergestellt."},
+  {k:"PUR", poly:"Polyurethan", monos:["hdi","butd"], type:"add", link:"urethan", by:"none", use:"Schaumstoffe, Lacke, Fasern (Elasthan)",
+   unit:["O","(CH2)4","O","C=O","NH","(CH2)6","NH","C=O"],
+   d:[{u:["O","(CH2)4","O","C=O","(CH2)6","C=O"], why:"Hier fehlen die NH-Gruppen – das wäre ein Polyester. Das N-Atom der Isocyanatgruppe bleibt in der Kette und nimmt das H-Atom der OH-Gruppe auf."},
+      {u:["O","(CH2)4","O","NH","(CH2)6","NH"], why:"Hier fehlen die C=O-Gruppen. Aus der Isocyanatgruppe –N=C=O wird die Gruppe –NH–CO–; das C-Atom und das O-Atom bleiben erhalten."}],
+   ex:"Das H-Atom einer Hydroxygruppe des Diols lagert sich an das N-Atom der Isocyanatgruppe –N=C=O an, das O-Atom des Diols bindet an das C-Atom. Es entsteht eine <strong>Urethangruppe</strong> –O–CO–NH–. Dabei werden keine Atome abgespalten: Es handelt sich um eine <strong>Polyaddition</strong>."},
+  {k:"PVC", add:"PVC", type:"poly", link:"cc", by:"none"},
+  {k:"PMMA", add:"PMMA", type:"poly", link:"cc", by:"none"}
+];
+/* PVC/PMMA in Typ C mit Daten aus ADD ergänzen */
+COND.forEach(c=>{ if(c.add){ const m=addByK(c.add); c.poly=m.poly; c.use=m.use; c.addM=m; } });
+
+/* Radikalische Polymerisation */
+const RMON = [
+  {n:"Ethen",      X:"H"},
+  {n:"Propen",     X:"CH3"},
+  {n:"Chlorethen", X:"Cl"},
+  {n:"Styrol",     X:"Ph"}
+];
+const CH2T = {l:"C", up:"H", down:"H"};
+const CX   = (r,rad) => ({l:"C", up:"H", down:r.X, rad:rad?1:0});
+const MONO = r => [{l:"C",up:"H",down:"H"},"=",{l:"C",up:"H",down:r.X}];
+const ROR  = ["R",{l:"O",rad:1}];
+const STEPS = {
+  init:  {n:"Zerfall des Initiators", phase:"start", rad:"up",   eq:r=>[["R","O","O","R"],"→","2",ROR]},
+  start: {n:"Startreaktion",          phase:"start", rad:"same", eq:r=>[ROR,"+",MONO(r),"→",["R","O",CH2T,CX(r,1)]]},
+  grow:  {n:"Kettenwachstum",         phase:"grow",  rad:"same", eq:r=>[["R","O",CH2T,CX(r,1)],"+",MONO(r),"→",["R","O",CH2T,CX(r),CH2T,CX(r,1)]]},
+  rec:   {n:"Rekombination",          phase:"stop",  rad:"down", eq:r=>[["~",CH2T,CX(r,1)],"+",[CX(r,1),CH2T,"~"],"→",["~",CH2T,CX(r),CX(r),CH2T,"~"]]},
+  disp:  {n:"Disproportionierung",    phase:"stop",  rad:"down", eq:r=>[["~",CH2T,CX(r,1)],"+",[CX(r,1),CH2T,"~"],"→",["~",CH2T,CX(r),"H"],"+",[CX(r),"=",{l:"C",up:"H"},"~"]]}
+};
+const PHASES = {start:"Kettenstart", grow:"Kettenwachstum", stop:"Kettenabbruch"};
+const RADS = {up:"nimmt zu", same:"bleibt gleich", down:"nimmt ab"};
+const STEP_EX = {
+  init:"Der Initiator, hier ein Peroxid R–O–O–R, zerfällt beim Erwärmen. Die schwache O–O-Bindung wird <strong>homolytisch</strong> gespalten: Jedes O-Atom erhält ein Elektron des bindenden Elektronenpaars. Aus einem Molekül ohne ungepaartes Elektron entstehen <strong>zwei Radikale</strong>. Dieser Schritt gehört zum <strong>Kettenstart</strong>.",
+  start:"Das Initiatorradikal R–O• greift die C=C-Doppelbindung des Monomers an. Mit einem Elektron der Doppelbindung bildet es eine neue Bindung zum CH<sub>2</sub>-Ende, das zweite Elektron bleibt am anderen C-Atom zurück. Es entsteht ein neues, größeres Radikal – die Zahl der Radikale <strong>bleibt gleich</strong>. Weil das erste Monomer an das Initiatorradikal gebunden wird, gehört dieser Schritt zum <strong>Kettenstart</strong>.",
+  grow:"Das Kettenradikal addiert ein weiteres Monomer nach demselben Prinzip wie bei der Startreaktion. Am Kettenende entsteht wieder ein Radikal, die Zahl der Radikale <strong>bleibt gleich</strong>. Dieser Schritt des <strong>Kettenwachstums</strong> wiederholt sich tausendfach.",
+  rec:"Zwei Kettenradikale treffen aufeinander. Ihre ungepaarten Elektronen bilden ein gemeinsames Elektronenpaar, die beiden Ketten werden verbunden (<strong>Rekombination</strong>). Es verschwinden zwei Radikale – die Kette wächst nicht weiter: <strong>Kettenabbruch</strong>.",
+  disp:"Ein Kettenradikal entzieht dem anderen ein H-Atom vom benachbarten C-Atom (<strong>Disproportionierung</strong>). Es entstehen eine gesättigte Kette und eine Kette mit C=C-Doppelbindung am Ende. Beide Radikale verschwinden: <strong>Kettenabbruch</strong>."
+};
+
+/* Struktur & Eigenschaften */
+const CLS = {
+  thermo:{n:"Thermoplast", net:"unvernetzt", netD:"unvernetzte, verknäuelte Ketten"},
+  elasto:{n:"Elastomer",   net:"weitmaschig vernetzt", netD:"wenige Brücken zwischen den Ketten"},
+  duro:  {n:"Duroplast",   net:"engmaschig vernetzt", netD:"sehr viele Brücken, starres Netz"}
+};
+const NETS = {thermo:"unvernetzt", elasto:"weitmaschig vernetzt", duro:"engmaschig vernetzt"};
+const CLS_EX = {
+  thermo:"<strong>Thermoplaste</strong> bestehen aus unvernetzten, linearen oder wenig verzweigten Ketten, die nur durch zwischenmolekulare Kräfte zusammengehalten werden. Beim Erwärmen werden diese Kräfte überwunden, die Ketten gleiten aneinander ab: Der Kunststoff wird weich und schmilzt. Deshalb sind Thermoplaste <strong>verformbar, schweißbar</strong> und in geeigneten Lösungsmitteln <strong>löslich</strong>.",
+  elasto:"<strong>Elastomere</strong> bestehen aus weitmaschig vernetzten Ketten. Beim Dehnen werden die verknäuelten Ketten gestreckt, die wenigen Brücken ziehen sie anschließend in die Ausgangslage zurück: Der Stoff ist <strong>gummielastisch</strong>. Schmelzen ist nicht möglich, weil die Brücken Atombindungen sind – beim starken Erhitzen <strong>zersetzt</strong> sich der Stoff. Lösungsmittelmoleküle können zwischen die Ketten eindringen: Der Stoff <strong>quillt</strong>, löst sich aber nicht.",
+  duro:"<strong>Duroplaste</strong> bestehen aus engmaschig vernetzten Ketten, die ein starres, dreidimensionales Netz bilden. Sie sind <strong>hart</strong> und auch beim Erwärmen <strong>formstabil</strong>. Statt zu schmelzen, <strong>zersetzen</strong> sie sich bei hohen Temperaturen. Sie sind weder löslich noch quellbar."
+};
+const STATEMENTS = [
+  {t:"Wird beim Erwärmen weich und lässt sich plastisch verformen.",   v:{thermo:1, elasto:0, duro:0}},
+  {t:"Lässt sich schweißen und durch Einschmelzen recyceln.",          v:{thermo:1, elasto:0, duro:0}},
+  {t:"Ist bei Raumtemperatur gummielastisch.",                         v:{thermo:0, elasto:1, duro:0}},
+  {t:"Quillt in Lösungsmitteln, löst sich aber nicht.",                v:{thermo:0, elasto:1, duro:0}},
+  {t:"Zersetzt sich beim starken Erhitzen, ohne vorher zu schmelzen.", v:{thermo:0, elasto:1, duro:1}},
+  {t:"Bleibt auch beim Erwärmen hart und formstabil.",                 v:{thermo:0, elasto:0, duro:1}},
+  {t:"Löst sich in geeigneten Lösungsmitteln.",                        v:{thermo:1, elasto:0, duro:0}}
+];
+const EXAMPLES = [
+  {t:"Plastiktüte aus Polyethen (PE)", c:"thermo", a:1},
+  {t:"Getränkeflasche aus PET", c:"thermo", a:1},
+  {t:"Abwasserrohr aus PVC", c:"thermo", a:1},
+  {t:"Joghurtbecher aus Polystyrol", c:"thermo", a:1},
+  {t:"Autoreifen aus vulkanisiertem Kautschuk", c:"elasto", a:1},
+  {t:"Gummiband", c:"elasto", a:1},
+  {t:"Backform aus Silikonkautschuk", c:"elasto", a:1},
+  {t:"Fahrradschlauch", c:"elasto", a:1},
+  {t:"Steckdose aus Phenoplast (Bakelit)", c:"duro", a:1},
+  {t:"Pfannengriff aus Phenolharz", c:"duro", a:1},
+  {t:"Leiterplatte aus Epoxidharz", c:"duro", a:1},
+  {t:"Arbeitsplatte mit Melaminharz-Beschichtung", c:"duro", a:1},
+  {t:"Ein Kunststoff wird beim Erwärmen weich, lässt sich zu einem Faden ziehen und erstarrt beim Abkühlen in der neuen Form.", c:"thermo", a:0},
+  {t:"Ein Kunststoff lässt sich dehnen und nimmt danach seine ursprüngliche Form wieder ein. Beim starken Erhitzen zersetzt er sich, ohne zu schmelzen.", c:"elasto", a:0},
+  {t:"Ein Kunststoff bleibt beim Erwärmen hart, lässt sich nicht verformen und verkohlt bei hoher Temperatur.", c:"duro", a:0}
+];
+
+/* ============================================================
+   AUFGABEN-GENERATOREN
+   Aufgabe: {typ, chip, title, ctx, groups:[{q, kind, opts:[{k,html,why}], ans}], hints, ex}
+   ============================================================ */
+const TYP = {
+  A:{n:"Monomer ↔ Polymer",                 d:"Wiederholungseinheit zum Monomer finden und umgekehrt (PE, PP, PVC, PS, PTFE, PMMA, PAN)."},
+  B:{n:"Radikalische Polymerisation",        d:"Kettenstart, Kettenwachstum und Kettenabbruch erkennen, ordnen und ergänzen."},
+  C:{n:"Polymerisation, Polykondensation & Polyaddition", d:"Reaktionstyp, Verknüpfung, Nebenprodukt und Wiederholungseinheit bestimmen (PET, PA 6.6, PA 6.10, PLA, PA 6, PUR, PVC, PMMA)."},
+  D:{n:"Struktur & Eigenschaften",           d:"Thermoplaste, Elastomere und Duroplaste an Teilchenmodell, Eigenschaften und Beispielen erkennen."}
+};
+const molBox = (svg, cap) => `<div class="mol-box">${svg}${cap?`<div class="cap">${cap}</div>`:""}</div>`;
+const btnOpts = (obj, keys) => keys.map(k=>({k, html:obj[k]}));
+
+function namesGroup(m, q){
+  const others = shuffle(ADD.filter(o=>o.k!==m.k)).slice(0,3);
+  return {q:q||"Wie heißt das Polymer?", kind:"buttons", ans:m.k,
+    opts: shuffle([m].concat(others)).map(o=>({k:o.k, html:`${esc(o.poly)} (${o.k})`, why: o.k===m.k?"":`${o.poly} entsteht aus ${o.mono}.`}))};
+}
+
+function makeA1(m){
+  const opts=[{k:"c", html:chainSVG(unitT(m.s))},
+              {k:"dbl", html:chainSVG(unitT(m.s,true)), why:"Die C=C-Doppelbindung wird bei der Polymerisation aufgespalten. In der Kette hätte jedes C-Atom sonst fünf Bindungen."}];
+  const b = bothS(m.s);
+  if(!same(b,m.s)) opts.push({k:"both", html:chainSVG(unitT(b)), why:"Jedes Monomer bringt seine Substituenten nur einmal mit. Sie stehen in der Kette nur an jedem zweiten C-Atom."});
+  shuffle(ADD.filter(o=>o.k!==m.k)).forEach(o=>{ if(opts.length<4) opts.push({k:"o"+o.k, html:chainSVG(unitT(o.s)), why:`Diese Wiederholungseinheit gehört zu ${o.poly} (${o.k}), sie entsteht aus ${o.mono}.`}); });
+  return {typ:"A", title:`${m.mono} → ${m.k}`,
+    ctx:`<p>Das Monomer <b>${esc(m.mono)}</b> wird polymerisiert.</p><div class="mol-row">${molBox(chainSVG(monoT(m.s)), esc(m.mono))}</div>`,
+    groups:[
+      {q:"Welche Formel zeigt die <b>Wiederholungseinheit</b> des entstehenden Polymers?", kind:"cards", ans:"c", opts:shuffle(opts)},
+      namesGroup(m)
+    ],
+    hints:[
+      "Bei der Polymerisation wird die C=C-Doppelbindung des Monomers aufgespalten. Die frei werdenden Elektronen verknüpfen die Monomere über C–C-Einfachbindungen.",
+      "In der Wiederholungseinheit hat jedes C-Atom vier Bindungen: zwei in der Kette, zwei zu den Substituenten. Eine Doppelbindung bleibt nicht erhalten.",
+      "Die Wiederholungseinheit enthält genau die Atome eines Monomers. Der Name des Polymers ist „Poly“ + Name des Monomers (bei PVC und PS mit dem Trivialnamen)."
+    ],
+    ex:`<p>Aus <strong>${esc(m.mono)}</strong> entsteht <strong>${esc(m.poly)} (${m.k})</strong>. Die C=C-Doppelbindung wird aufgespalten, die Monomere werden über C–C-Einfachbindungen verknüpft. Die Wiederholungseinheit enthält dieselben Atome wie das Monomer, die Substituenten bleiben an ihrem C-Atom.</p>
+        <div class="figure"><div class="mol-row" style="padding:4px 0">${molBox(chainSVG(monoT(m.s)),"n × Monomer")}<span class="plus">→</span>${molBox(chainSVG(unitT(m.s)),esc(m.poly))}</div></div>
+        <p>Verwendung: ${esc(m.use)}.</p>`
+  };
+}
+
+function makeA2(m){
+  const opts=[{k:"c", html:chainSVG(monoT(m.s))}];
+  const b = bothS(m.s);
+  if(!same(b,m.s)) opts.push({k:"both", html:chainSVG(monoT(b)), why:"Im Ausschnitt trägt nur jedes zweite C-Atom der Hauptkette die Substituenten. Das Monomer hat sie deshalb nur an einem C-Atom."});
+  shuffle(ADD.filter(o=>o.k!==m.k)).forEach(o=>{ if(opts.length<4) opts.push({k:"o"+o.k, html:chainSVG(monoT(o.s)), why:`Das ist ${o.mono}, das Monomer von ${o.poly}.`}); });
+  return {typ:"A", title:`Ausschnitt ${m.k} → Monomer`,
+    ctx:`<p>Die Formel zeigt einen <b>Ausschnitt aus einem Polymer</b>, das durch Polymerisation entstanden ist.</p><div class="mol-row">${chainSVG(segT(m.s))}</div>`,
+    groups:[
+      {q:"Aus welchem <b>Monomer</b> ist das Polymer entstanden?", kind:"cards", ans:"c", opts:shuffle(opts)},
+      namesGroup(m)
+    ],
+    hints:[
+      "Suche den kleinsten Abschnitt, der sich ständig wiederholt. Er umfasst hier zwei C-Atome der Hauptkette.",
+      "Schneide eine Wiederholungseinheit heraus und setze zwischen ihre beiden C-Atome eine Doppelbindung – das ist das Monomer.",
+      "Der Name des Polymers ist „Poly“ + Name des Monomers (bei PVC und PS mit dem Trivialnamen)."
+    ],
+    ex:`<p>Der Ausschnitt besteht aus der sich wiederholenden Einheit –CH<sub>2</sub>–CHX– bzw. hier:</p>
+        <div class="figure"><div class="mol-row" style="padding:4px 0">${molBox(chainSVG(unitT(m.s)),"Wiederholungseinheit")}<span class="plus">⇐</span>${molBox(chainSVG(monoT(m.s)),esc(m.mono))}</div></div>
+        <p>Setzt man zwischen die beiden C-Atome der Wiederholungseinheit eine Doppelbindung, erhält man das Monomer <strong>${esc(m.mono)}</strong>. Das Polymer heißt <strong>${esc(m.poly)} (${m.k})</strong>. Verwendung: ${esc(m.use)}.</p>`
+  };
+}
+
+const RHINT_EQ = "Striche am Atom sind freie Elektronenpaare, der orange Punkt • ist ein ungepaartes Elektron. Die Wellenlinie zeigt, dass die Polymerkette weitergeht, R steht für den Rest des Initiators.";
+function makeB1(stepKey, r){
+  r = r || pick(RMON);
+  const st = STEPS[stepKey];
+  return {typ:"B", title:`${st.n} (${r.n})`,
+    ctx:`<p>Bei der radikalischen Polymerisation von <b>${r.n}</b> läuft folgender Reaktionsschritt ab:</p>${eqHTML(st.eq(r))}<p class="dim">${RHINT_EQ}</p>`,
+    groups:[
+      {q:"Zu welcher <b>Phase</b> gehört der Schritt?", kind:"buttons", ans:st.phase, opts:btnOpts(PHASES,["start","grow","stop"]).map(o=>({...o, why:
+          o.k==="grow" && st.phase==="start" ? (stepKey==="init" ? "Beim Kettenwachstum reagiert ein Radikal mit einem Monomer. Hier entstehen erst die Radikale." : "Links steht das Initiatorradikal R–O•, noch keine wachsende Kette. Die Addition des ersten Monomers gehört zum Kettenstart.") :
+          o.k==="start" && st.phase==="grow" ? "Links steht bereits ein Kettenradikal, nicht das Initiatorradikal R–O•." :
+          o.k!=="stop" && st.phase==="stop" ? "Hier reagieren zwei Radikale miteinander – danach wächst die Kette nicht weiter." :
+          o.k==="stop" && st.phase!=="stop" ? "Nach diesem Schritt ist noch ein Radikal vorhanden, die Reaktion kann weitergehen." : ""}))},
+      {q:"Wie verändert sich die <b>Anzahl der Radikale</b>?", kind:"buttons", ans:st.rad, opts:btnOpts(RADS,["up","same","down"]).map(o=>({...o, why:"Zähle die Radikalpunkte • links und rechts vom Reaktionspfeil – Koeffizienten beachten."}))}
+    ],
+    hints:[
+      "Zähle die Radikalpunkte • links und rechts vom Reaktionspfeil.",
+      "Kettenstart: Radikale entstehen, das erste Monomer wird an das Initiatorradikal addiert. Kettenwachstum: Ein Kettenradikal addiert ein Monomer. Kettenabbruch: Zwei Radikale reagieren miteinander.",
+      "Unterscheide Start und Wachstum am Radikal auf der linken Seite: Ist es das Initiatorradikal R–O• oder schon eine wachsende Kette?"
+    ],
+    ex:`<div class="figure">${eqHTML(st.eq(r))}</div><p><strong>${st.n}</strong> – ${STEP_EX[stepKey]}</p>`
+  };
+}
+
+function makeB2(r){
+  r = r || pick(RMON);
+  const stop = pick(["rec","disp"]);
+  const order = ["init","start","grow",stop];
+  const rows = shuffle(order.map((k,i)=>({k, n:i+1})));
+  return {typ:"B", title:`Reihenfolge der Schritte (${r.n})`,
+    ctx:`<p>Die Gleichungen beschreiben die radikalische Polymerisation von <b>${r.n}</b>, sind aber durcheinandergeraten. Ordne jedem Schritt seine Position in der Reaktionsfolge zu (1 = zuerst).</p><p class="dim">${RHINT_EQ}</p>`,
+    groups: rows.map(row=>({q:eqHTML(STEPS[row.k].eq(r)), qcls:"eqq", inline:true, kind:"buttons", ans:String(row.n),
+      opts:["1","2","3","4"].map(k=>({k, html:k, why:""}))})),
+    hints:[
+      "Am Anfang steht ein Molekül ohne ungepaartes Elektron, das in zwei Radikale zerfällt.",
+      "Danach wird das Initiatorradikal R–O• an das erste Monomer addiert, anschließend wächst die Kette um weitere Monomere.",
+      "Zum Schluss reagieren zwei Radikale miteinander – die Radikale verschwinden."
+    ],
+    ex:`<div class="figure">${order.map((k,i)=>`<div class="eqnum"><span>${i+1}</span>${eqHTML(STEPS[k].eq(r))}</div>`).join("")}</div>
+        <ul><li><strong>1 ${STEPS.init.n}</strong> (Kettenstart): Homolytische Spaltung der O–O-Bindung, es entstehen zwei Radikale.</li>
+        <li><strong>2 ${STEPS.start.n}</strong> (Kettenstart): Das Initiatorradikal addiert an das erste Monomer.</li>
+        <li><strong>3 ${STEPS.grow.n}</strong>: Das Kettenradikal addiert weitere Monomere.</li>
+        <li><strong>4 ${STEPS[stop].n}</strong> (Kettenabbruch): Zwei Radikale reagieren miteinander.</li></ul>`
+  };
+}
+
+function makeB3(kind, r){
+  r = r || pick(RMON);
+  let left, opts, title;
+  if(kind==="start"){
+    title=`Produkt der Startreaktion (${r.n})`;
+    left = [ROR,"+",MONO(r),"→","?"];
+    opts=[{k:"c", p:[["R","O",CH2T,CX(r,1)]]},
+          {k:"a", p:[["R","O",CH2T,CX(r)]], why:"Ein Radikal reagiert mit einem Molekül ohne ungepaartes Elektron – das Produkt muss wieder ein Radikal sein. Ohne ungepaartes Elektron hätte das C-Atom nur drei Bindungen und kein Oktett."},
+          {k:"b", p:[["R","O",CH2T,CX(r),"O","R"]], why:"Dafür wäre ein zweites Initiatorradikal nötig. Das wäre ein Abbruch durch Rekombination, keine Startreaktion."},
+          {k:"d", p:[ROR,"+",[{l:"C",up:"H",down:"H",rad:1},CX(r,1)]], why:"Das Monomer zerfällt nicht in ein Biradikal. Die Doppelbindung wird durch das Initiatorradikal aufgespalten, ein Elektron bildet mit ihm eine neue Bindung."}];
+  } else {
+    title=`Produkt des Kettenwachstums (${r.n})`;
+    left = [["R","O",CH2T,CX(r,1)],"+",MONO(r),"→","?"];
+    opts=[{k:"c", p:[["R","O",CH2T,CX(r),CH2T,CX(r,1)]]},
+          {k:"a", p:[["R","O",CH2T,CX(r),CH2T,CX(r)]], why:"Ein Radikal reagiert mit einem Molekül ohne ungepaartes Elektron – das Produkt muss wieder ein Radikal sein."},
+          {k:"b", p:[["R","O",CH2T,CX(r,1),CH2T,CX(r,1)]], why:"Es entsteht nur ein neues Radikal: Das alte ungepaarte Elektron wird für die neue Bindung zum Monomer verbraucht. Ein C-Atom mit vier Bindungen kann kein zusätzliches Elektron tragen."},
+          {k:"d", p:[["R","O",CH2T,CX(r),CH2T,CX(r),"O","R"]], why:"Hier wäre die Kette durch ein zweites Radikal abgeschlossen worden. Beim Kettenwachstum bleibt das Kettenende ein Radikal."}];
+  }
+  opts.forEach(o=>o.html=eqHTML(o.p));
+  return {typ:"B", title,
+    ctx:`<p>Ergänze das Produkt dieses Schritts der radikalischen Polymerisation von <b>${r.n}</b>:</p>${eqHTML(left)}<p class="dim">${RHINT_EQ}</p>`,
+    groups:[{q:"Welches <b>Produkt</b> entsteht?", kind:"cards", wide:true, ans:"c", opts:shuffle(opts)}],
+    hints:[
+      "Ein Radikal reagiert mit einem Molekül, das kein ungepaartes Elektron hat. Wie viele Radikale muss das Produkt haben?",
+      "Das Radikal bildet mit einem Elektron der C=C-Doppelbindung eine neue Bindung zum CH<sub>2</sub>-Ende des Monomers. Das zweite Elektron der Doppelbindung bleibt am anderen C-Atom zurück."
+    ],
+    ex:`<div class="figure">${eqHTML(STEPS[kind].eq(r))}</div><p>${STEP_EX[kind]}</p>`
+  };
+}
+
+function makeC(c){
+  let ctxMols, unitOpts;
+  if(c.addM){
+    const m=c.addM;
+    ctxMols = molBox(chainSVG(monoT(m.s)), esc(m.mono));
+    unitOpts = [{k:"c", html:chainSVG(unitT(m.s))},
+                {k:"dbl", html:chainSVG(unitT(m.s,true)), why:"Die C=C-Doppelbindung wird bei der Polymerisation aufgespalten – in der Kette hätte jedes C-Atom sonst fünf Bindungen."},
+                {k:"both", html:chainSVG(unitT(bothS(m.s))), why:"Jedes Monomer bringt seine Substituenten nur einmal mit. Sie stehen in der Kette nur an jedem zweiten C-Atom."}];
+  } else {
+    ctxMols = c.monos.map(k=>molBox(chainSVG(M[k].t), esc(M[k].n))).join('<span class="plus">+</span>');
+    unitOpts = [{k:"c", html:chainSVG(wrapU(c.unit))}].concat(c.d.map((d,i)=>({k:"d"+i, html:chainSVG(wrapU(d.u)), why:d.why})));
+  }
+  const typeWhy = k => {
+    if(k==="poly") return "Für eine Polymerisation braucht das Monomer eine C=C-Doppelbindung. Hier reagieren funktionelle Gruppen miteinander.";
+    if(k==="kond") return c.type==="add" ? "Bei dieser Reaktion wird kein Molekül abgespalten – das spricht gegen eine Polykondensation." : "Hier wird die C=C-Doppelbindung gespalten, ohne dass ein kleines Molekül abgespalten wird.";
+    if(k==="add") return c.type==="kond" ? "Bei dieser Reaktion wird ein kleines Molekül abgespalten – das ist eine Kondensation." : "Polyaddition bezeichnet die Reaktion von Isocyanaten mit Diolen. Monomere mit C=C-Doppelbindung werden polymerisiert.";
+    return "";
+  };
+  const linkWhy = {cc:"Funktionelle Gruppen reagieren miteinander – dabei entsteht eine neue funktionelle Gruppe in der Kette.",
+                   ester:"Eine Estergruppe –CO–O– entsteht aus einer Carboxy- und einer Hydroxygruppe.",
+                   amid:"Eine Amidgruppe –CO–NH– entsteht aus einer Carboxy- (oder Säurechlorid-) und einer Aminogruppe.",
+                   urethan:"Eine Urethangruppe –O–CO–NH– entsteht aus einer Isocyanat- und einer Hydroxygruppe.",
+                   ether:"Eine Ethergruppe –O– enthält keine C=O-Gruppe. Keines der Monomere bildet hier Ether."};
+  const byWhy  = {h2o:"Wasser entsteht, wenn –OH und –H abgespalten werden. Prüfe, welche Atome die reagierenden Gruppen tragen.",
+                  hcl:"Chlorwasserstoff entsteht nur, wenn ein Monomer Cl-Atome trägt (Säurechlorid).",
+                  none:"Bei einer Kondensation wird immer ein kleines Molekül abgespalten."};
+  const linkKeys = shuffle(["cc","ester","amid","urethan","ether"].filter(k=>k===c.link || Math.random()<0.75)).slice(0,4);
+  if(!linkKeys.includes(c.link)) linkKeys[0]=c.link;
+  const monoNames = c.addM ? esc(c.addM.mono) : c.monos.map(k=>esc(M[k].n)).join(" und ");
+  return {typ:"C", title:`${c.poly} (${c.k})`,
+    ctx:`<p>Aus ${c.monos && c.monos.length===2 ? "den Monomeren" : "dem Monomer"} entsteht der Kunststoff <b>${esc(c.poly)}</b> (${esc(c.k)}).</p><div class="mol-row">${ctxMols}</div>`,
+    groups:[
+      {q:"Um welchen <b>Reaktionstyp</b> handelt es sich?", kind:"buttons", ans:c.type, opts:btnOpts(TYPES,["poly","kond","add"]).map(o=>({...o, why:typeWhy(o.k)}))},
+      {q:"Welche <b>Verknüpfung</b> entsteht zwischen den Bausteinen?", kind:"buttons", ans:c.link, opts:shuffle(linkKeys).map(k=>({k, html:LINKS[k], why:linkWhy[k]}))},
+      {q:"Welches <b>Nebenprodukt</b> entsteht?", kind:"buttons", ans:c.by, opts:btnOpts(BYS,["h2o","hcl","none"]).map(o=>({...o, why: o.k==="none" && c.type==="kond" ? byWhy.none : o.k!=="none" && c.by==="none" ? "Hier werden keine Atome abgespalten – alle Atome der Monomere finden sich im Polymer wieder." : byWhy[o.k]}))},
+      {q:"Welche Formel zeigt die <b>Wiederholungseinheit</b>?", kind:"cards", wide:true, ans:"c", opts:shuffle(unitOpts)}
+    ],
+    hints:[
+      "Untersuche die funktionellen Gruppen: Hat das Monomer eine C=C-Doppelbindung? Gibt es Hydroxy-, Carboxy-, Amino-, Säurechlorid- oder Isocyanatgruppen (–N=C=O)?",
+      "Polykondensation: –COOH oder –COCl reagiert mit –OH oder –NH<sub>2</sub> unter Abspaltung eines kleinen Moleküls (OH + H → H<sub>2</sub>O, Cl + H → HCl). Polyaddition: Das H-Atom der OH-Gruppe lagert sich an das N-Atom der Isocyanatgruppe an, ohne Nebenprodukt.",
+      "Estergruppe –CO–O–, Amidgruppe –CO–NH–, Urethangruppe –O–CO–NH–. In der Wiederholungseinheit fehlen genau die abgespaltenen Atome."
+    ],
+    ex: c.addM
+      ? `<p><strong>${esc(c.addM.mono)}</strong> besitzt eine C=C-Doppelbindung. Bei der <strong>Polymerisation</strong> wird sie aufgespalten, die Monomere verknüpfen sich über C–C-Einfachbindungen. Es entsteht <strong>kein Nebenprodukt</strong> und keine neue funktionelle Gruppe in der Kette.</p><div class="figure">${chainSVG(unitT(c.addM.s))}</div><p>Verwendung: ${esc(c.use)}.</p>`
+      : `<p>${c.ex}</p><div class="figure">${chainSVG(wrapU(c.unit))}</div><p>Monomere: ${monoNames}. Reaktionstyp: <strong>${TYPES[c.type]}</strong>, Nebenprodukt: <strong>${BYS[c.by]}</strong>. Verwendung: ${esc(c.use)}.</p>`
+  };
+}
+
+function makeD1(cls){
+  const seed = 1+Math.floor(Math.random()*1e6);
+  const sts = shuffle(STATEMENTS).slice(0,3);
+  return {typ:"D", title:`Teilchenmodell: ${CLS[cls].n}`,
+    ctx:`<p>Das Modell zeigt den Aufbau eines Kunststoffs auf Teilchenebene. Graue Linien sind Polymerketten, orange Striche sind Brücken aus Atombindungen zwischen den Ketten.</p><div class="mol-row">${netSVG(cls,seed)}</div>`,
+    groups:[
+      {q:"Wie sind die Ketten <b>verknüpft</b>?", kind:"buttons", ans:cls, opts:btnOpts(NETS,["thermo","elasto","duro"]).map(o=>({...o, why:"Achte darauf, ob und wie viele orange Brücken die Ketten verbinden."}))},
+      {q:"Zu welcher <b>Kunststoffklasse</b> gehört der Stoff?", kind:"buttons", ans:cls, opts:["thermo","elasto","duro"].map(k=>({k, html:CLS[k].n, why:`${CLS[k].n}e sind ${CLS[k].net}.`}))}
+    ].concat(sts.map(st=>({q:esc(st.t), inline:true, kind:"buttons", ans: st.v[cls]?"y":"n",
+      opts:[{k:"y", html:"trifft zu", why:""},{k:"n", html:"trifft nicht zu", why:""}]}))),
+    hints:[
+      "Sind die Ketten durch Brücken verbunden? Wenn nicht, können sie beim Erwärmen aneinander abgleiten.",
+      "Wenige Brücken (weitmaschig): Die Ketten lassen sich strecken, werden aber zurückgezogen. Viele Brücken (engmaschig): starres Netz.",
+      "Ein vernetzter Kunststoff kann nicht schmelzen, weil dafür Atombindungen gespalten werden müssten – er zersetzt sich."
+    ],
+    ex:`<p>${CLS_EX[cls]}</p><ul>${sts.map(st=>`<li>${esc(st.t)} – <strong>${st.v[cls]?"trifft zu":"trifft nicht zu"}</strong></li>`).join("")}</ul>`,
+    seed
+  };
+}
+
+function makeD2(e){
+  const seed = 1+Math.floor(Math.random()*1e6);
+  return {typ:"D", title: e.a ? e.t : "Beobachtung: "+CLS[e.c].n,
+    ctx: e.a ? `<p>Aus welcher Art Kunststoff besteht dieser Gegenstand?</p><p style="font-size:17px; color:var(--text)"><b>${esc(e.t)}</b></p>`
+             : `<p>Bei der Untersuchung eines Kunststoffs wird Folgendes beobachtet:</p><p style="font-size:15px; color:var(--text)"><b>${esc(e.t)}</b></p>`,
+    groups:[
+      {q:"Zu welcher <b>Kunststoffklasse</b> gehört der Stoff?", kind:"buttons", ans:e.c, opts:["thermo","elasto","duro"].map(k=>({k, html:CLS[k].n, why:
+        k==="thermo"?"Thermoplaste werden beim Erwärmen weich und schmelzen." : k==="elasto"?"Elastomere sind gummielastisch." : "Duroplaste sind hart und auch beim Erwärmen formstabil."}))},
+      {q:"Welches <b>Teilchenmodell</b> passt dazu?", kind:"cards", ans:e.c, cls:"net3", opts:["thermo","elasto","duro"].map((k,i)=>({k, html:netSVG(k, seed+i*977), why:`Dieses Modell zeigt ${CLS[k].netD} – das passt zu ${CLS[k].n}en.`}))}
+    ],
+    hints:[
+      "Überlege: Wird der Stoff beim Erwärmen weich? Ist er gummielastisch? Bleibt er hart?",
+      "Thermoplast – unvernetzt; Elastomer – weitmaschig vernetzt; Duroplast – engmaschig vernetzt."
+    ],
+    ex:`<p>${CLS_EX[e.c]}</p><div class="figure" style="max-width:380px">${netSVG(e.c, seed+7)}</div>`,
+    seed
+  };
+}
+
+/* gezielte Auswahl */
+const CATALOG = [];
+ADD.forEach(m=>CATALOG.push({typ:"A", label:`Monomer → Polymer: ${m.mono}`, make:()=>makeA1(m)}));
+ADD.forEach(m=>CATALOG.push({typ:"A", label:`Ausschnitt → Monomer: ${m.k}`, make:()=>makeA2(m)}));
+Object.keys(STEPS).forEach(k=>CATALOG.push({typ:"B", label:`Schritt einordnen: ${STEPS[k].n}`, make:()=>makeB1(k)}));
+CATALOG.push({typ:"B", label:"Schritte in die richtige Reihenfolge bringen", make:()=>makeB2()});
+CATALOG.push({typ:"B", label:"Produkt ergänzen: Startreaktion", make:()=>makeB3("start")});
+CATALOG.push({typ:"B", label:"Produkt ergänzen: Kettenwachstum", make:()=>makeB3("grow")});
+COND.forEach(c=>CATALOG.push({typ:"C", label:`${c.poly} (${c.k})`, make:()=>makeC(c)}));
+Object.keys(CLS).forEach(k=>CATALOG.push({typ:"D", label:`Teilchenmodell: ${CLS[k].n}`, make:()=>makeD1(k)}));
+EXAMPLES.forEach(e=>CATALOG.push({typ:"D", label: e.a ? `Gegenstand: ${e.t}` : `Beobachtung: ${e.t.slice(0,48)}…`, make:()=>makeD2(e)}));
+
+/* ============================================================
+   ZUSTAND & DARSTELLUNG
+   ============================================================ */
+const enabled = {A:true, B:true, C:true, D:true};
+const stats = {solved:0, first:0, streak:0, shown:0};
+const history = [];
+let T = null, taskNo = 0, lastLabel = "";
+
+function renderTypes(){
+  $("typeList").innerHTML = Object.keys(TYP).map(k=>`
+    <label class="type-item ${enabled[k]?"on":""}" data-k="${k}">
+      <input type="checkbox" ${enabled[k]?"checked":""} data-k="${k}">
+      <span><span class="tt">${TYP[k].n}</span><span class="td" style="display:block">${TYP[k].d}</span></span>
+    </label>`).join("");
+}
+$("typeList").addEventListener("change", e=>{
+  const k = e.target.dataset.k; if(!k) return;
+  enabled[k] = e.target.checked;
+  if(!Object.values(enabled).some(Boolean)){ enabled[k]=true; e.target.checked=true; }
+  renderTypes();
+});
+
+function renderSelect(){
+  $("taskSelect").innerHTML = Object.keys(TYP).map(t=>`<optgroup label="${esc(TYP[t].n)}">${
+    CATALOG.map((c,i)=>c.typ===t?`<option value="${i}">${esc(c.label)}</option>`:"").join("")}</optgroup>`).join("");
+}
+
+function renderOverview(){
+  const rows = [];
+  rows.push(`<tr class="grp"><td colspan="5">Polymerisation</td></tr>`);
+  ADD.forEach(m=>rows.push(`<tr><td class="k">${m.k}</td><td>${esc(m.poly)}</td><td>${esc(m.mono)}</td><td>Polymerisation</td><td>${esc(m.use)}</td></tr>`));
+  rows.push(`<tr class="grp"><td colspan="5">Polykondensation &amp; Polyaddition</td></tr>`);
+  COND.filter(c=>!c.addM).forEach(c=>rows.push(`<tr><td class="k">${esc(c.k)}</td><td>${esc(c.poly)}</td><td>${c.monos.map(k=>esc(M[k].n)).join(" + ")}</td><td>${TYPES[c.type]} (${LINKS[c.link]}, ${BYS[c.by]})</td><td>${esc(c.use)}</td></tr>`));
+  rows.push(`<tr class="grp"><td colspan="5">Kunststoffklassen</td></tr>`);
+  Object.keys(CLS).forEach(k=>rows.push(`<tr><td class="k">–</td><td>${CLS[k].n}</td><td colspan="2">${CLS[k].net}</td><td>${EXAMPLES.filter(e=>e.c===k&&e.a).map(e=>esc(e.t)).join(", ")}</td></tr>`));
+  $("ovwBody").innerHTML = rows.join("");
+}
+
+function setStatus(kind, txt){
+  const b=$("statusBadge"); b.className="status "+kind; $("statusText").textContent=txt;
+}
+function renderStats(){
+  $("roSolved").textContent=stats.solved; $("roFirst").textContent=stats.first;
+  $("roStreak").textContent=stats.streak; $("roShown").textContent=stats.shown;
+}
+function renderHistory(){
+  if(!history.length){ $("histBody").innerHTML=`<tr><td colspan="4" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr>`; return; }
+  const lab = {first:["s-first","im 1. Versuch gelöst"], ok:["s-ok","gelöst"], shown:["s-shown","Lösung angesehen"], open:["s-open","nicht beendet"]};
+  $("histBody").innerHTML = history.slice().reverse().map(h=>`<tr><td class="mono">${h.no}</td><td>${esc(TYP[h.typ].n)}</td><td>${esc(h.title)}</td><td class="${lab[h.st][0]}">${lab[h.st][1]}${h.tries>1&&h.st==="ok"?` (${h.tries} Versuche)`:""}</td></tr>`).join("");
+}
+
+function loadTask(t){
+  if(T && !T.done && (T.tries>0 || T.hintIdx>0)) history.push({no:taskNo, typ:T.typ, title:T.title, st:"open", tries:T.tries});
+  T = t; taskNo++;
+  T.tries=0; T.hintIdx=0; T.done=false; T.shown=false;
+  T.groups.forEach(g=>{ g.sel=null; g.state=""; g.why=""; });
+  lastLabel = T.title;
+  $("taskNum").textContent = "Aufgabe "+taskNo;
+  const chip=$("taskChip"); chip.className="chip t"+T.typ; chip.textContent=TYP[T.typ].n;
+  $("ctx").innerHTML = T.ctx;
+  $("groups").innerHTML = T.groups.map((g,gi)=>`
+    <div class="q-group${g.inline?" inline":""}" data-g="${gi}">
+      <div class="q${g.qcls?" "+g.qcls:""}">${T.groups.length>1&&!g.inline?`<span class="qn">${String.fromCharCode(97+gi)})</span>`:""}${g.q}<span class="mark"></span></div>
+      <div class="${g.kind==="cards" ? "cards"+(g.wide?" wide":"")+(g.cls?" "+g.cls:"") : "choices"}">
+        ${g.opts.map(o=>`<button type="button" class="opt${g.kind==="cards"?" card":""}${o.txt?" txt":""}" data-k="${esc(o.k)}">${o.html}</button>`).join("")}
+      </div>
+      <div class="why" hidden></div>
+    </div>`).join("");
+  $("feedback").innerHTML="";
+  $("expBox").innerHTML=`<div class="empty-hint">Die Erklärung erscheint, sobald die Aufgabe gelöst oder die Lösung angezeigt wurde.</div>`;
+  $("btnCheck").disabled=false; $("btnHint").disabled=false; $("btnSolve").disabled=false;
+  setStatus("running","Aufgabe offen");
+  renderHistory();
+}
+
+function paintGroup(gi){
+  const g=T.groups[gi], el=$("groups").querySelector(`.q-group[data-g="${gi}"]`);
+  el.classList.toggle("ok", g.state==="ok");
+  el.classList.toggle("bad", g.state==="bad");
+  el.classList.toggle("done", T.done);
+  el.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel", b.dataset.k===g.sel));
+  const w=el.querySelector(".why");
+  if(g.why){ w.innerHTML=g.why; w.hidden=false; } else { w.hidden=true; w.innerHTML=""; }
+}
+
+$("groups").addEventListener("click", e=>{
+  const b = e.target.closest(".opt"); if(!b || !T || T.done) return;
+  const gi = +b.closest(".q-group").dataset.g, g=T.groups[gi];
+  g.sel = b.dataset.k; g.state=""; g.why="";
+  paintGroup(gi);
+});
+
+function fb(cls, html, append){
+  const div = `<div class="fb ${cls}">${html}</div>`;
+  if(append) $("feedback").insertAdjacentHTML("beforeend", div); else $("feedback").innerHTML = div;
+}
+
+function finish(st){
+  T.done=true;
+  T.groups.forEach((g,gi)=>paintGroup(gi));
+  $("btnCheck").disabled=true; $("btnHint").disabled=true; $("btnSolve").disabled=true;
+  $("expBox").innerHTML = `<div class="explain">${T.ex}</div>`;
+  history.push({no:taskNo, typ:T.typ, title:T.title, st, tries:T.tries});
+  renderHistory(); renderStats();
+}
+
+function check(){
+  if(!T || T.done) return;
+  const open = T.groups.filter(g=>g.sel==null).length;
+  if(open){ fb("info", open===1 ? "Eine Teilaufgabe ist noch nicht beantwortet." : `${open} Teilaufgaben sind noch nicht beantwortet.`); return; }
+  T.tries++;
+  let nOk=0;
+  T.groups.forEach((g,gi)=>{
+    const ok = g.sel===g.ans;
+    g.state = ok?"ok":"bad";
+    g.why = ok ? "" : ((g.opts.find(o=>o.k===g.sel)||{}).why||"");
+    if(ok) nOk++;
+    paintGroup(gi);
+  });
+  const n=T.groups.length;
+  if(nOk===n){
+    stats.solved++; if(T.tries===1) stats.first++; stats.streak++;
+    fb("good", T.tries===1 ? "Alles richtig – im ersten Versuch! Die Erklärung steht unten im Tab „Erklärung“." : "Alles richtig! Die Erklärung steht unten im Tab „Erklärung“.");
+    setStatus("done","gelöst");
+    finish(T.tries===1?"first":"ok");
+  } else {
+    stats.streak=0; renderStats();
+    fb("bad", n===1 ? "Das stimmt noch nicht. Ändere deine Auswahl und prüfe erneut." : `${nOk} von ${n} Teilaufgaben richtig. Ändere die rot markierten Antworten und prüfe erneut.`);
+  }
+}
+
+function hint(){
+  if(!T || T.done) return;
+  if(T.hintIdx < T.hints.length){
+    fb("hint", `<strong>Tipp ${T.hintIdx+1}:</strong> ${T.hints[T.hintIdx]}`, true);
+    T.hintIdx++;
+  } else fb("info","Keine weiteren Tipps – nutze „Lösung zeigen“, um die Lösung anzuzeigen.", true);
+}
+
+function solve(){
+  if(!T || T.done) return;
+  T.groups.forEach(g=>{ g.sel=g.ans; g.state="ok"; g.why=""; });
+  T.shown=true; stats.shown++; stats.streak=0;
+  fb("info","Die richtigen Antworten sind markiert. Die Aufgabe zählt nicht als gelöst – die Erklärung steht unten im Tab „Erklärung“.");
+  setStatus("shown","Lösung angezeigt");
+  finish("shown");
+}
+
+function newTask(){
+  const pool = CATALOG.filter(c=>enabled[c.typ]);
+  let t, guard=0;
+  do {
+    const typ = pick(Object.keys(enabled).filter(k=>enabled[k]));
+    const c = pick(pool.filter(p=>p.typ===typ));
+    t = c.make(); guard++;
+  } while(t.title===lastLabel && guard<10);
+  loadTask(t);
+}
+
+/* Bedienung */
+$("btnNew").addEventListener("click", newTask);
+$("btnCheck").addEventListener("click", check);
+$("btnHint").addEventListener("click", hint);
+$("btnSolve").addEventListener("click", solve);
+$("btnLoad").addEventListener("click", ()=>{ const c=CATALOG[+$("taskSelect").value]; if(c) loadTask(c.make()); });
+
+document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click", ()=>{
+  document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+}));
+
+const gbd=$("guideBackdrop");
+$("btnGuide").addEventListener("click", e=>{ e.preventDefault(); gbd.classList.add("open"); });
+$("closeGuide").addEventListener("click", ()=>gbd.classList.remove("open"));
+gbd.addEventListener("click", e=>{ if(e.target===gbd) gbd.classList.remove("open"); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") gbd.classList.remove("open"); });
+
+renderTypes(); renderSelect(); renderOverview(); renderStats();
+$("guideEq").innerHTML = eqHTML(["n", monoT(addByK("PVC").s), "→", unitT(addByK("PVC").s)]);
+loadTask(makeA1(addByK("PVC")));
+})();
+</script>
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
+})();
+</script>
+</body>
+</html>
