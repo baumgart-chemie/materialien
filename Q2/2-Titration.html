@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulation „Titration“</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --danger:#e4785b; --ok:#7fd68a;
+  --screen:#0e1113; --glass:#6b7680;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+h1,h2,h3{font-weight:600; margin:0;}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.warn .dot{background:var(--danger);}
+header .status.warn{color:var(--danger); border-color:var(--danger);}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:620px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 4px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 320px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  position:sticky; top:0; align-self:start;
+  padding:20px 20px 40px; max-height:100vh; overflow-y:auto; overscroll-behavior:contain;
+}
+.main{padding:20px 24px 60px; min-width:0; border-left:1px solid var(--line); min-height:100vh;}
+@media (max-width:920px){
+  .sidebar{position:static; max-height:none; overflow:visible; border-bottom:1px solid var(--line);}
+  .main{border-left:none; min-height:0;}
+}
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px;
+  letter-spacing:.2px; display:flex; justify-content:space-between; align-items:center;
+}
+.role{font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-faint);}
+.role.on{color:var(--amber); border-color:var(--amber-dim);}
+.role.done{color:var(--ok); border-color:var(--ok);}
+.task-box{border:1px solid var(--amber-dim); background:rgba(255,180,84,.05); border-radius:4px; padding:12px 14px; margin-bottom:6px;}
+.task-box p{margin:0; font-size:13px; line-height:1.55; color:var(--text-dim);}
+.task-box p + p{margin-top:6px;}
+.task-box strong{color:var(--text);}
+.fb{border:1px solid var(--line); border-left-width:3px; border-radius:4px; padding:10px 14px; margin-top:14px; background:var(--panel-alt);}
+.fb .t{font-size:13.5px; font-weight:600; margin-bottom:4px;}
+.fb p{margin:4px 0 0; font-size:13px; line-height:1.55; color:var(--text-dim);}
+.fb.ok{border-left-color:var(--ok);} .fb.ok .t{color:var(--ok);}
+.fb.mid{border-left-color:var(--amber);} .fb.mid .t{color:var(--amber);}
+.fb.bad{border-left-color:var(--danger);} .fb.bad .t{color:var(--danger);}
+
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+.row label{font-size:13px; color:var(--text-dim);}
+.row .val{font-size:13px; color:var(--amber); min-width:64px; text-align:right;}
+.row .val.plain{color:var(--text);}
+input[type=range]{width:100%; accent-color: var(--teal); height:4px; background:transparent; cursor:pointer; margin:0 0 8px;}
+.field-full{margin-bottom:14px;}
+.field-full label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+select, input[type=text]{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+input[type=text]{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px;}
+select:focus, input:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+.hint{font-size:11.5px; color:var(--text-faint); margin-top:2px;}
+.hint.warn{color:var(--danger);}
+
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:12px;}
+.mode-toggle button{
+  flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 6px;
+  font-size:12.5px; cursor:pointer; font-family:inherit;
+}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.sw{display:flex; align-items:flex-start; gap:11px; margin-bottom:14px; cursor:pointer;}
+.sw input{position:absolute; opacity:0; pointer-events:none;}
+.sw .track{flex:none; width:34px; height:19px; margin-top:1px; border-radius:20px; background:var(--panel-alt); border:1px solid var(--line); position:relative; transition:background .15s, border-color .15s;}
+.sw .track::after{content:""; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--text-faint); transition:transform .15s, background .15s;}
+.sw input:checked + .track{background:var(--teal-dim); border-color:var(--teal);}
+.sw input:checked + .track::after{transform:translateX(15px); background:var(--teal);}
+.sw input:focus-visible + .track{outline:2px solid var(--teal-dim); outline-offset:2px;}
+.sw input:disabled + .track{opacity:.4;}
+.sw .sw-text{font-size:13px; color:var(--text); line-height:1.35;}
+.sw .sw-text small{display:block; font-size:11.5px; color:var(--text-faint); margin-top:2px;}
+.sw.off .sw-text{opacity:.5;}
+input[type=range]:disabled{opacity:.35; cursor:not-allowed;}
+.sub-label{font-size:12px; color:var(--text-faint); margin:0 0 6px;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.primary.on{background:var(--amber); border-color:var(--amber); color:#1a1206;}
+.btn.ghost{background:transparent;}
+.btn.warn{border-color:var(--danger); color:var(--danger); background:transparent;}
+.btn[hidden]{display:none;}
+.btn:disabled{opacity:.4; cursor:not-allowed; filter:none;}
+
+/* Simulationsfenster */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+.speed-group{display:flex; gap:4px; margin-left:auto; align-items:center;}
+.speed-group .lbl{font-size:11.5px; color:var(--text-faint); margin-right:4px;}
+.speed-group button{
+  background:var(--panel-alt); border:1px solid var(--line); color:var(--text-dim); font-size:11.5px;
+  padding:5px 9px; border-radius:var(--radius); cursor:pointer; font-family:inherit;
+}
+.speed-group button.active{background:var(--teal-dim); color:var(--text); border-color:var(--teal);}
+.sim-grid{display:grid; grid-template-columns:minmax(0,380fr) minmax(0,640fr); gap:12px; align-items:start;}
+@media (max-width:700px){ .sim-grid{grid-template-columns:1fr;} }
+.sim-grid canvas{width:100%; height:auto; display:block; border-radius:2px;}
+.sim-grid.solo{grid-template-columns:minmax(0,440px); justify-content:center;}
+.sim-grid.solo #cvG{display:none;}
+.readout[hidden]{display:none;}
+.mode-toggle.off{opacity:.4; pointer-events:none;}
+.mode-toggle[hidden]{display:none;}
+.sym-bar{display:flex; gap:4px; flex-wrap:wrap; margin:0 0 10px; align-items:center;}
+#halfBlock[hidden]{display:none;}
+.sub-eq{font-size:12.5px; color:var(--text-dim); font-weight:600; margin:12px 0 6px;}
+.half-row:first-child .sub-eq{margin-top:0;}
+.sym-bar[hidden]{display:none;}
+.sym-bar .lbl2{font-size:11px; color:var(--text-faint); margin-right:4px;}
+.sym-bar button{min-width:40px; padding:5px 8px; font-size:15px; line-height:1.1;}
+.col-row{display:flex; gap:18px; flex-wrap:wrap; margin:6px 0 4px;}
+.col-row .ci{display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px; color:var(--text-dim);}
+.col-row .ci i{width:46px; height:46px; border-radius:50%; border:1px solid var(--line); display:block;}
+table.gg{border-collapse:separate; border-spacing:0; background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:4px; font-size:14px; width:100%; max-width:660px;}
+table.gg th, table.gg td{padding:7px 12px; text-align:left; vertical-align:baseline; border-bottom:1px solid var(--line-soft);}
+table.gg tr:last-child th, table.gg tr:last-child td{border-bottom:none;}
+table.gg th{color:var(--amber); font-weight:600; font-size:12.5px; width:58px; white-space:nowrap;}
+table.gg td.sym{white-space:nowrap; width:1%;}
+table.gg td.val{white-space:nowrap; width:1%; padding-right:22px;}
+table.gg td.val b{color:var(--amber); font-weight:600;}
+table.gg td.d{color:var(--text-faint); font-size:12px;}
+table.gg tr.sep th, table.gg tr.sep td{border-top:1px solid var(--line);}
+@media (max-width:640px){ table.gg td.d{display:none;} }
+.step{margin-top:16px;}
+.step .eq-label{margin:0 0 5px;}
+.step .why{font-size:12px; color:var(--text-faint); margin:5px 0 0; line-height:1.5;}
+.rxn-row{display:flex; gap:8px; flex-wrap:wrap;}
+.rxn-row input{flex:1 1 260px; min-width:0;}
+.rxn-row .btn{flex:none;}
+.rxn-prev{margin-top:8px;}
+.rxn-prev .lbl{font-size:11px; color:var(--text-faint); margin-bottom:4px;}
+.rxn-prev .eq.ok{border-color:var(--ok);}
+.rxn-prev .tagl{margin-left:10px; vertical-align:1px;}
+#calcHead{margin-top:22px;}
+ol.howto{margin:10px 0 0; padding-left:20px; font-size:13px; color:var(--text-dim); line-height:1.7;}
+canvas#cvG{touch-action:pan-y; cursor:crosshair;}
+.readout-bar{display:flex; gap:26px; padding:10px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:8px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+.readout .v.plain{color:var(--text);}
+.swatch{display:inline-block; width:11px; height:11px; border-radius:50%; border:1px solid var(--line); vertical-align:-1px; margin-right:6px;}
+
+/* Tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+.tabs button{
+  background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px;
+  cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500;
+}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+
+.eq-label{font-size:11px; color:var(--text-faint); margin:14px 0 5px;}
+.eq-label:first-child{margin-top:0;}
+.eq{
+  background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:4px;
+  padding:9px 12px; font-size:14px; line-height:1.7; overflow-x:auto; white-space:nowrap;
+}
+.eq b{color:var(--amber); font-weight:600;}
+.eq .hl{color:var(--teal); font-weight:600;}
+.eq.big{font-size:16px;}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:12px; line-height:1.15; margin:0 2px;}
+.frac span:first-child{border-bottom:1px solid var(--text-dim); padding:0 3px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:70ch;}
+.note strong{color:var(--text); font-weight:600;}
+ul.obs{margin:6px 0 0; padding-left:18px; font-size:13.5px; color:var(--text-dim); line-height:1.65;}
+.calc-grid{display:grid; grid-template-columns:260px minmax(0,1fr); gap:24px; align-items:start;}
+@media (max-width:760px){ .calc-grid{grid-template-columns:minmax(0,1fr);} }
+.result-ok{color:var(--ok);}
+.result-bad{color:var(--danger);}
+
+/* Messwerte */
+.tbl-tools{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;}
+.tbl-tools .hint{margin-left:6px;}
+.tbl-wrap{max-height:360px; overflow-y:auto; border:1px solid var(--line-soft); border-radius:4px; max-width:520px;}
+table.mw{border-collapse:collapse; width:100%; font-size:13px;}
+table.mw th{position:sticky; top:0; background:var(--panel); color:var(--text-dim); font-weight:600; font-size:12px; text-align:right; padding:7px 12px; border-bottom:1px solid var(--line);}
+table.mw td{padding:4px 12px; text-align:right; color:var(--text); border-bottom:1px solid var(--line-soft); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+table.mw tr:last-child td{color:var(--amber);}
+
+/* Indikatoren */
+.ind-row{display:grid; grid-template-columns:150px 1fr 130px; gap:14px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line-soft);}
+@media (max-width:640px){ .ind-row{grid-template-columns:1fr; gap:6px;} }
+.ind-row .nm{font-size:13.5px;}
+.ind-row .nm small{display:block; font-size:11.5px; color:var(--text-faint); margin-top:2px;}
+.ind-bar{position:relative; height:22px; border-radius:3px; border:1px solid var(--line); background:var(--panel-alt);}
+.ind-bar .g{position:absolute; inset:0; border-radius:2px;}
+.ind-bar .mk{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--amber); box-shadow:0 0 4px var(--amber);}
+.ind-bar .ep{position:absolute; top:-3px; bottom:-3px; width:0; border-left:2px dashed var(--teal);}
+.ind-bar .jmp{position:absolute; top:0; bottom:0; background:rgba(79,209,197,.16); border-left:1px solid var(--teal-dim); border-right:1px solid var(--teal-dim);}
+.ph-axis{display:grid; grid-template-columns:150px 1fr 130px; gap:14px; font-size:10.5px; color:var(--text-faint);}
+@media (max-width:640px){ .ph-axis{display:none;} }
+.ph-axis .ax{display:flex; justify-content:space-between;}
+.tagl{display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-faint); margin:2px 4px 2px 0;}
+.tagl.good{color:var(--ok); border-color:var(--ok);}
+.tagl.mid{color:var(--amber); border-color:var(--amber-dim);}
+.tagl.bad{color:var(--danger); border-color:var(--danger);}
+
+/* Teilchenbilanz */
+.sp-row{display:grid; grid-template-columns:110px 1fr 150px; gap:14px; align-items:center; padding:5px 0;}
+.sp-row .nm{font-size:14px;}
+.sp-row .bar{height:14px; background:var(--panel-alt); border-radius:2px; position:relative; overflow:hidden;}
+.sp-row .bar i{position:absolute; left:0; top:0; bottom:0; border-radius:2px;}
+.sp-row .num{font-size:12.5px; text-align:right; color:var(--text-dim);}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+</style>
+
+<style>
+/* Versionshinweise */
+.modal-body ul{padding-left:18px; margin:0 0 6px;}
+.modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body li strong{color:var(--text); font-weight:600;}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Simulation „Titration“</h1>
+  <span class="tag">Säure-Base- und Redox-Titration – Titrationskurven, Indikatoren & Konzentrationsbestimmung</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status" id="statusBadge"><span class="dot"></span><span id="statusText">Hahn geschlossen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Versuch vorbereiten</h3>
+      <p>Wähle links die <strong>Probelösung</strong> (Titrand), ihre Konzentration c₀ und das vorgelegte Volumen V₀. Optional kannst du <strong>destilliertes Wasser</strong> zugeben – das verändert die Stoffmenge der Probe nicht, wohl aber die Konzentrationen und damit Anfangs-pH und Leitfähigkeit.</p>
+      <p>Die <strong>Maßlösung</strong> (Titrator) in der Bürette wird automatisch passend gewählt: Säuren werden mit Natronlauge, Basen mit Salzsäure titriert. Die Bürette fasst 50 mL. Ist sie leer, kannst du sie nachfüllen.</p>
+
+      <h3>Titrieren</h3>
+      <p>Mit <strong>„Hahn öffnen"</strong> tropft die Maßlösung kontinuierlich in den Erlenmeyerkolben – die Geschwindigkeit stellst du oben rechts ein (langsam 1 Tropfen/s, mittel 4 Tropfen/s, schnell 1 mL/s als Strahl). Mit <strong>„1 Tropfen"</strong>, <strong>„+0,5 mL"</strong> und <strong>„+1 mL"</strong> gibst du gezielte Portionen zu. Ein Tropfen entspricht 0,05 mL.</p>
+      <p>Bei jedem Tropfen wird ein Messwert aufgenommen. Im schnellen Modus wird nur alle 0,2 mL gemessen – in der Nähe des Äquivalenzpunkts solltest du deshalb tropfenweise titrieren, sonst wird der Sprung nur grob aufgelöst.</p>
+
+      <h3>Messgröße und Indikator</h3>
+      <p>Unter <strong>„Messung"</strong> schaltest du zwischen <strong>pH-Wert</strong> (pH-Meter) und <strong>elektrischer Leitfähigkeit</strong> (Konduktometrie) um. Beide Größen werden immer gleichzeitig aufgezeichnet, du kannst also auch nachträglich wechseln.</p>
+      <p>Das <strong>pH-Meter</strong> (bei Leitfähigkeitsmessung das Leitfähigkeitsmessgerät) und die <strong>Titrationskurve</strong> lassen sich einzeln ausschalten. Ohne Kurve werden die Messwerte nur angezeigt und in der Tabelle notiert – die Kurve kannst du dann selbst zeichnen. Ohne pH-Meter titrierst du klassisch nur mit dem Indikator: Du beobachtest den Farbumschlag und liest das Volumen an der Bürette ab.</p>
+      <p>Ein <strong>Indikator</strong> färbt die Lösung je nach pH-Wert. Beim Eintropfen siehst du kurz eine farbige Schliere, bevor der Rührer die Lösung durchmischt – kurz vor dem Äquivalenzpunkt bleibt sie immer länger sichtbar.</p>
+
+      <h3>Diagramm</h3>
+      <p>Tippe oder fahre über das Diagramm, um die Messwerte an einer Stelle abzulesen. Optional lassen sich der <strong>Umschlagbereich</strong> des Indikators, die <strong>Äquivalenzpunkte</strong>, die <strong>Halbäquivalenzpunkte</strong> (pH = pKs) und die vorab <strong>berechnete Kurve</strong> einblenden.</p>
+
+      <h3>Auswerten</h3>
+      <p>Lies das <strong>Äquivalenzvolumen V<sub>ÄP</sub></strong> am steilsten Punkt des Sprungs (pH) bzw. am Knick der Kurve (Leitfähigkeit) ab und trage es im Reiter „Auswertung" ein. Stelle dort außerdem die <strong>Reaktionsgleichung der Neutralisation</strong> auf (Eingabe z. B. als <span class="mono">H2SO4 + 2 NaOH -> Na2SO4 + 2 H2O</span>, Zahlen in Formeln werden automatisch tiefgestellt) und lass sie mit „Prüfen" kontrollieren – oder lass sie dir mit „vorgeben" anzeigen. Aus der Gleichung ergibt sich das Stoffmengenverhältnis, danach wird die Konzentration der Probe Schritt für Schritt berechnet. Bei schwachen Säuren und Basen wird zusätzlich der pKs-Wert aus deinem Messwert am Halbäquivalenzpunkt bestimmt.</p>
+
+      <h3>Aufgabe: unbekannte Konzentration</h3>
+      <p>Mit dem Schalter <strong>„Unbekannte Konzentration"</strong> ganz oben in der Seitenleiste erhältst du eine nummerierte Probe, deren Konzentration c₀ zufällig gewählt und verborgen ist. Berechnete Kurve, Äquivalenzpunkte und Teilchenbilanz sind gesperrt, und die Auswertung rechnet nicht mehr vor.</p>
+      <p>Titriere die Probe, lies V<sub>ÄP</sub> ab, berechne c₀ selbst und gib dein Ergebnis im Reiter „Auswertung" ein. Mit <strong>„Ergebnis prüfen"</strong> erfährst du, ob es stimmt (Toleranz ±3 %). Bei typischen Fehlern – vergessener Faktor bei mehrprotonigen Säuren, mitgerechnetes Wasser, vertauschte Volumina, falsche Einheit, falscher Äquivalenzpunkt – bekommst du einen gezielten Hinweis. Nach dem richtigen Ergebnis oder mit „Auflösung anzeigen" erscheint der vollständige Lösungsweg. Mit „Neue Probe" geht es weiter; der Zähler zeigt, wie viele Proben du gelöst hast.</p>
+      <p>Probelösung, V₀, Wasserzugabe und Maßlösung kannst du auch im Aufgabenmodus frei wählen. Eine andere Probelösung, ein anderes V₀ oder eine andere Maßlösung erzeugen eine neue Probe.</p>
+
+      <h3>Redox-Titration</h3>
+      <p>Mit <strong>„Redox"</strong> ganz oben in der Seitenleiste wechselst du zu den Redox-Titrationen. Zur Auswahl stehen die <strong>Manganometrie</strong> (Eisen(II)-sulfat, Oxalsäure und Wasserstoffperoxid mit Kaliumpermanganat-Lösung) und die <strong>Iodometrie</strong> (Iod-Lösung mit Natriumthiosulfat-Lösung, Vitamin C mit Iod-Lösung).</p>
+      <p>Statt des pH-Meters misst ein <strong>Potentiometer</strong> mit Platinelektrode das Redoxpotential E. Es ist zu Beginn ausgeschaltet – titriert wird dann bis zum Farbumschlag; unter „Messung“ lässt es sich einschalten. Die Titrationskurve zeigt einen <strong>Potentialsprung</strong> am Äquivalenzpunkt; am Halbäquivalenzpunkt gilt E ≈ E° des Redoxpaars der Probe.</p>
+      <p>Permanganat ist ein <strong>Selbstindikator</strong>: Der erste überschüssige Tropfen färbt die Lösung bleibend rosa. Bei der Iodometrie macht <strong>Stärkelösung</strong> schon kleinste Iodmengen durch eine Blaufärbung sichtbar.</p>
+      <p>In der Auswertung stellst du zuerst die beiden <strong>Teilgleichungen</strong> für Oxidation und Reduktion auf (mit Elektronen e⁻), danach die <strong>Redoxgleichung</strong>. Jede Gleichung kannst du prüfen oder dir vorgeben lassen; die Gesamtgleichung wird erst nach beiden Teilgleichungen freigegeben. Ladungen gibst du über die Knöpfe ⁺ ⁻ ²⁺ ³⁺ ²⁻ e⁻ ein oder mit ^, z. B. <span class="mono">Fe^2+</span> oder <span class="mono">MnO4^-</span>. Einfache Ladungen hinter einem Buchstaben gehen auch direkt (<span class="mono">H+</span>, <span class="mono">I-</span>, <span class="mono">e-</span>). H⁺ und H₃O⁺ werden beide akzeptiert.</p>
+
+      <h3>Ideen zum Ausprobieren</h3>
+      <p><strong>Starke und schwache Säure:</strong> Vergleiche Salzsäure und Essigsäure gleicher Konzentration – Anfangs-pH, Pufferbereich und pH am Äquivalenzpunkt.<br>
+      <strong>Indikatorwahl:</strong> Titriere Essigsäure einmal mit Phenolphthalein und einmal mit Methylorange.<br>
+      <strong>Mehrprotonige Säuren:</strong> Phosphorsäure zeigt zwei Sprünge, Schwefelsäure nur einen.<br>
+      <strong>Leitfähigkeitstitration:</strong> Warum fällt die Leitfähigkeit bei Salzsäure zunächst stark ab, bei Essigsäure aber nicht?<br>
+      <strong>Redox:</strong> Vergleiche die Potentiale am Halbäquivalenzpunkt mit den Standardpotentialen. Titriere Iod mit und ohne Stärke.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">19.10.2026</span></div>
+      <ul>
+        <li>Erste Version mit zwei Titrationsarten: <strong>Säure-Base-Titration</strong> (starke und schwache, ein- und mehrprotonige Säuren mit Natronlauge; Natronlauge und Ammoniak-Lösung mit Salzsäure) und <strong>Redox-Titration</strong> (Manganometrie: Fe²⁺, Oxalsäure, H₂O₂ mit KMnO₄; Iodometrie: Iod mit Thiosulfat, Vitamin C mit Iod).</li>
+        <li>Animierter Versuchsaufbau mit Bürette, Magnetrührer und Messelektrode; Titration tropfenweise, in Portionen oder kontinuierlich. Farbe der Lösung durch Säure-Base-Indikatoren, Selbstindikation durch Permanganat oder Stärke.</li>
+        <li>pH-Meter bzw. Leitfähigkeitsmessgerät (Säure-Base) und Potentiometer (Redox, standardmäßig aus) sowie die Titrationskurve sind abschaltbar – für eine klassische Titration nur mit Farbumschlag. Optional Umschlagbereich, Äquivalenz- und Halbäquivalenzpunkte und berechnete Kurve.</li>
+        <li>Auswertung mit Geg./Ges.-Tabelle und Rechnung in drei Schritten. Die Reaktionsgleichung wird selbst eingegeben und geprüft oder vorgegeben; bei Redox-Titrationen zuerst die Teilgleichungen für Oxidation und Reduktion, dann die Redoxgleichung. Dazu pKs- bzw. E°-Bestimmung am Halbäquivalenzpunkt.</li>
+        <li>Aufgabenmodus mit unbekannter Konzentration: nummerierte Proben, eigenes Ergebnis prüfen lassen, gezielte Hinweise auf typische Fehler, Auflösung mit Lösungsweg, Zähler für gelöste Proben.</li>
+        <li>Messwerttabelle zum Kopieren und als CSV, Reiter zu Reaktionsgleichungen, Indikatoren und Teilchenbilanz.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <section class="block">
+      <h2>Titrationsart</h2>
+      <div class="mode-toggle" id="kindWrap" style="margin-bottom:0">
+        <button id="kindAB" class="active">Säure-Base</button>
+        <button id="kindRX">Redox</button>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Aufgabe <span class="role" id="taskRole">aus</span></h2>
+      <label class="sw"><input type="checkbox" id="swUnk"><span class="track"></span>
+        <span class="sw-text">Unbekannte Konzentration<small>c₀ der Probe wird zufällig gewählt und verborgen – bestimme sie durch Titration</small></span></label>
+      <div id="taskInfo" hidden>
+        <div class="row"><label>Probe</label><span class="val mono" id="taskNo"></span></div>
+        <div class="row"><label>Gelöste Proben</label><span class="val plain mono" id="taskScore"></span></div>
+        <button class="btn ghost" id="btnNewSample" style="width:100%">Neue Probe</button>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Probelösung (Titrand) <span class="role" id="roleAn">Säure</span></h2>
+      <div class="field-full"><label for="selAn">Lösung</label>
+        <select id="selAn">
+          <optgroup label="Säuren">
+            <option value="HCl">Salzsäure (HCl, stark)</option>
+            <option value="H2SO4">Schwefelsäure (H₂SO₄, zweiprotonig)</option>
+            <option value="HCOOH">Ameisensäure (HCOOH, pKs 3,75)</option>
+            <option value="CH3COOH" selected>Essigsäure (CH₃COOH, pKs 4,75)</option>
+            <option value="H3PO4">Phosphorsäure (H₃PO₄, dreiprotonig)</option>
+          </optgroup>
+          <optgroup label="Basen">
+            <option value="NaOH">Natronlauge (NaOH, stark)</option>
+            <option value="NH3">Ammoniak-Lösung (NH₃, pKb 4,75)</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="row"><label>Konzentration c₀</label><span class="val mono" id="c0v"></span></div>
+      <input type="range" id="c0" min="0" max="6" step="1" value="3">
+      <div class="hint" id="c0hint"></div>
+      <div class="field-full" style="margin-top:12px"><label for="selV0">Vorgelegtes Volumen V₀</label>
+        <select id="selV0">
+          <option value="10">10 mL</option>
+          <option value="20" selected>20 mL</option>
+          <option value="25">25 mL</option>
+          <option value="50">50 mL</option>
+        </select>
+      </div>
+      <div class="field-full"><label for="selVw">Zusätzlich destilliertes Wasser</label>
+        <select id="selVw">
+          <option value="0" selected>kein Wasser</option>
+          <option value="25">25 mL</option>
+          <option value="50">50 mL</option>
+          <option value="100">100 mL</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Maßlösung (Titrator)</h2>
+      <div class="row"><label>Lösung in der Bürette</label><span class="val plain" id="titName"></span></div>
+      <div class="field-full"><label for="selCT">Konzentration</label>
+        <select id="selCT">
+          <option value="0.05">0,05 mol/L</option>
+          <option value="0.1" selected>0,1 mol/L</option>
+          <option value="0.2">0,2 mol/L</option>
+          <option value="0.5">0,5 mol/L</option>
+          <option value="1">1 mol/L</option>
+        </select>
+      </div>
+      <div class="hint" id="ctHint">Bürette: 50 mL</div>
+    </section>
+
+    <section class="block">
+      <h2>Indikator</h2>
+      <div class="field-full">
+        <select id="selInd">
+          <option value="none">kein Indikator</option>
+          <option value="mo">Methylorange</option>
+          <option value="mr">Methylrot</option>
+          <option value="btb">Bromthymolblau</option>
+          <option value="pp" selected>Phenolphthalein</option>
+          <option value="tp">Thymolphthalein</option>
+          <option value="uni">Universalindikator</option>
+        </select>
+      </div>
+      <div class="hint" id="indHint"></div>
+    </section>
+
+    <section class="block">
+      <h2>Messung</h2>
+      <div class="mode-toggle" id="modeWrap">
+        <button id="modePH" class="active">pH-Wert</button>
+        <button id="modeK">Leitfähigkeit</button>
+      </div>
+      <label class="sw"><input type="checkbox" id="swMeter" checked><span class="track"></span>
+        <span class="sw-text"><span id="meterName">pH-Meter</span><small>ausgeschaltet: Titration nur mit Indikator</small></span></label>
+      <label class="sw" id="swGraphWrap"><input type="checkbox" id="swGraph" checked><span class="track"></span>
+        <span class="sw-text">Titrationskurve anzeigen<small id="swGraphHint">ausgeschaltet: Messwerte selbst notieren und zeichnen</small></span></label>
+      <div class="hint warn" id="meterWarn" hidden>Ohne <span class="mName">pH-Meter</span> und ohne Indikator ist der Äquivalenzpunkt nicht erkennbar – wähle einen Indikator.</div>
+    </section>
+
+    <section class="block">
+      <h2>Diagramm</h2>
+      <label class="sw" id="swBandWrap"><input type="checkbox" id="swBand" checked><span class="track"></span>
+        <span class="sw-text">Umschlagbereich anzeigen<small>Farbband des gewählten Indikators (nur pH-Kurve)</small></span></label>
+      <label class="sw" id="swEPWrap"><input type="checkbox" id="swEP"><span class="track"></span>
+        <span class="sw-text">Äquivalenzpunkte markieren<small id="swEPHint">n(Maßlösung) entspricht n(Probe)</small></span></label>
+      <label class="sw" id="swHEPWrap"><input type="checkbox" id="swHEP"><span class="track"></span>
+        <span class="sw-text">Halbäquivalenzpunkte markieren<small id="swHEPHint">dort gilt pH = pKs</small></span></label>
+      <label class="sw" id="swTheoWrap"><input type="checkbox" id="swTheo"><span class="track"></span>
+        <span class="sw-text">Berechnete Kurve einblenden<small id="swTheoHint">gestrichelt, über den ganzen Bereich</small></span></label>
+    </section>
+
+    <section class="block">
+      <h2>Beispiele laden</h2>
+      <div class="field-full">
+        <select id="presetSelect">
+          <option value="hcl">Salzsäure mit Natronlauge (Bromthymolblau)</option>
+          <option value="hac">Essigsäure mit Natronlauge (Phenolphthalein)</option>
+          <option value="hacmo">Essigsäure mit Methylorange (falscher Indikator)</option>
+          <option value="h3po4">Phosphorsäure – zwei Äquivalenzpunkte</option>
+          <option value="h2so4">Schwefelsäure – ein Sprung trotz zwei Protonen</option>
+          <option value="nh3">Ammoniak-Lösung mit Salzsäure (Methylrot)</option>
+          <option value="khcl">Leitfähigkeitstitration: Salzsäure</option>
+          <option value="khac">Leitfähigkeitstitration: Essigsäure</option>
+        </select>
+      </div>
+      <button class="btn ghost" id="btnPreset" style="width:100%">Beispiel übernehmen</button>
+    </section>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnTap">Hahn öffnen</button>
+        <button class="btn" id="btnDrop">1 Tropfen</button>
+        <button class="btn" id="btnHalf">+0,5 mL</button>
+        <button class="btn" id="btnOne">+1 mL</button>
+        <button class="btn warn" id="btnRefill" hidden>Bürette nachfüllen</button>
+        <button class="btn ghost" id="btnReset">Zurücksetzen</button>
+        <div class="speed-group">
+          <span class="lbl">Tropfgeschwindigkeit</span>
+          <button data-rate="0.05" title="1 Tropfen pro Sekunde (0,05 mL/s)">langsam</button>
+          <button data-rate="0.2" class="active" title="4 Tropfen pro Sekunde (0,2 mL/s)">mittel</button>
+          <button data-rate="1" title="Strahl, 1 mL/s">schnell</button>
+        </div>
+      </div>
+      <div class="sim-grid" id="simGrid">
+        <canvas id="cvA" width="380" height="520" aria-label="Animierter Titrationsaufbau mit Bürette und Erlenmeyerkolben"></canvas>
+        <canvas id="cvG" width="640" height="520" aria-label="Titrationskurve"></canvas>
+      </div>
+      <div class="readout-bar">
+        <div class="readout"><span class="k" id="roVk">V(NaOH) zugegeben</span><span class="v mono" id="roV">–</span></div>
+        <div class="readout" id="roPHw"><span class="k">pH-Wert</span><span class="v mono" id="roPH">–</span></div>
+        <div class="readout" id="roKw"><span class="k">Leitfähigkeit κ</span><span class="v mono" id="roK">–</span></div>
+        <div class="readout" id="roEw" hidden><span class="k">Potential E</span><span class="v mono" id="roE">–</span></div>
+        <div class="readout"><span class="k" id="roNk">n(OH⁻) zugegeben</span><span class="v mono" id="roN">–</span></div>
+        <div class="readout"><span class="k">Farbe der Lösung</span><span class="v plain" id="roInd">–</span></div>
+        <div class="readout" id="roPtsw"><span class="k">Messpunkte</span><span class="v mono plain" id="roPts">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="calc">Auswertung</button>
+      <button class="tabbtn" data-tab="data">Messwerte</button>
+      <button class="tabbtn" data-tab="eq">Reaktionsgleichungen</button>
+      <button class="tabbtn" data-tab="ind">Indikatoren</button>
+      <button class="tabbtn" data-tab="sp">Teilchenbilanz</button>
+    </div>
+    <div class="tabpanel active" id="tab-calc">
+      <div class="calc-grid">
+        <div>
+          <div class="field-full"><label for="inVeq">Abgelesenes Äquivalenzvolumen V<sub>ÄP</sub> in mL</label>
+            <input type="text" id="inVeq" inputmode="decimal" autocomplete="off" placeholder="z. B. 20,0"></div>
+          <div class="field-full" id="epSelWrap" hidden><label for="epSel">Abgelesener Äquivalenzpunkt</label>
+            <select id="epSel"></select></div>
+          <div id="taskInputs" hidden>
+            <div class="field-full"><label for="inC0">Dein Ergebnis c₀ in mol/L</label>
+              <input type="text" id="inC0" inputmode="decimal" autocomplete="off" placeholder="z. B. 0,125"></div>
+            <button class="btn primary" id="btnCheck" style="width:100%; margin-bottom:4px">Ergebnis prüfen</button>
+            <div class="hint" id="checkHint" style="margin-bottom:8px">Erst die Reaktionsgleichung aufstellen oder vorgeben.</div>
+            <button class="btn ghost" id="btnReveal" style="width:100%">Auflösung anzeigen</button>
+          </div>
+          <p class="note" id="calcSideNote"></p>
+        </div>
+        <div>
+          <div id="rxnBlock">
+            <div class="eq-label" id="rxnLabel">Reaktionsgleichung der Neutralisation aufstellen</div>
+            <div class="sym-bar" id="symBar" hidden>
+              <span class="lbl2">Einfügen:</span>
+              <button class="btn ghost" data-ins="⁺">⁺</button>
+              <button class="btn ghost" data-ins="⁻">⁻</button>
+              <button class="btn ghost" data-ins="²⁺">²⁺</button>
+              <button class="btn ghost" data-ins="³⁺">³⁺</button>
+              <button class="btn ghost" data-ins="²⁻">²⁻</button>
+              <button class="btn ghost" data-ins="e⁻">e⁻</button>
+              <button class="btn ghost" data-ins=" → ">→</button>
+            </div>
+            <div id="halfBlock" hidden>
+              <div class="half-row">
+                <div class="sub-eq">1 · Oxidation (Teilgleichung)</div>
+                <div class="rxn-row">
+                  <input type="text" id="inOx" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Elektronenabgabe, z. B. … → … + e⁻">
+                  <button class="btn" id="btnOxCheck">Prüfen</button>
+                  <button class="btn ghost" id="btnOxGive">vorgeben</button>
+                </div>
+                <div class="rxn-prev" id="oxPrev"></div>
+              </div>
+              <div class="half-row">
+                <div class="sub-eq">2 · Reduktion (Teilgleichung)</div>
+                <div class="rxn-row">
+                  <input type="text" id="inRed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Elektronenaufnahme, z. B. … + e⁻ → …">
+                  <button class="btn" id="btnRedCheck">Prüfen</button>
+                  <button class="btn ghost" id="btnRedGive">vorgeben</button>
+                </div>
+                <div class="rxn-prev" id="redPrev"></div>
+              </div>
+              <div class="sub-eq">3 · Redoxgleichung (Gesamtgleichung)</div>
+            </div>
+            <div class="rxn-row">
+              <input type="text" id="inRxn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. HCl + NaOH -> NaCl + H2O">
+              <button class="btn" id="btnRxnCheck">Prüfen</button>
+              <button class="btn ghost" id="btnRxnGive">vorgeben</button>
+            </div>
+            <div class="rxn-prev" id="rxnPrev"></div>
+          </div>
+          <div id="calcHead"></div>
+          <div id="calcOut"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tabpanel" id="tab-data">
+      <p class="note" id="dataNote" hidden style="margin-top:0">Ohne <span class="mName">pH-Meter</span> werden keine Messwerte aufgenommen. Schalte es unter „Messung“ ein, um Messwerte aufzuzeichnen.</p>
+      <div id="dataWrap">
+      <div class="tbl-tools">
+        <button class="btn" id="btnCopy">Tabelle kopieren</button>
+        <button class="btn ghost" id="btnCSV">CSV speichern</button>
+        <span class="hint" id="copyHint"></span>
+      </div>
+      <div class="tbl-wrap"><table class="mw"><thead><tr id="thRow"></tr></thead><tbody id="tblBody"></tbody></table></div>
+      <p class="note">Die Tabelle lässt sich direkt in eine Tabellenkalkulation einfügen (tabulatorgetrennt, Dezimalkomma).</p>
+      </div>
+    </div>
+    <div class="tabpanel" id="tab-eq"></div>
+    <div class="tabpanel" id="tab-ind"></div>
+    <div class="tabpanel" id="tab-sp"></div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Simulierte Daten zu Lehrzwecken · 25 °C, K<sub>W</sub> = 10⁻¹⁴ mol²/L², Aktivitäten durch Konzentrationen ersetzt, Volumenkontraktion vernachlässigt. Leitfähigkeiten aus Ionen-Grenzleitfähigkeiten berechnet (idealisiert, ohne Konzentrationsabhängigkeit). pKs-Werte sind Tabellenwerte und können je nach Schulbuch geringfügig abweichen. Redox-Titration: Potentiale gegen die Standard-Wasserstoffelektrode, vereinfacht mit Standard- bzw. Formalpotentialen bei c(H⁺) ≈ 1 mol/L berechnet.</p>
+  <p class="footer-credit">Bastian Baumgart · Simulation „Titration“ V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+(() => {
+"use strict";
+// ---------- Daten ----------
+const KW = 1e-14;
+const LAM = {H:349.8, OH:198.6, Na:50.1, Cl:76.3};   // molare Grenzleitfähigkeiten in S·cm²/mol
+const AN = {
+  HCl:    {name:'Salzsäure', f:'HCl', type:'acid', spect:'Cl', pKs:[], eps:[1], hep:[]},
+  H2SO4:  {name:'Schwefelsäure', f:'H₂SO₄', type:'acid', pKs:[-3, 1.92], top:0, lam:[0, 52, 160], sp:['H₂SO₄','HSO₄⁻','SO₄²⁻'], eps:[2], hep:[]},
+  HCOOH:  {name:'Ameisensäure', f:'HCOOH', type:'acid', pKs:[3.75], top:0, lam:[0, 54.6], sp:['HCOOH','HCOO⁻'], eps:[1], hep:[[0.5, 0]]},
+  CH3COOH:{name:'Essigsäure', f:'CH₃COOH', type:'acid', pKs:[4.75], top:0, lam:[0, 40.9], sp:['CH₃COOH','CH₃COO⁻'], eps:[1], hep:[[0.5, 0]]},
+  H3PO4:  {name:'Phosphorsäure', f:'H₃PO₄', type:'acid', pKs:[2.16, 7.21, 12.32], top:0, lam:[0, 36, 114, 207], sp:['H₃PO₄','H₂PO₄⁻','HPO₄²⁻','PO₄³⁻'], eps:[1, 2], hep:[[0.5, 0], [1.5, 1]]},
+  NaOH:   {name:'Natronlauge', f:'NaOH', type:'base', spect:'Na', pKs:[], eps:[1], hep:[]},
+  NH3:    {name:'Ammoniak-Lösung', f:'NH₃', type:'base', pKs:[9.25], top:1, lam:[73.5, 0], sp:['NH₄⁺','NH₃'], eps:[1], hep:[[0.5, 0]]}
+};
+// Redox-Titrationen: Probe (Analyt) und Maßlösung
+const RXA = {
+  FE:  {name:'Eisen(II)-sulfat-Lösung', f:'FeSO₄', cf:'Fe²⁺', role:'red', ea:1, E0:0.77, na:1, couple:'Fe³⁺/Fe²⁺', tit:'KMnO4', c0i:3, ind:'none'},
+  OX:  {name:'Oxalsäure', f:'H₂C₂O₄', cf:'H₂C₂O₄', role:'red', ea:2, E0:-0.49, na:2, couple:'CO₂/H₂C₂O₄', tit:'KMnO4', c0i:2, ind:'none'},
+  H2O2:{name:'Wasserstoffperoxid-Lösung', f:'H₂O₂', cf:'H₂O₂', role:'red', ea:2, E0:0.68, na:2, couple:'O₂/H₂O₂', tit:'KMnO4', c0i:2, ind:'none'},
+  I2:  {name:'Iod-Lösung', f:'I₂', cf:'I₂', role:'ox', ea:2, E0:0.54, na:2, couple:'I₂/I⁻', tit:'THIO', c0i:2, ind:'starch'},
+  VITC:{name:'Ascorbinsäure-Lösung', f:'C₆H₈O₆', cf:'C₆H₈O₆', role:'red', ea:2, E0:0.13, na:2, couple:'C₆H₆O₆/C₆H₈O₆', tit:'I2', c0i:2, ind:'starch'}
+};
+const TITR = {
+  KMnO4:{f:'KMnO₄', cf:'MnO₄⁻', name:'Kaliumpermanganat-Lösung', role:'ox', et:5, E0:1.51, nt:5, conc:[0.002, 0.005, 0.01, 0.02, 0.05], def:0.02,
+         bur:'rgba(118,22,100,0.88)', drop:'rgba(150,40,130,0.95)', plume:[150,30,130,0.9]},
+  THIO: {f:'Na₂S₂O₃', cf:'S₂O₃²⁻', name:'Natriumthiosulfat-Lösung', role:'red', et:1, E0:0.08, nt:1, conc:[0.01, 0.02, 0.05, 0.1, 0.2], def:0.1,
+         bur:null, drop:null, plume:null},
+  I2:   {f:'I₂', cf:'I₂', name:'Iod-Lösung', role:'ox', et:2, E0:0.54, nt:2, conc:[0.005, 0.01, 0.02, 0.05, 0.1], def:0.05,
+         bur:'rgba(150,80,25,0.85)', drop:'rgba(170,100,40,0.95)', plume:[170,100,30,0.75]}
+};
+for (const k in RXA){
+  const a = RXA[k], t = TITR[a.tit], kk = a.ea / t.et;
+  AN[k] = Object.assign({type:'redox', pKs:[], eps:[kk], hep:[[0.5 * kk, 0]]}, a);
+}
+const AB_AN = [['Säuren', [['HCl','Salzsäure (HCl, stark)'], ['H2SO4','Schwefelsäure (H₂SO₄, zweiprotonig)'], ['HCOOH','Ameisensäure (HCOOH, pKs 3,75)'],
+                          ['CH3COOH','Essigsäure (CH₃COOH, pKs 4,75)'], ['H3PO4','Phosphorsäure (H₃PO₄, dreiprotonig)']]],
+               ['Basen', [['NaOH','Natronlauge (NaOH, stark)'], ['NH3','Ammoniak-Lösung (NH₃, pKb 4,75)']]]];
+const RX_AN = [['Manganometrie – Maßlösung KMnO₄', [['FE','Eisen(II)-sulfat (Fe²⁺)'], ['OX','Oxalsäure (H₂C₂O₄)'], ['H2O2','Wasserstoffperoxid (H₂O₂)']]],
+               ['Iodometrie', [['I2','Iod-Lösung (I₂) – Maßlösung Thiosulfat'], ['VITC','Vitamin C (Ascorbinsäure) – Maßlösung Iod']]]];
+const AB_IND = [['none','kein Indikator'], ['mo','Methylorange'], ['mr','Methylrot'], ['btb','Bromthymolblau'], ['pp','Phenolphthalein'], ['tp','Thymolphthalein'], ['uni','Universalindikator']];
+const RX_IND = [['none','kein Zusatz (Eigenfarbe)'], ['starch','Stärkelösung']];
+const AB_CT = [0.05, 0.1, 0.2, 0.5, 1];
+const AB_PRE = [['hcl','Salzsäure mit Natronlauge (Bromthymolblau)'], ['hac','Essigsäure mit Natronlauge (Phenolphthalein)'], ['hacmo','Essigsäure mit Methylorange (falscher Indikator)'],
+                ['h3po4','Phosphorsäure – zwei Äquivalenzpunkte'], ['h2so4','Schwefelsäure – ein Sprung trotz zwei Protonen'], ['nh3','Ammoniak-Lösung mit Salzsäure (Methylrot)'],
+                ['khcl','Leitfähigkeitstitration: Salzsäure'], ['khac','Leitfähigkeitstitration: Essigsäure']];
+const RX_PRE = [['rfe','Eisen(II)-sulfat mit Kaliumpermanganat'], ['rox','Oxalsäure mit Kaliumpermanganat (Autokatalyse)'], ['rh2o2','Wasserstoffperoxid mit Kaliumpermanganat'],
+                ['ri2','Iod mit Natriumthiosulfat (Stärke)'], ['ri2n','Iod mit Natriumthiosulfat ohne Stärke'], ['rvitc','Vitamin C mit Iod-Lösung (Stärke)']];
+const C0 = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1];
+const IND = {
+  none:{name:'kein Indikator'},
+  mo:  {name:'Methylorange',    lo:3.1, hi:4.4,  ca:[214,54,43],  cb:[240,180,41],  na:'rot', nm:'orange', nb:'gelb-orange'},
+  mr:  {name:'Methylrot',       lo:4.4, hi:6.2,  ca:[212,49,58],  cb:[242,201,76],  na:'rot', nm:'orange', nb:'gelb'},
+  btb: {name:'Bromthymolblau',  lo:6.0, hi:7.6,  ca:[226,196,54], cm:[72,168,96], cb:[45,104,214], na:'gelb', nm:'grün', nb:'blau'},
+  pp:  {name:'Phenolphthalein', lo:8.2, hi:10.0, ca:null,         cb:[214,51,138],  na:'farblos', nm:'blassrosa', nb:'pink'},
+  tp:  {name:'Thymolphthalein', lo:9.3, hi:10.5, ca:null,         cb:[47,95,214],   na:'farblos', nm:'hellblau', nb:'blau'},
+  uni: {name:'Universalindikator', uni:true},
+  starch:{name:'Stärkelösung', redox:true}
+};
+const UNI = [[0,[176,30,40]],[2,[226,62,42]],[4,[238,132,36]],[5,[240,192,40]],[6,[214,214,48]],[7,[118,190,62]],
+             [8,[44,156,96]],[9,[30,136,152]],[10,[36,96,180]],[11,[64,62,168]],[12,[92,46,152]],[14,[74,28,114]]];
+const PRESETS = {
+  hcl:  {an:'HCl', c0i:3, V0:20, Vw:0,  cT:0.1, ind:'btb', mode:'ph'},
+  hac:  {an:'CH3COOH', c0i:3, V0:20, Vw:0, cT:0.1, ind:'pp', mode:'ph'},
+  hacmo:{an:'CH3COOH', c0i:3, V0:20, Vw:0, cT:0.1, ind:'mo', mode:'ph'},
+  h3po4:{an:'H3PO4', c0i:3, V0:20, Vw:0, cT:0.2, ind:'none', mode:'ph'},
+  h2so4:{an:'H2SO4', c0i:3, V0:20, Vw:0, cT:0.2, ind:'pp', mode:'ph'},
+  nh3:  {an:'NH3', c0i:3, V0:20, Vw:0, cT:0.1, ind:'mr', mode:'ph'},
+  khcl: {an:'HCl', c0i:3, V0:20, Vw:50, cT:0.1, ind:'none', mode:'k'},
+  khac: {an:'CH3COOH', c0i:3, V0:20, Vw:50, cT:0.1, ind:'none', mode:'k'},
+  rfe:  {an:'FE', c0i:3, V0:20, Vw:0, cT:0.02, ind:'none', mode:'E'},
+  rox:  {an:'OX', c0i:2, V0:20, Vw:0, cT:0.02, ind:'none', mode:'E'},
+  rh2o2:{an:'H2O2', c0i:2, V0:20, Vw:0, cT:0.02, ind:'none', mode:'E'},
+  ri2:  {an:'I2', c0i:2, V0:20, Vw:0, cT:0.1, ind:'starch', mode:'E'},
+  ri2n: {an:'I2', c0i:2, V0:20, Vw:0, cT:0.1, ind:'none', mode:'E'},
+  rvitc:{an:'VITC', c0i:2, V0:20, Vw:0, cT:0.05, ind:'starch', mode:'E'}
+};
+const DROP = 0.05, BUR = 50;
+
+// ---------- Hilfsfunktionen ----------
+const $ = id => document.getElementById(id);
+const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+const sup = n => String(n).split('').map(ch => SUP[ch] || ch).join('');
+function fmt(x, d){ const s = Math.abs(x).toFixed(d).replace('.', ','); return (x < 0 && Number(Math.abs(x).toFixed(d)) !== 0 ? '−' : '') + s; }
+function fmtSig(x, n){
+  if (x === 0) return '0';
+  if (Math.abs(x) < 1e-4){
+    let e = Math.floor(Math.log10(Math.abs(x))), m = Number((x / 10**e).toPrecision(n));
+    if (Math.abs(m) >= 10){ m /= 10; e++; }
+    return m.toLocaleString('de-DE') + '·10' + sup(e);
+  }
+  return Number(x.toPrecision(n)).toLocaleString('de-DE', {maximumFractionDigits:8});
+}
+const fmtK = k => fmt(k, k < 10 ? 2 : 1);
+const fmtC = c => Number(c.toPrecision(3)).toLocaleString('de-DE', {maximumFractionDigits:5});
+const r6 = x => Math.round(x * 1e6) / 1e6;
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+function niceAxis(v){
+  const L = [5,10,15,20,25,30,40,50,60,80,100,120,150,200,250,300,400,500];
+  for (const x of L) if (x >= v - 1e-9) return x;
+  return Math.ceil(v / 100) * 100;
+}
+function niceStep(range, maxTicks){
+  const raw = range / maxTicks, p = 10 ** Math.floor(Math.log10(raw));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= raw - 1e-12) return m * p;
+  return 10 * p;
+}
+
+// ---------- Zustand ----------
+const S = {
+  kind:'ab', abState:null, rxState:null, an:'CH3COOH', c0i:3, c0:0.1, V0:20, Vw:0, cT:0.1, ind:'pp', mode:'ph',
+  meter:true, graph:true, rxn:{done:{}, form:{}, half:{}, fb:null}, unknown:false, revealed:false, task:{no:0, total:0, solved:0, attempts:0, done:false, fb:null, cIn:null}, band:true, ep:false, hep:false, theo:false, rate:0.2,
+  Vt:0, Vemit:0, Vref:0, tapOpen:false, pending:0, pendStream:false, empty:false,
+  points:[], lastRecV:0, chem:null, wasStream:false,
+  xMax:30, yMaxK:10, yMinE:0, yMaxE:1.6, yStepE:0.2, theoPts:[], cursorV:null, cursorSticky:false
+};
+const A = () => AN[S.an];
+const RX = () => A().type === 'redox';
+const TIT = () => {
+  const an = A();
+  if (an.type === 'redox'){ const t = TITR[an.tit]; return Object.assign({key:an.tit, ion:t.cf, pH:NaN}, t); }
+  return an.type === 'acid'
+    ? {f:'NaOH', cf:'NaOH', name:'Natronlauge', ion:'OH⁻', pH:14 + Math.log10(S.cT)}
+    : {f:'HCl', cf:'HCl', name:'Salzsäure', ion:'H₃O⁺', pH:-Math.log10(S.cT)};
+};
+const Veq = k => k * S.c0 * S.V0 / S.cT;
+
+// ---------- Chemie: exakte Ladungsbilanz ----------
+function alphas(h, Ka){
+  const t = [1];
+  for (let i = 0; i < Ka.length; i++) t.push(t[i] * Ka[i] / h);
+  const s = t.reduce((a, b) => a + b, 0);
+  return t.map(x => x / s);
+}
+function chemAt(Vt){ return RX() ? redoxAt(Vt) : chemAB(Vt); }
+// Redox: Potential aus der Elektronenbilanz (Nernst-Gleichung für beide Redoxpaare)
+const NF = 0.059, X0 = 1e-3;   // X0: Spuren bereits umgesetzter Probe (z. B. etwas Fe³⁺ in Fe²⁺-Lösung)
+function redoxAt(Vt){
+  const an = A(), t = TITR[an.tit], Vtot = S.V0 + S.Vw + Vt;
+  const nA = S.c0 * S.V0, nT = S.cT * Vt;   // mmol
+  const convA = E => an.role === 'red' ? 1 / (1 + 10 ** ((an.E0 - E) * an.na / NF)) : 1 / (1 + 10 ** ((E - an.E0) * an.na / NF));
+  const convT = E => t.role === 'ox' ? 1 / (1 + 10 ** ((E - t.E0) * t.nt / NF)) : 1 / (1 + 10 ** ((t.E0 - E) * t.nt / NF));
+  // Probe: Vorrat nA·(1+X0), davon anfangs nA·X0 in der umgesetzten Form
+  const g = E => nA * an.ea * ((1 + X0) * convA(E) - X0) - nT * t.et * convT(E);
+  let lo = -1.5, hi = 2.6; const glo = g(lo);
+  for (let i = 0; i < 80; i++){ const m = (lo + hi) / 2, gm = g(m); if ((gm > 0) === (glo > 0)) lo = m; else hi = m; }
+  const E = (lo + hi) / 2;
+  const f = convA(E);
+  return {E, x:(1 + X0) * f, xr:(1 + X0) * (1 - f), y:convT(E), nA, nT, Vtot, pH:NaN, kap:NaN};
+}
+function chemAB(Vt){
+  const an = A(), Vtot = S.V0 + S.Vw + Vt;
+  const n0 = S.c0 * S.V0, nT = S.cT * Vt;   // mmol
+  let Na = 0, Cl = 0, C = 0;
+  if (an.type === 'acid') Na += nT; else Cl += nT;
+  if (an.spect === 'Cl') Cl += n0; else if (an.spect === 'Na') Na += n0; else C = n0;
+  Na /= Vtot; Cl /= Vtot; C /= Vtot;        // mol/L
+  const Ka = an.pKs.map(p => 10 ** -p);
+  const f = lh => {
+    const h = 10 ** lh; let q = h + Na - KW / h - Cl;
+    if (C > 0){ const a = alphas(h, Ka); for (let i = 0; i < a.length; i++) q += C * a[i] * (an.top - i); }
+    return q;
+  };
+  let lo = -15.5, hi = 1.5;
+  for (let k = 0; k < 64; k++){ const m = (lo + hi) / 2; if (f(m) > 0) hi = m; else lo = m; }
+  const h = 10 ** ((lo + hi) / 2), oh = KW / h, a = C > 0 ? alphas(h, Ka) : [];
+  let kap = h * LAM.H + oh * LAM.OH + Na * LAM.Na + Cl * LAM.Cl;
+  for (let i = 0; i < a.length; i++) kap += C * a[i] * (an.lam[i] || 0);
+  return {pH:-Math.log10(h), h, oh, Na, Cl, C, a, kap, Vtot};
+}
+
+// ---------- Indikatorfarben ----------
+function indRGBA(key, pH){
+  const I = IND[key];
+  if (!I || key === 'none') return null;
+  if (I.uni){
+    const p = clamp(pH, 0, 14);
+    for (let k = 1; k < UNI.length; k++){
+      if (p <= UNI[k][0]){
+        const [p0, c0] = UNI[k-1], [p1, c1] = UNI[k], t = (p - p0) / (p1 - p0);
+        return [lerp(c0[0], c1[0], t), lerp(c0[1], c1[1], t), lerp(c0[2], c1[2], t), 0.78];
+      }
+    }
+    return [...UNI[UNI.length-1][1], 0.78];
+  }
+  let t = clamp((pH - I.lo) / (I.hi - I.lo), 0, 1); t = t * t * (3 - 2 * t);
+  if (!I.ca) return [...I.cb, 0.82 * t];
+  if (I.cm){
+    const [c0, c1, u] = t < 0.5 ? [I.ca, I.cm, t * 2] : [I.cm, I.cb, (t - 0.5) * 2];
+    return [lerp(c0[0], c1[0], u), lerp(c0[1], c1[1], u), lerp(c0[2], c1[2], u), 0.8];
+  }
+  return [lerp(I.ca[0], I.cb[0], t), lerp(I.ca[1], I.cb[1], t), lerp(I.ca[2], I.cb[2], t), 0.8];
+}
+function overC(base, rgb, a){
+  const oa = a + base[3] * (1 - a);
+  if (oa <= 0) return [0, 0, 0, 0];
+  return [0, 1, 2].map(i => (rgb[i] * a + base[i] * base[3] * (1 - a)) / oa).concat(oa);
+}
+function redoxLayers(ch){
+  const an = A(), V = ch.Vtot, L = [];
+  const al = (k, c) => Math.min(0.92, 1 - Math.exp(-k * Math.max(0, c)));
+  if (S.an === 'FE') L.push({n:'Fe³⁺', a:al(2.5, ch.nA * ch.x / V), rgb:[214,172,60]});
+  let cI2 = 0;
+  if (S.an === 'I2') cI2 = ch.nA * ch.xr / V;
+  if (an.tit === 'I2') cI2 = ch.nT * (1 - ch.y) / V;
+  if (cI2 > 0){
+    if (S.ind === 'starch'){ const a = al(3e4, cI2); L.push({n:'I₂-Stärke', a, rgb:[28,40,150]}); }
+    else { const a = al(250, cI2); L.push({n:'I₂', a, rgb:[lerp(232,140,a), lerp(205,72,a), lerp(80,20,a)]}); }
+  }
+  if (an.tit === 'KMnO4'){ const a = al(1.8e4, ch.nT * (1 - ch.y) / V); L.push({n:'MnO₄⁻', a, rgb:[lerp(205,115,a), lerp(55,20,a), lerp(160,105,a)]}); }
+  return L;
+}
+function solRGBA(ch){
+  if (!RX()) return indRGBA(S.ind, ch.pH);
+  let c = [0, 0, 0, 0];
+  for (const l of redoxLayers(ch)) if (l.a > 0.002) c = overC(c, l.rgb, l.a);
+  return c[3] > 0.003 ? c : null;
+}
+function solName(ch){
+  if (!RX()) return indName(S.ind, ch.pH);
+  let best = null;
+  for (const l of redoxLayers(ch)) if (l.a > 0.04 && (!best || l.a > best.a)) best = l;
+  if (!best) return 'farblos';
+  if (best.n === 'MnO₄⁻') return best.a < 0.45 ? 'rosa' : 'violett';
+  if (best.n === 'I₂-Stärke') return best.a < 0.4 ? 'hellblau' : 'tiefblau';
+  if (best.n === 'I₂') return best.a < 0.3 ? 'blassgelb' : best.a < 0.7 ? 'gelb' : 'gelbbraun';
+  return 'blassgelb';
+}
+function plumeRGBA(){
+  if (!RX()) return indRGBA(S.ind, TIT().pH);
+  const t = TITR[A().tit];
+  if (A().tit === 'I2' && S.ind === 'starch') return [28,40,150,0.9];
+  return t.plume;
+}
+const rgba = (c, af = 1) => `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(c[3] * af).toFixed(3)})`;
+function indName(key, pH){
+  const I = IND[key];
+  if (!I || key === 'none') return 'farblos (kein Indikator)';
+  if (I.uni){
+    return pH < 3 ? 'rot' : pH < 5 ? 'orange' : pH < 6.5 ? 'gelb' : pH < 7.5 ? 'grün' : pH < 9 ? 'blaugrün' : pH < 11 ? 'blau' : 'violett';
+  }
+  const w = (I.hi - I.lo) * 0.18;
+  return pH < I.lo + w ? I.na : pH > I.hi - w ? I.nb : I.nm;
+}
+
+// ---------- Achsen & berechnete Kurve ----------
+function computeAxis(force){
+  const an = A(), kLast = an.eps[an.eps.length - 1];
+  const base = S.unknown ? 50 : niceAxis(Math.max(10, Veq(kLast) * 1.5));
+  let maxP = 0; for (const p of S.points) maxP = Math.max(maxP, p.V);
+  const x = Math.max(base, maxP > 0 ? niceAxis(maxP * 1.05) : 0);
+  if (x !== S.xMax || force){
+    S.xMax = x;
+    S.theoPts = [];
+    const N = 600;
+    for (let i = 0; i <= N; i++){ const V = S.xMax * i / N, c = chemAt(V); S.theoPts.push({V, pH:c.pH, k:c.kap, E:c.E}); }
+  }
+  if (RX()){
+    let lo = Infinity, hi = -Infinity;
+    for (const q of S.theoPts.concat(S.points)) if (isFinite(q.E)){ lo = Math.min(lo, q.E); hi = Math.max(hi, q.E); }
+    const st = niceStep((hi - lo) * 1.1, 8);
+    S.yStepE = st; S.yMinE = Math.floor((lo - 0.02) / st) * st; S.yMaxE = Math.ceil((hi + 0.02) / st) * st;
+    return;
+  }
+  let km = 0;
+  for (const p of S.theoPts) km = Math.max(km, p.k);
+  for (const p of S.points) km = Math.max(km, p.k);
+  const st = niceStep(km * 1.1, 6);
+  S.yMaxK = Math.max(st, Math.ceil(km * 1.08 / st) * st);
+}
+
+// ---------- Messwerte ----------
+function record(){
+  const c = S.chem;
+  S.points.push({V:S.Vt, pH:c.pH, k:c.kap, E:c.E});
+  S.lastRecV = S.Vt;
+  computeAxis(false);
+  dataDirty = true;
+}
+function land(dv, stream){
+  S.Vt = r6(S.Vt + dv);
+  S.chem = chemAt(S.Vt);
+  const step = stream ? 0.2 : DROP - 1e-4;
+  if (S.Vt - S.lastRecV >= step - 1e-9) record();
+  uiDirty = true;
+}
+
+// ---------- Geometrie Aufbau ----------
+const WA = 380, HA = 520;
+const BX = 190, BUR_TOP = 26, SC0 = 44, SC50 = 284, BUR_BOT = 298, COCK_Y = 306, TIP_Y = 352;
+const PXML = (SC50 - SC0) / BUR;
+const FL = {rimY:358, nL:170, nR:210, nBot:394, botY:478, bL:74, bR:306};
+const surfY = Vtot => FL.botY - (22 + 58 * Math.pow(Math.min(1, Vtot / 230), 0.75));
+
+// ---------- Animation ----------
+let drops = [], plumes = [], ripples = [], dropAcc = 0, stirA = 0, streamOn = false;
+let uiDirty = true, dataDirty = true;
+const remaining = () => BUR - (S.Vemit - S.Vref);
+
+function spawnDrop(){
+  if (remaining() < DROP - 1e-6) return false;
+  S.Vemit = r6(S.Vemit + DROP);
+  drops.push({y:TIP_Y + 2, v:40});
+  uiDirty = true;
+  return true;
+}
+function flow(dt){
+  let streaming = false;
+  const streamMode = (S.tapOpen && S.rate >= 1) || (!S.tapOpen && S.pending > 1e-9 && S.pendStream);
+  if (streamMode){
+    let dv = 1 * dt;
+    if (!S.tapOpen) dv = Math.min(dv, S.pending);
+    dv = Math.min(dv, remaining());
+    if (dv > 1e-9){
+      S.Vemit = r6(S.Vemit + dv);
+      if (!S.tapOpen){ S.pending = r6(S.pending - dv); if (S.pending <= 1e-9){ S.pending = 0; S.pendStream = false; } }
+      land(dv, true);
+      streaming = true;
+    }
+  } else if (S.tapOpen){
+    dropAcc += dt * S.rate / DROP;
+    while (dropAcc >= 1){ dropAcc -= 1; if (!spawnDrop()) break; }
+  } else if (S.pending > 1e-9){
+    spawnDrop(); S.pending = 0;
+  }
+  if (S.wasStream && !streaming && S.Vt > S.lastRecV + 1e-9) record();
+  S.wasStream = streaming; streamOn = streaming;
+  if (remaining() < DROP - 1e-6){
+    if (S.tapOpen || S.pending > 1e-9){ S.tapOpen = false; S.pending = 0; S.pendStream = false; }
+    if (!S.empty){ S.empty = true; setTapUI(); }
+  }
+}
+function update(dt){
+  flow(dt);
+  const ys = surfY(S.chem.Vtot), T = TIT();
+  for (let k = drops.length - 1; k >= 0; k--){
+    const d = drops[k];
+    d.v += 900 * dt; d.y += d.v * dt;
+    if (d.y >= ys){
+      drops.splice(k, 1);
+      land(DROP, false);
+      ripples.push({t:0});
+      const col = plumeRGBA();
+      if (col) plumes.push({t:0, col, dx:(Math.random() - .5) * 10});
+    }
+  }
+  if (streamOn && Math.random() < dt * 8){
+    const col = plumeRGBA();
+    if (col) plumes.push({t:0, col, dx:(Math.random() - .5) * 14});
+  }
+  // Schlieren halten sich nahe am Äquivalenzpunkt länger (Lösung schlecht gepuffert)
+  // Oxalsäure: Entfärbung anfangs langsam, bis Mn²⁺ als Katalysator entstanden ist (Autokatalyse)
+  const life = (S.an === 'OX' && S.Vt < 0.12 * Veq(A().eps[0])) ? 2.8 : 0.7;
+  for (let k = plumes.length - 1; k >= 0; k--){ plumes[k].t += dt / life; if (plumes[k].t >= 1) plumes.splice(k, 1); }
+  for (let k = ripples.length - 1; k >= 0; k--){ ripples[k].t += dt * 1.6; if (ripples[k].t >= 1) ripples.splice(k, 1); }
+  stirA += dt * 13;
+}
+
+// ---------- Zeichnen: Aufbau ----------
+const cvA = $('cvA'), ctxA = cvA.getContext('2d');
+const cvG = $('cvG'), ctxG = cvG.getContext('2d');
+const WG = 640, HG = 520;
+const COL = {text:'#e7e4dd', dim:'#9aa2a9', faint:'#5f6870', line:'#31383e', soft:'#262c31', amber:'#ffb454',
+             teal:'#4fd1c5', glass:'#6b7680', screen:'#0e1113', titr:'rgba(160,200,240,0.32)'};
+const FONT = s => `${s} system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`;
+const MONO = s => `${s} ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace`;
+function setupCanvas(){
+  const d = Math.max(1, window.devicePixelRatio || 1);
+  cvA.width = WA * d; cvA.height = HA * d; ctxA.setTransform(d, 0, 0, d, 0, 0);
+  cvG.width = WG * d; cvG.height = HG * d; ctxG.setTransform(d, 0, 0, d, 0, 0);
+}
+function rrect(c, x, y, w, h, r){
+  c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function flaskPath(c){
+  c.beginPath();
+  c.moveTo(FL.nL, FL.rimY); c.lineTo(FL.nL, FL.nBot);
+  c.lineTo(FL.bL + 6, FL.botY - 10); c.quadraticCurveTo(FL.bL + 4, FL.botY, FL.bL + 16, FL.botY);
+  c.lineTo(FL.bR - 16, FL.botY); c.quadraticCurveTo(FL.bR - 4, FL.botY, FL.bR - 6, FL.botY - 10);
+  c.lineTo(FL.nR, FL.nBot); c.lineTo(FL.nR, FL.rimY);
+}
+function flaskHalfWidth(y){
+  if (y <= FL.nBot) return (FL.nR - FL.nL) / 2;
+  const t = (y - FL.nBot) / (FL.botY - 10 - FL.nBot);
+  return lerp((FL.nR - FL.nL) / 2, (FL.bR - FL.bL) / 2 - 6, clamp(t, 0, 1));
+}
+function drawApparatus(){
+  const c = ctxA, an = A(), T = TIT();
+  c.clearRect(0, 0, WA, HA);
+  c.fillStyle = COL.screen; c.fillRect(0, 0, WA, HA);
+
+  // Stativ
+  c.fillStyle = '#2a3036'; rrect(c, 14, 508, 340, 10, 2); c.fill();
+  c.fillStyle = '#4a535b'; c.fillRect(36, 14, 6, 494);
+  c.fillStyle = '#3c444b'; c.fillRect(42, 147, BX - 12 - 42, 6);
+  c.strokeStyle = '#5c666f'; c.lineWidth = 2; rrect(c, BX - 14, 140, 28, 20, 3); c.stroke();
+  c.fillStyle = '#3c444b'; c.fillRect(30, 144, 18, 12);
+
+  // Bürette: Flüssigkeit
+  const used = S.Vemit - S.Vref, lvl = SC0 + used * PXML;
+  c.fillStyle = (RX() && T.bur) ? T.bur : COL.titr;
+  if (lvl < BUR_BOT) c.fillRect(BX - 9, lvl, 18, BUR_BOT - lvl);
+  if (remaining() > 1e-6){ c.fillRect(BX - 2.5, BUR_BOT, 5, COCK_Y - BUR_BOT + 8); c.fillRect(BX - 1.5, COCK_Y + 8, 3, TIP_Y - COCK_Y - 10); }
+  if (lvl < BUR_BOT){
+    c.strokeStyle = 'rgba(190,220,250,0.85)'; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(BX - 9, lvl - 2); c.quadraticCurveTo(BX, lvl + 4, BX + 9, lvl - 2); c.stroke();
+  }
+  // Bürette: Glas
+  c.strokeStyle = COL.glass; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(BX - 10, BUR_TOP); c.lineTo(BX - 10, BUR_BOT); c.lineTo(BX - 4, BUR_BOT + 6); c.lineTo(BX - 4, COCK_Y - 8); c.stroke();
+  c.beginPath(); c.moveTo(BX + 10, BUR_TOP); c.lineTo(BX + 10, BUR_BOT); c.lineTo(BX + 4, BUR_BOT + 6); c.lineTo(BX + 4, COCK_Y - 8); c.stroke();
+  c.beginPath(); c.moveTo(BX - 13, BUR_TOP); c.lineTo(BX - 10, BUR_TOP + 3); c.moveTo(BX + 13, BUR_TOP); c.lineTo(BX + 10, BUR_TOP + 3); c.stroke();
+  c.beginPath(); c.moveTo(BX - 5, COCK_Y + 8); c.lineTo(BX - 2.5, TIP_Y); c.lineTo(BX + 2.5, TIP_Y); c.lineTo(BX + 5, COCK_Y + 8); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 3;
+  c.beginPath(); c.moveTo(BX - 6, BUR_TOP + 10); c.lineTo(BX - 6, BUR_BOT - 10); c.stroke();
+  // Skala
+  c.strokeStyle = 'rgba(231,228,221,0.55)'; c.lineWidth = 1;
+  c.fillStyle = COL.dim; c.font = MONO('9px'); c.textAlign = 'left'; c.textBaseline = 'middle';
+  for (let v = 0; v <= BUR; v++){
+    const y = SC0 + v * PXML, major = v % 5 === 0;
+    c.beginPath(); c.moveTo(BX + 10, y); c.lineTo(BX + 10 - (major ? 8 : 4), y); c.stroke();
+    if (major) c.fillText(String(v), BX + 14, y);
+  }
+  c.fillStyle = COL.faint; c.font = FONT('9px'); c.fillText('mL', BX + 14, SC0 - 12);
+  // Hahn
+  const open = S.tapOpen || S.pending > 1e-9;
+  c.fillStyle = '#3a4249'; rrect(c, BX - 8, COCK_Y - 8, 16, 16, 3); c.fill();
+  c.strokeStyle = COL.glass; c.lineWidth = 1.5; c.stroke();
+  c.save(); c.translate(BX, COCK_Y); c.rotate(open ? Math.PI / 2 : 0);
+  const hl = open ? 13 : 20;
+  c.fillStyle = open ? COL.teal : '#8a949c'; rrect(c, -hl, -3, 2 * hl, 6, 3); c.fill();
+  c.restore();
+  // Beschriftung Bürette
+  c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+  c.fillStyle = COL.faint; c.font = FONT('11px'); c.fillText('Maßlösung', BX - 18, 46);
+  c.fillStyle = COL.text; c.font = FONT('600 13px'); c.fillText(T.f, BX - 18, 62);
+  c.fillStyle = COL.amber; c.font = MONO('11px'); c.fillText('c = ' + fmtC(S.cT) + ' mol/L', BX - 18, 77);
+
+  // Erlenmeyerkolben: Flüssigkeit
+  const ys = surfY(S.chem.Vtot);
+  c.save(); flaskPath(c); c.closePath(); c.clip();
+  c.fillStyle = 'rgba(150,190,230,0.13)'; c.fillRect(0, ys, WA, FL.botY - ys + 2);
+  const ic = solRGBA(S.chem);
+  if (ic){ c.fillStyle = rgba(ic); c.fillRect(0, ys, WA, FL.botY - ys + 2); }
+  for (const p of plumes){
+    const r = 6 + p.t * 34, x = BX + p.dx, y = ys + 6 + p.t * 16;
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, rgba(p.col, (1 - p.t) * 0.95)); g.addColorStop(1, rgba(p.col, 0));
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  }
+  // Rührfisch
+  const L = 8 + 30 * Math.abs(Math.cos(stirA));
+  c.fillStyle = '#d9dde2'; rrect(c, BX - L / 2, FL.botY - 8, L, 6, 3); c.fill();
+  c.restore();
+  const hw = flaskHalfWidth(ys);
+  c.strokeStyle = 'rgba(160,200,235,0.55)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(BX - hw + 2, ys); c.lineTo(BX + hw - 2, ys); c.stroke();
+  for (const r of ripples){
+    c.strokeStyle = `rgba(190,220,250,${(1 - r.t) * 0.7})`; c.lineWidth = 1;
+    c.beginPath(); c.ellipse(BX, ys, 3 + r.t * 26, (3 + r.t * 26) * 0.22, 0, 0, 7); c.stroke();
+  }
+  // Kolben: Glas
+  c.strokeStyle = COL.glass; c.lineWidth = 2.5; c.lineJoin = 'round';
+  flaskPath(c); c.stroke();
+  c.beginPath(); c.moveTo(FL.nL - 3, FL.rimY); c.lineTo(FL.nL + 2, FL.rimY); c.moveTo(FL.nR - 2, FL.rimY); c.lineTo(FL.nR + 3, FL.rimY); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(FL.nL - 10, FL.nBot + 18); c.lineTo(FL.bL + 26, FL.botY - 22); c.stroke();
+  // Tropfen & Strahl
+  const dropCol = (RX() && T.drop) ? T.drop : 'rgba(175,210,245,0.9)';
+  c.fillStyle = dropCol;
+  for (const d of drops){ c.beginPath(); c.ellipse(BX, d.y, 2.6, 3.4, 0, 0, 7); c.fill(); }
+  if (streamOn){
+    c.strokeStyle = dropCol; c.lineWidth = 2.4;
+    c.beginPath(); c.moveTo(BX, TIP_Y); c.lineTo(BX, ys); c.stroke();
+  } else if (S.tapOpen || drops.length){
+    c.fillStyle = dropCol; c.beginPath(); c.arc(BX, TIP_Y + 1.5, 1.8, 0, 7); c.fill();
+  }
+
+  if (S.meter){
+  // Elektrode
+  const ex = 203;
+  c.strokeStyle = '#59636b'; c.lineWidth = 2.5; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(ex, 334); c.bezierCurveTo(ex + 14, 322, 236, 300, 262, 292); c.stroke();
+  c.fillStyle = '#3a4249'; rrect(c, ex - 5, 332, 10, 18, 2); c.fill();
+  c.fillStyle = 'rgba(200,215,230,0.18)'; c.strokeStyle = 'rgba(200,215,230,0.5)'; c.lineWidth = 1;
+  rrect(c, ex - 4, 350, 8, 108, 3); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(200,215,230,0.28)'; c.beginPath(); c.arc(ex, 462, 5.5, 0, 7); c.fill(); c.stroke();
+  // Messgerät
+  c.fillStyle = '#20252a'; rrect(c, 262, 250, 108, 66, 4); c.fill();
+  c.strokeStyle = COL.line; c.lineWidth = 1; c.stroke();
+  c.fillStyle = COL.dim; c.font = FONT('10.5px'); c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText(S.mode === 'ph' ? 'pH-Meter' : S.mode === 'k' ? 'Leitfähigkeit' : 'Potentiometer', 270, 264);
+  c.fillStyle = '#0a0d0f'; rrect(c, 270, 270, 92, 36, 3); c.fill();
+  c.fillStyle = COL.amber; c.textAlign = 'right'; c.font = MONO('600 19px');
+  if (S.mode === 'E'){ c.fillText(fmt(S.chem.E, 3), 344, 295); c.fillStyle = COL.faint; c.font = MONO('10px'); c.textAlign = 'right'; c.fillText('V', 356, 295); c.textAlign = 'left'; c.fillText('E', 274, 300); }
+  else if (S.mode === 'ph'){ c.fillText(fmt(S.chem.pH, 2), 356, 295); c.fillStyle = COL.faint; c.font = MONO('10px'); c.textAlign = 'left'; c.fillText('pH', 274, 300); }
+  else { c.fillText(fmtK(S.chem.kap), 356, 293); c.fillStyle = COL.faint; c.font = MONO('9px'); c.textAlign = 'right'; c.fillText('mS/cm', 356, 304); }
+  }
+  // Beschriftung Kolben
+  c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+  c.fillStyle = COL.faint; c.font = FONT('11px'); c.fillText(S.unknown ? 'Probe Nr. ' + S.task.no : 'Probe', 150, 368);
+  c.fillStyle = COL.text; c.font = FONT('600 12px'); c.fillText(an.f, 150, 382);
+  c.fillStyle = COL.amber; c.font = MONO('10.5px');
+  c.fillText('c₀ = ' + (S.unknown && !S.revealed ? '?' : fmtC(S.c0)), 150, 396);
+  c.fillText('V₀ = ' + S.V0 + ' mL', 150, 409);
+
+  // Magnetrührer
+  c.fillStyle = '#262c32'; rrect(c, 66, 482, 252, 24, 4); c.fill();
+  c.strokeStyle = COL.line; c.stroke();
+  c.fillStyle = COL.teal; c.beginPath(); c.arc(84, 494, 2.6, 0, 7); c.fill();
+  c.fillStyle = '#4a535b'; c.beginPath(); c.arc(296, 494, 6.5, 0, 7); c.fill();
+  c.fillStyle = COL.faint; c.font = FONT('9.5px'); c.textAlign = 'left'; c.fillText('Magnetrührer', 94, 497);
+}
+
+// ---------- Zeichnen: Diagramm ----------
+const GL = 58, GR = WG - 18, GT = 22, GB = HG - 50;
+const gx = V => GL + V / S.xMax * (GR - GL);
+const gy = y => S.mode === 'ph' ? GB - y / 14 * (GB - GT) : S.mode === 'E' ? GB - (y - S.yMinE) / (S.yMaxE - S.yMinE) * (GB - GT) : GB - y / S.yMaxK * (GB - GT);
+const val = p => S.mode === 'ph' ? p.pH : S.mode === 'E' ? p.E : p.k;
+function nearestPoint(V){
+  let best = null, bd = Infinity;
+  for (const p of S.points){ const d = Math.abs(p.V - V); if (d < bd){ bd = d; best = p; } }
+  return best;
+}
+function drawGraph(){
+  const c = ctxG, an = A(), T = TIT(), ph = S.mode === 'ph';
+  const locked = S.unknown && !S.revealed;
+  c.clearRect(0, 0, WG, HG);
+  c.fillStyle = COL.screen; c.fillRect(0, 0, WG, HG);
+  // Umschlagbereich
+  const I = IND[S.ind];
+  if (ph && S.band && I && I.lo !== undefined){
+    const y0 = gy(I.hi), y1 = gy(I.lo);
+    const g = c.createLinearGradient(0, y1, 0, y0);
+    for (let i = 0; i <= 8; i++){
+      const p = I.lo + (I.hi - I.lo) * i / 8, col = indRGBA(S.ind, p);
+      g.addColorStop(i / 8, col[3] < 0.05 ? 'rgba(160,170,180,0.07)' : rgba(col, 0.3));
+    }
+    c.fillStyle = g; c.fillRect(GL, y0, GR - GL, y1 - y0);
+    c.fillStyle = COL.dim; c.font = FONT('10.5px'); c.textAlign = 'right'; c.textBaseline = 'bottom';
+    c.fillText(`Umschlagbereich ${I.name} (pH ${fmt(I.lo, 1)}–${fmt(I.hi, 1)})`, GR - 6, y0 - 3);
+  }
+  // Raster
+  c.strokeStyle = '#1a2024'; c.lineWidth = 1;
+  c.fillStyle = COL.faint; c.font = MONO('10.5px'); c.textBaseline = 'middle'; c.textAlign = 'right';
+  const eM = S.mode === 'E';
+  const yStep = ph ? 1 : eM ? S.yStepE : niceStep(S.yMaxK, 6), yTop = ph ? 14 : eM ? S.yMaxE : S.yMaxK, yBot = eM ? S.yMinE : 0;
+  for (let y = yBot; y <= yTop + 1e-9; y += yStep){
+    const py = gy(y);
+    c.beginPath(); c.moveTo(GL, py); c.lineTo(GR, py); c.stroke();
+    c.fillText(eM ? fmt(r6(y), yStep < 0.1 ? 2 : 1) : fmtSig(r6(y), 4), GL - 8, py);
+  }
+  const xStep = niceStep(S.xMax, 10);
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let x = 0; x <= S.xMax + 1e-9; x += xStep){
+    const px = gx(x);
+    c.beginPath(); c.moveTo(px, GT); c.lineTo(px, GB); c.stroke();
+    c.fillText(fmtSig(r6(x), 4), px, GB + 7);
+  }
+  if (ph){ c.strokeStyle = '#2a3238'; c.setLineDash([2, 4]); c.beginPath(); c.moveTo(GL, gy(7)); c.lineTo(GR, gy(7)); c.stroke(); c.setLineDash([]); }
+  c.strokeStyle = COL.line; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(GL, GT); c.lineTo(GL, GB); c.lineTo(GR, GB); c.stroke();
+  // Achsentitel
+  c.fillStyle = COL.dim; c.font = FONT('12px'); c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  c.fillText(`V(${T.f}) in mL`, (GL + GR) / 2, HG - 12);
+  c.save(); c.translate(16, (GT + GB) / 2); c.rotate(-Math.PI / 2);
+  c.fillText(ph ? 'pH' : eM ? 'E in V' : 'κ in mS/cm', 0, 0); c.restore();
+
+  // berechnete Kurve
+  if (S.theo && !locked){
+    c.strokeStyle = 'rgba(154,162,169,0.7)'; c.lineWidth = 1.4; c.setLineDash([5, 4]);
+    c.beginPath();
+    S.theoPts.forEach((p, i) => { const x = gx(p.V), y = gy(val(p)); i ? c.lineTo(x, y) : c.moveTo(x, y); });
+    c.stroke(); c.setLineDash([]);
+  }
+  // Messwerte
+  if (S.points.length){
+    c.strokeStyle = COL.amber; c.lineWidth = 2; c.lineJoin = 'round';
+    c.beginPath();
+    S.points.forEach((p, i) => { const x = gx(p.V), y = gy(val(p)); i ? c.lineTo(x, y) : c.moveTo(x, y); });
+    c.stroke();
+    if (S.points.length < 400){
+      c.fillStyle = COL.amber;
+      for (const p of S.points){ c.beginPath(); c.arc(gx(p.V), gy(val(p)), 2.1, 0, 7); c.fill(); }
+    }
+    const lp = S.points[S.points.length - 1];
+    c.strokeStyle = COL.amber; c.lineWidth = 1.5; c.beginPath(); c.arc(gx(lp.V), gy(val(lp)), 5, 0, 7); c.stroke();
+  }
+  // Halbäquivalenzpunkte
+  if (S.hep && !locked && an.hep.length){
+    for (const [fr, idx] of an.hep){
+      const V = fr * Veq(1); if (V > S.xMax) continue;
+      const cc = chemAt(V), y = gy(val(cc)), x = gx(V);
+      c.strokeStyle = 'rgba(255,180,84,0.7)'; c.lineWidth = 1; c.setLineDash([3, 3]);
+      c.beginPath(); c.moveTo(x, GB); c.lineTo(x, y); if (ph || eM) c.lineTo(GL, y); c.stroke(); c.setLineDash([]);
+      c.fillStyle = COL.amber; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill();
+      const pk = an.type === 'base' ? 'pKs(NH₄⁺)' : (an.pKs.length > 1 ? `pKs${'₁₂₃'[idx]}` : 'pKs');
+      const lt = eM ? `HÄP: E = ${fmt(cc.E, 3)} V (E°(${an.couple}) = ${fmt(an.E0, 2)} V)` : ph ? `HÄP: pH ${fmt(cc.pH, 2)} (${pk} = ${fmt(an.pKs[idx], 2)})` : 'HÄP';
+      c.font = FONT('11px');
+      const lw = c.measureText(lt).width + 10, up = an.type === 'redox' ? an.role === 'red' : an.type === 'acid';
+      let lx = x - lw / 2; lx = clamp(lx, GL + 4, GR - lw);
+      const ly = up ? y - 32 : y + 10;
+      c.fillStyle = 'rgba(14,17,19,0.88)'; rrect(c, lx, ly, lw, 20, 3); c.fill();
+      c.strokeStyle = 'rgba(255,180,84,0.45)'; c.lineWidth = 1; c.stroke();
+      c.fillStyle = COL.amber; c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.fillText(lt, lx + 5, ly + 10.5);
+    }
+  }
+  // Äquivalenzpunkte
+  if (S.ep && !locked){
+    an.eps.forEach((k, i) => {
+      const V = Veq(k); if (V > S.xMax) return;
+      const cc = chemAt(V), x = gx(V), y = gy(val(cc));
+      c.strokeStyle = 'rgba(79,209,197,0.75)'; c.lineWidth = 1; c.setLineDash([4, 3]);
+      c.beginPath(); c.moveTo(x, GT); c.lineTo(x, GB); c.stroke(); c.setLineDash([]);
+      c.fillStyle = COL.teal; c.beginPath(); c.arc(x, y, 4.5, 0, 7); c.fill();
+      c.font = FONT('11px'); c.textBaseline = 'top';
+      const txt = `ÄP${an.eps.length > 1 ? ' ' + (i + 1) : ''}: ${fmt(V, 2)} mL` + (ph ? ` · pH ${fmt(cc.pH, 2)}` : eM ? ` · E = ${fmt(cc.E, 3)} V` : '');
+      const right = x > GR - 150;
+      c.textAlign = right ? 'right' : 'left';
+      c.fillText(txt, x + (right ? -6 : 6), GT + 4 + i * 16);
+    });
+  }
+  // Ablesehilfe
+  if (S.cursorV !== null && S.points.length){
+    const p = nearestPoint(S.cursorV), x = gx(p.V), y = gy(val(p));
+    c.strokeStyle = 'rgba(231,228,221,0.45)'; c.lineWidth = 1; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(x, GT); c.lineTo(x, GB); c.moveTo(GL, y); c.lineTo(GR, y); c.stroke(); c.setLineDash([]);
+    c.fillStyle = COL.text; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill();
+    const txt = `V = ${fmt(p.V, 2)} mL · ` + (ph ? `pH = ${fmt(p.pH, 2)}` : eM ? `E = ${fmt(p.E, 3)} V` : `κ = ${fmtK(p.k)} mS/cm`);
+    c.font = MONO('12px');
+    const w = c.measureText(txt).width + 16;
+    let bx = x + 10, by = y - 34;
+    if (bx + w > GR) bx = x - 10 - w;
+    if (by < GT) by = y + 12;
+    c.fillStyle = 'rgba(32,37,42,0.95)'; rrect(c, bx, by, w, 24, 3); c.fill();
+    c.strokeStyle = COL.line; c.stroke();
+    c.fillStyle = COL.text; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 12);
+  }
+  if (S.points.length <= 1 && !S.theo){
+    c.fillStyle = COL.faint; c.font = FONT('12.5px'); c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('Öffne den Hahn oder gib Maßlösung tropfenweise zu.', (GL + GR) / 2, (GT + GB) / 2);
+  }
+}
+
+// ---------- UI-Texte ----------
+function setTapUI(){
+  const b = $('btnTap');
+  b.textContent = S.tapOpen ? 'Hahn schließen' : 'Hahn öffnen';
+  b.classList.toggle('on', S.tapOpen);
+  b.disabled = S.empty;
+  $('btnRefill').hidden = !S.empty;
+  const st = $('statusBadge');
+  st.classList.toggle('running', S.tapOpen && !S.empty);
+  st.classList.toggle('warn', S.empty);
+  $('statusText').textContent = S.empty ? 'Bürette leer' : S.tapOpen ? 'Hahn offen' : 'Hahn geschlossen';
+}
+function renderReadouts(){
+  const T = TIT(), ch = S.chem;
+  $('roV').textContent = fmt(S.Vemit, 2) + ' mL';
+  if (RX()) $('roE').textContent = fmt(ch.E, 3) + ' V';
+  else { $('roPH').textContent = fmt(ch.pH, 2); $('roK').textContent = fmtK(ch.kap) + ' mS/cm'; }
+  $('roN').textContent = fmtSig(S.cT * S.Vt, 4) + ' mmol';
+  const col = solRGBA(ch);
+  $('roInd').innerHTML = (col && col[3] > 0.05 ? `<span class="swatch" style="background:${rgba([col[0], col[1], col[2], 1])}"></span>` : '') + solName(ch);
+  $('roPts').textContent = S.points.length;
+}
+function renderStatic(){
+  const an = A(), T = TIT();
+  const rx = RX();
+  $('roleAn').textContent = rx ? (an.role === 'red' ? 'Reduktionsmittel' : 'Oxidationsmittel') : an.type === 'acid' ? 'Säure' : 'Base';
+  $('kindAB').classList.toggle('active', !rx); $('kindRX').classList.toggle('active', rx);
+  $('thRow').innerHTML = rx ? `<th>V(${T.f}) in mL</th><th>E in V</th>` : `<th>V(${T.f}) in mL</th><th>pH</th><th>κ in mS/cm</th>`;
+  $('rxnLabel').textContent = rx ? 'Redoxgleichung aufstellen' : 'Reaktionsgleichung der Neutralisation aufstellen';
+  $('inRxn').placeholder = rx ? 'z. B. 5 Fe^2+ + … -> … (Knöpfe oben)' : 'z. B. HCl + NaOH -> NaCl + H2O';
+  $('symBar').hidden = !rx;
+  $('titName').textContent = `${T.name} (${T.f})`;
+  $('roVk').textContent = `V(${T.f}) zugegeben`;
+  $('roNk').textContent = `n(${T.ion}) zugegeben`;
+  const locked = S.unknown && !S.revealed;
+  $('c0v').textContent = locked ? '?' : fmtC(S.c0) + ' mol/L';
+  $('c0').disabled = S.unknown;
+  $('c0hint').textContent = S.unknown ? (S.revealed ? `Auflösung: c₀ = ${fmtC(S.c0)} mol/L` : 'c₀ ist unbekannt – bestimme sie durch Titration.') : `n₀ = c₀ · V₀ = ${fmtSig(S.c0 * S.V0, 3)} mmol`;
+  $('btnNewSample').hidden = !S.unknown;
+  const vLast = Veq(an.eps[an.eps.length - 1]);
+  const h = $('ctHint');
+  if (!S.unknown && vLast > BUR){ h.textContent = 'Der Verbrauch übersteigt die Bürettenfüllung (50 mL) – die Bürette muss zwischendurch nachgefüllt werden.'; h.classList.add('warn'); }
+  else if (!S.unknown && vLast < 3){ h.textContent = 'Sehr kleiner Verbrauch – die Maßlösung ist für diese Probe zu konzentriert.'; h.classList.add('warn'); }
+  else { h.textContent = 'Bürette: 50 mL · 1 Tropfen = 0,05 mL'; h.classList.remove('warn'); }
+  const I = IND[S.ind];
+  if (rx){
+    $('indHint').textContent = an.tit === 'KMnO4'
+      ? (S.ind === 'starch' ? 'Stärke ist hier wirkungslos – Permanganat zeigt den Endpunkt selbst an (erste bleibende Rosafärbung).' : 'Permanganat ist ein Selbstindikator: Der erste überschüssige Tropfen färbt die Lösung bleibend rosa.')
+      : (S.ind === 'starch' ? `Stärke bildet mit Iod einen tiefblauen Komplex: ${S.an === 'I2' ? 'blau → farblos' : 'farblos → blau'} am Endpunkt.` : 'Ohne Stärke ist nur die schwache Gelbfärbung durch Iod zu erkennen – der Endpunkt ist schwer zu sehen.');
+  } else
+  $('indHint').textContent = S.ind === 'none' ? 'Die Lösung bleibt farblos.' : I.uni ? 'Mischindikator mit fließendem Farbverlauf über den ganzen pH-Bereich.'
+    : `Umschlagbereich pH ${fmt(I.lo, 1)}–${fmt(I.hi, 1)}: ${I.na} → ${I.nb}`;
+  // Sperren im Übungsmodus
+  for (const [id, wrap, hint, txt] of [['swEP','swEPWrap','swEPHint','n(Maßlösung) entspricht n(Probe)'],
+                                       ['swTheo','swTheoWrap','swTheoHint','gestrichelt, über den ganzen Bereich'],
+                                       ['swHEP','swHEPWrap','swHEPHint', rx ? 'dort gilt E ≈ E° der Probe' : an.hep.length ? 'dort gilt pH = pKs' : 'nur bei schwachen Säuren und Basen']]){
+    const dis = locked || (id === 'swHEP' && !an.hep.length);
+    $(id).disabled = dis; $(wrap).classList.toggle('off', dis);
+    $(hint).textContent = locked ? 'im Übungsmodus gesperrt' : txt;
+  }
+  const gOff = !S.meter || !S.graph;
+  $('swBand').disabled = gOff || rx;
+  $('swBandWrap').classList.toggle('off', gOff || rx || S.mode !== 'ph' || S.ind === 'none');
+  if (gOff) for (const [id, wrap, hint] of [['swEP','swEPWrap','swEPHint'], ['swTheo','swTheoWrap','swTheoHint'], ['swHEP','swHEPWrap','swHEPHint']]){
+    $(id).disabled = true; $(wrap).classList.add('off'); $(hint).textContent = 'nur mit Titrationskurve';
+  }
+  $('modeWrap').classList.toggle('off', !S.meter);
+  $('modeWrap').hidden = rx;
+  const mName = rx ? 'Potentiometer' : S.mode === 'ph' ? 'pH-Meter' : 'Leitfähigkeitsmessgerät';
+  $('meterName').textContent = mName;
+  document.querySelectorAll('.mName').forEach(x => x.textContent = mName);
+  $('swGraph').disabled = !S.meter;
+  $('swGraphWrap').classList.toggle('off', !S.meter);
+  $('swGraphHint').textContent = S.meter ? 'ausgeschaltet: Messwerte selbst notieren und zeichnen' : `nur mit ${mName} möglich`;
+  $('meterWarn').hidden = rx || S.meter || S.ind !== 'none';
+  $('simGrid').classList.toggle('solo', gOff);
+  $('roPHw').hidden = !S.meter || rx; $('roKw').hidden = !S.meter || rx; $('roEw').hidden = !S.meter || !rx; $('roPtsw').hidden = !S.meter;
+  $('dataNote').hidden = S.meter; $('dataWrap').hidden = !S.meter;
+  // Auswahl Äquivalenzpunkt
+  const sel = $('epSel'), prev = sel.value;
+  $('epSelWrap').hidden = an.eps.length < 2;
+  sel.innerHTML = an.eps.map((k, i) => `<option value="${i}">${i + 1}. Äquivalenzpunkt</option>`).join('');
+  if (prev && +prev < an.eps.length) sel.value = prev;
+  $('taskInputs').hidden = !(S.unknown && !S.revealed);
+  $('taskInfo').hidden = !S.unknown;
+  const tr = $('taskRole');
+  tr.textContent = !S.unknown ? 'aus' : S.task.done ? 'gelöst' : S.revealed ? 'aufgelöst' : 'läuft';
+  tr.className = 'role' + (S.unknown ? (S.task.done ? ' done' : ' on') : '');
+  $('taskNo').textContent = 'Nr. ' + S.task.no;
+  $('taskScore').textContent = `${S.task.solved} von ${S.task.total}`;
+}
+
+// ---------- Reiter: Auswertung ----------
+function parseNum(s){ const v = parseFloat(String(s).trim().replace(',', '.')); return isFinite(v) ? v : NaN; }
+function selK(){ const an = A(); return an.eps.length > 1 ? an.eps[+$('epSel').value || 0] : an.eps[0]; }
+const RXN = {
+  HCl:    [{r:[[1,'HCl'],[1,'NaOH']], p:[[1,'NaCl'],[1,'H2O']]}],
+  H2SO4:  [{r:[[1,'H2SO4'],[2,'NaOH']], p:[[1,'Na2SO4'],[2,'H2O']]}],
+  HCOOH:  [{r:[[1,'HCOOH'],[1,'NaOH']], p:[[1,'HCOONa'],[1,'H2O']]}],
+  CH3COOH:[{r:[[1,'CH3COOH'],[1,'NaOH']], p:[[1,'CH3COONa'],[1,'H2O']]}],
+  H3PO4:  [{r:[[1,'H3PO4'],[1,'NaOH']], p:[[1,'NaH2PO4'],[1,'H2O']]},
+           {r:[[1,'H3PO4'],[2,'NaOH']], p:[[1,'Na2HPO4'],[2,'H2O']]}],
+  NaOH:   [{r:[[1,'NaOH'],[1,'HCl']], p:[[1,'NaCl'],[1,'H2O']]}],
+  NH3:    [{r:[[1,'NH3'],[1,'HCl']], p:[[1,'NH4Cl']]}],
+  // Redox (Ionengleichungen; r[0] = Probe, r[1] = Maßlösung)
+  FE:  [{r:[[5,'Fe^2+'],[1,'MnO4^-'],[8,'H^+']], p:[[5,'Fe^3+'],[1,'Mn^2+'],[4,'H2O']],
+         alt:[{r:[[5,'Fe^2+'],[1,'MnO4^-'],[8,'H3O^+']], p:[[5,'Fe^3+'],[1,'Mn^2+'],[12,'H2O']]}]}],
+  OX:  [{r:[[5,'H2C2O4'],[2,'MnO4^-'],[6,'H^+']], p:[[10,'CO2'],[2,'Mn^2+'],[8,'H2O']],
+         alt:[{r:[[5,'H2C2O4'],[2,'MnO4^-'],[6,'H3O^+']], p:[[10,'CO2'],[2,'Mn^2+'],[14,'H2O']]},
+              {r:[[5,'C2O4^2-'],[2,'MnO4^-'],[16,'H^+']], p:[[10,'CO2'],[2,'Mn^2+'],[8,'H2O']]}]}],
+  H2O2:[{r:[[5,'H2O2'],[2,'MnO4^-'],[6,'H^+']], p:[[5,'O2'],[2,'Mn^2+'],[8,'H2O']],
+         alt:[{r:[[5,'H2O2'],[2,'MnO4^-'],[6,'H3O^+']], p:[[5,'O2'],[2,'Mn^2+'],[14,'H2O']]}]}],
+  I2:  [{r:[[1,'I2'],[2,'S2O3^2-']], p:[[2,'I^-'],[1,'S4O6^2-']],
+         alt:[{r:[[1,'I2'],[2,'Na2S2O3']], p:[[2,'NaI'],[1,'Na2S4O6']]}]}],
+  VITC:[{r:[[1,'C6H8O6'],[1,'I2']], p:[[1,'C6H6O6'],[2,'I^-'],[2,'H^+']],
+         alt:[{r:[[1,'C6H8O6'],[1,'I2']], p:[[1,'C6H6O6'],[2,'HI']]},
+              {r:[[1,'C6H8O6'],[1,'I2'],[2,'H2O']], p:[[1,'C6H6O6'],[2,'I^-'],[2,'H3O^+']]}]}]
+};
+const MNRED = {r:[[1,'MnO4^-'],[8,'H^+'],[5,'e^-']], p:[[1,'Mn^2+'],[4,'H2O']], alt:[{r:[[1,'MnO4^-'],[8,'H3O^+'],[5,'e^-']], p:[[1,'Mn^2+'],[12,'H2O']]}]};
+const I2RED = {r:[[1,'I2'],[2,'e^-']], p:[[2,'I^-']]};
+const HALF = {
+  FE:  {ox:{r:[[1,'Fe^2+']], p:[[1,'Fe^3+'],[1,'e^-']]}, red:MNRED},
+  OX:  {ox:{r:[[1,'H2C2O4']], p:[[2,'CO2'],[2,'H^+'],[2,'e^-']], alt:[{r:[[1,'H2C2O4'],[2,'H2O']], p:[[2,'CO2'],[2,'H3O^+'],[2,'e^-']]}, {r:[[1,'C2O4^2-']], p:[[2,'CO2'],[2,'e^-']]}]}, red:MNRED},
+  H2O2:{ox:{r:[[1,'H2O2']], p:[[1,'O2'],[2,'H^+'],[2,'e^-']], alt:[{r:[[1,'H2O2'],[2,'H2O']], p:[[1,'O2'],[2,'H3O^+'],[2,'e^-']]}]}, red:MNRED},
+  I2:  {ox:{r:[[2,'S2O3^2-']], p:[[1,'S4O6^2-'],[2,'e^-']]}, red:I2RED},
+  VITC:{ox:{r:[[1,'C6H8O6']], p:[[1,'C6H6O6'],[2,'H^+'],[2,'e^-']], alt:[{r:[[1,'C6H8O6'],[2,'H2O']], p:[[1,'C6H6O6'],[2,'H3O^+'],[2,'e^-']]}]}, red:I2RED}
+};
+const MNHINT = 'Permanganat MnO₄⁻ wird in saurer Lösung zu Mn²⁺ reduziert. Die Sauerstoffatome bilden mit H⁺-Ionen Wasser.';
+const HALFHINT = {
+  FE:  {ox:'Fe²⁺ wird zu Fe³⁺ oxidiert.', red:MNHINT},
+  OX:  {ox:'Oxalsäure H₂C₂O₄ wird zu Kohlenstoffdioxid CO₂ oxidiert; dabei werden H⁺-Ionen frei.', red:MNHINT},
+  H2O2:{ox:'Wasserstoffperoxid H₂O₂ wird zu Sauerstoff O₂ oxidiert; dabei werden H⁺-Ionen frei.', red:MNHINT},
+  I2:  {ox:'Zwei Thiosulfat-Ionen S₂O₃²⁻ werden zu einem Tetrathionat-Ion S₄O₆²⁻ oxidiert.', red:'Iod I₂ wird zu Iodid-Ionen I⁻ reduziert.'},
+  VITC:{ox:'Ascorbinsäure C₆H₈O₆ wird zu Dehydroascorbinsäure C₆H₆O₆ oxidiert; dabei werden H⁺-Ionen frei.', red:'Iod I₂ wird zu Iodid-Ionen I⁻ reduziert.'}
+};
+const RXHINT = {
+  FE:'Fe²⁺ wird zu Fe³⁺ oxidiert. In saurer Lösung wird Permanganat zu Mn²⁺-Ionen reduziert; dabei werden H⁺-Ionen verbraucht und Wasser gebildet.',
+  OX:'Oxalsäure wird zu Kohlenstoffdioxid oxidiert. In saurer Lösung wird Permanganat zu Mn²⁺-Ionen reduziert; dabei werden H⁺-Ionen verbraucht und Wasser gebildet.',
+  H2O2:'Wasserstoffperoxid wird zu Sauerstoff oxidiert. In saurer Lösung wird Permanganat zu Mn²⁺-Ionen reduziert; dabei werden H⁺-Ionen verbraucht und Wasser gebildet.',
+  I2:'Iod wird zu Iodid-Ionen reduziert, Thiosulfat-Ionen werden zu Tetrathionat-Ionen S₄O₆²⁻ oxidiert.',
+  VITC:'Ascorbinsäure C₆H₈O₆ wird zu Dehydroascorbinsäure C₆H₆O₆ oxidiert (dabei werden zwei H⁺ frei), Iod wird zu Iodid-Ionen reduziert.'
+};
+const SUBD = '₀₁₂₃₄₅₆₇₈₉';
+const SUPD = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const qPrev = v => RX() ? v.replace(/([A-Za-z)])([+\-−])(?=\s|$)/g, (m, x, sg) => x + '^' + (sg === '+' ? '+' : '-')) : v;
+const fmtF = f => f.replace(/\^(\d*)([+-])/g, (m, d, sg) => d.split('').map(x => SUPD[+x]).join('') + (sg === '+' ? '⁺' : '⁻'))
+                   .replace(/([A-Za-z)])(\d+)/g, (m, a, d) => a + d.split('').map(x => SUBD[+x]).join(''));
+function splitCharge(f){ const m = f.match(/\^(\d*)([+-])$/); return m ? [f.slice(0, -m[0].length), (m[1] ? +m[1] : 1) * (m[2] === '+' ? 1 : -1)] : [f, 0]; }
+const termTxt = ([c, f], plain) => (c > 1 ? c + ' ' : '') + (plain ? f : fmtF(f));
+const eqTxt = (e, plain) => e.r.map(t => termTxt(t, plain)).join(' + ') + (plain ? ' -> ' : ' → ') + e.p.map(t => termTxt(t, plain)).join(' + ');
+const ELEM = new Set('H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Mn Fe Co Ni Cu Zn Br Ag Sn I Ba Pb Hg'.split(' '));
+function parseFormula(f){
+  const st = [{}]; let i = 0;
+  const add = (o, e, n) => o[e] = (o[e] || 0) + n;
+  while (i < f.length){
+    if (f[i] === '('){ st.push({}); i++; continue; }
+    if (f[i] === ')'){
+      i++; const m = f.slice(i).match(/^\d+/), n = m ? +m[0] : 1; if (m) i += m[0].length;
+      const top = st.pop(); if (!st.length) return {err:`Klammerfehler in „${f}“.`};
+      for (const e in top) add(st[st.length - 1], e, top[e] * n); continue;
+    }
+    const m = f.slice(i).match(/^([A-Z][a-z]?)(\d*)/);
+    if (!m) return {err:`„${f}“ ist keine gültige Formel – achte auf die Groß- und Kleinschreibung der Elementsymbole (z. B. NaCl, nicht NACL).`};
+    if (!ELEM.has(m[1])) return {err:`Unbekanntes Elementsymbol „${m[1]}“ in „${f}“ – achte auf Groß- und Kleinschreibung.`};
+    add(st[st.length - 1], m[1], m[2] ? +m[2] : 1); i += m[0].length;
+  }
+  if (st.length !== 1) return {err:`Klammerfehler in „${f}“.`};
+  return {comp:st[0]};
+}
+const compKey = c => Object.keys(c).sort().map(e => e + c[e]).join('');
+function sideMap(list){
+  const m = new Map();
+  for (const [c, f0] of list){
+    const [f, q] = splitCharge(f0);
+    if (f === 'e'){ const o = m.get('e⁻'); m.set('e⁻', {c:(o ? o.c : 0) + c, f:'e^-', comp:{}, q:-1}); continue; }
+    const r = parseFormula(f); if (r.err) return r;
+    const k = compKey(r.comp) + (q ? '|' + q : ''), o = m.get(k);
+    m.set(k, {c:(o ? o.c : 0) + c, f:f0, comp:r.comp, q});
+  }
+  return {m};
+}
+const QHINT = 'Ladungen bitte hochgestellt eingeben – mit den Knöpfen ⁺ ⁻ ²⁺ ³⁺ ²⁻ oder mit ^, z. B. Fe^2+, MnO4^- oder H^+.';
+function parseEq(str, withE){
+  const rx = RX();
+  let t = str.replace(/[₀-₉]/g, d => String(SUBD.indexOf(d)));
+  if (!rx && /[⁺⁻]/.test(t)) return {err:'Bitte ohne Ionenladungen: Gib alle Stoffe mit Summenformeln an (z. B. NaCl statt Na⁺ + Cl⁻).'};
+  if (rx){
+    t = t.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹]*)([⁺⁻])/g, (m, d, sg) => '^' + d.split('').map(x => SUPD.indexOf(x)).join('') + (sg === '⁺' ? '+' : '-'));
+    t = t.replace(/(^|[\s+→>])(\d*\s*)e\s*[-−](?![>\d])/g, '$1$2e^-');
+    t = t.replace(/([A-Za-z)])([+\-−])(?=\s|$|→)/g, (m, x, sg) => x + '^' + (sg === '+' ? '+' : '-'));   // einfache Ladung: H+, I-, OH-
+    t = t.replace(/\^\s*(\d*)\s*([+-])/g, (m, d, sg) => `§${d}${sg === '+' ? 'p' : 'm'}§`);
+    if (/[\^⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(t)) return {err:'Nach einem hochgestellten Zeichen bzw. ^ muss eine Ladung mit + oder − folgen. ' + QHINT};
+  }
+  t = t.replace(/<=>|<->|⇌|⇄|-->|->|=>|⟶|→|=/g, '→');
+  const parts = t.split('→');
+  if (parts.length !== 2) return {err:'Die Gleichung braucht genau einen Reaktionspfeil – tippe dafür -> oder =.'};
+  const sides = [];
+  for (const side of parts){
+    const list = [];
+    for (const raw of side.split('+')){
+      const x = raw.trim();
+      const xs = x.replace(/§(\d*)([pm])§/g, (m, d, sg) => '^' + d + (sg === 'p' ? '+' : '−'));
+      if (!x) return {err: rx ? 'Leerer Term – steht irgendwo ein „+“ zu viel? ' + QHINT : 'Leerer Term – steht irgendwo ein „+“ zu viel? Ionenladungen bitte weglassen und alle Stoffe mit Summenformeln angeben.'};
+      const m = x.match(/^(\d*)\s*(.*)$/);
+      let f = m[2].replace(/\s+/g, ''), q = '';
+      const qm = f.match(/§(\d*)([pm])§$/);
+      if (qm){ q = '^' + qm[1] + (qm[2] === 'p' ? '+' : '-'); f = f.slice(0, -qm[0].length); }
+      if (/§/.test(f)) return {err:`„${xs}“: Die Ladung muss am Ende der Formel stehen.`};
+      if (!f) return {err:`„${xs}“ ist unvollständig.`};
+      if (rx && f === 'e'){
+        if (!withE) return {err:'Elektronen kommen in der Gesamtgleichung nicht vor – sie heben sich beim Zusammenfassen der Teilgleichungen auf.'};
+        if (q && q !== '^-') return {err:'Elektronen sind einfach negativ geladen: e⁻.'};
+        q = '^-';
+      }
+      if (!/^[A-Za-z0-9()]+$/.test(f)) return {err: rx ? `„${xs}“ enthält ungültige Zeichen. ${QHINT}` : `„${x}“ enthält ungültige Zeichen. Ionenladungen bitte weglassen.`};
+      const c = m[1] ? +m[1] : 1;
+      if (c < 1) return {err:'Koeffizienten müssen positive ganze Zahlen sein.'};
+      list.push([c, f + q]);
+    }
+    const sm = sideMap(list); if (sm.err) return sm;
+    sides.push(sm.m);
+  }
+  return {r:sides[0], p:sides[1]};
+}
+const sameKeys = (a, b) => a.size === b.size && [...a.keys()].every(k => b.has(k));
+function propTo(U, E){
+  let q = null;
+  for (const side of ['r','p']) for (const [k, v] of E[side]){
+    const x = U[side].get(k).c / v.c;
+    if (q === null) q = x; else if (Math.abs(x - q) > 1e-9) return 0;
+  }
+  return q;
+}
+function atomSums(m){ const o = {}; for (const v of m.values()) for (const e in v.comp) o[e] = (o[e] || 0) + v.comp[e] * v.c; return o; }
+const qSum = m => [...m.values()].reduce((a, v) => a + (v.q || 0) * v.c, 0);
+const fmtQ = q => q > 0 ? '+' + q : q < 0 ? '−' + (-q) : '0';
+function balanceMsg(U){
+  const L = atomSums(U.r), Rr = atomSums(U.p);
+  for (const e of new Set([...Object.keys(L), ...Object.keys(Rr)])){
+    if ((L[e] || 0) !== (Rr[e] || 0)) return `Zähle die Atome: Links stehen ${L[e] || 0} ${e}-Atome, rechts ${Rr[e] || 0}.`;
+  }
+  const ql = qSum(U.r), qr = qSum(U.p);
+  if (ql !== qr) return `Ladungsbilanz: Links beträgt die Summe der Ladungen ${fmtQ(ql)}, rechts ${fmtQ(qr)}.`;
+  return '';
+}
+const rxnKey = () => S.an + '|' + epIdx();
+function expMaps(e){ return {r:sideMap(e.r).m, p:sideMap(e.p).m}; }
+function checkRxn(){
+  if (RX() && !halvesDone()) return;
+  const an = A(), T = TIT(), idx = epIdx(), str = $('inRxn').value.trim();
+  const rx = RX();
+  if (!str){ S.rxn.fb = {cls:'bad', t:'Noch keine Gleichung', p:[rx ? 'Gib die Redoxgleichung ein. ' + QHINT : 'Gib die Reaktionsgleichung ein, z. B. als HCl + NaOH -> NaCl + H2O.']}; renderRxn(); return; }
+  const U = parseEq(str);
+  if (U.err){ S.rxn.fb = {cls:'bad', t:'Gleichung nicht lesbar', p:[U.err]}; renderRxn(); return; }
+  const main = RXN[S.an][idx], forms = [main, ...(main.alt || [])], cands = forms.map(expMaps), E = cands[0];
+  const fb = p => { S.rxn.fb = {cls:'bad', t:'Noch nicht richtig', p:[p].flat().filter(Boolean)}; };
+  const hi = cands.findIndex(C => sameKeys(U.r, C.r) && sameKeys(U.p, C.p));
+  if (hi >= 0){
+    const q = propTo(U, cands[hi]);
+    if (q === 1){ S.rxn.done[rxnKey()] = 'ok'; S.rxn.form[rxnKey()] = forms[hi]; S.rxn.fb = null; renderRxn(); renderCalc(); renderEq(); return; }
+    if (q > 1 && Number.isInteger(q)) S.rxn.fb = {cls:'mid', t:'Fast richtig', p:['Die Gleichung stimmt, verwende aber die kleinstmöglichen ganzzahligen Koeffizienten.']};
+    else fb(['Die Stoffe stimmen, aber die Gleichung ist noch nicht richtig ausgeglichen.', balanceMsg(U), rx ? 'Tipp: Gleiche zuerst die Elektronenzahl der beiden Teilgleichungen aus, dann Ladungen (mit H⁺) und zuletzt die H- und O-Atome (mit H₂O).' : '']);
+  } else if (cands.some(C => sameKeys(U.r, C.p) && sameKeys(U.p, C.r))){
+    fb('Edukte und Produkte sind vertauscht: Links stehen die Stoffe, die miteinander reagieren.');
+  } else {
+    let other = -1;
+    RXN[S.an].forEach((e, j) => { if (j !== idx){ const O = expMaps(e); if (sameKeys(U.r, O.r) && sameKeys(U.p, O.p) && propTo(U, O) === 1) other = j; } });
+    if (other >= 0) fb(`Das ist die Gleichung bis zum ${other + 1}. Äquivalenzpunkt. Links ausgewählt ist aber der ${idx + 1}. Äquivalenzpunkt.`);
+    else if (rx){
+      const hasA = cands.some(C => U.r.has([...C.r.keys()][0])), hasT = cands.some(C => U.r.has([...C.r.keys()][1]));
+      if (hasA && hasT) fb(['Reduktionsmittel und Oxidationsmittel stimmen. Prüfe die weiteren Teilchen und die Produkte: ' + RXHINT[S.an],
+                           'Tipp: Stelle zuerst die Teilgleichungen für Oxidation und Reduktion auf, gleiche die Elektronenzahlen aus und addiere sie.', balanceMsg(U)]);
+      else fb(`Prüfe die Edukte: ${an.cf} (aus der ${an.name}) reagiert mit ${T.cf} (aus der ${T.name}).`);
+    }
+    else if (sameKeys(U.r, E.r)){
+      const hints = ['Die Edukte stimmen. Prüfe die Produkte:'];
+      if (S.an === 'NH3') hints[0] += ' Ammoniak nimmt ein Proton auf – es entsteht ein Ammoniumsalz.';
+      else if (S.an === 'H3PO4') hints[0] += ` Bis zum ${idx + 1}. Äquivalenzpunkt gibt jedes H₃PO₄ ${idx === 0 ? 'ein Proton' : 'zwei Protonen'} ab – welches Natriumsalz entsteht dann?`;
+      else hints[0] += ' Bei der Neutralisation entstehen ein Salz und Wasser.';
+      const water = compKey({H:2, O:1});
+      if (S.an !== 'NH3' && !U.p.has(water)) hints.push('Es fehlt noch Wasser (H₂O) auf der Produktseite.');
+      if (S.an === 'NH3' && U.p.has(water)) hints.push('Bei dieser Reaktion entsteht kein Wasser – das Proton der Salzsäure geht direkt auf das Ammoniak-Molekül über.');
+      fb(hints);
+    } else {
+      fb(`Prüfe die Edukte: Es reagiert ${an.name} (${fmtF(RXN[S.an][0].r[0][1])}) mit ${T.name} (${T.f}).`);
+    }
+  }
+  renderRxn();
+}
+const halfSt = () => S.rxn.half[rxnKey()] || (S.rxn.half[rxnKey()] = {});
+const halvesDone = () => { const h = S.rxn.half[rxnKey()]; return !!(h && h.ox && h.red); };
+function checkHalf(w){
+  const hs = halfSt(), inp = $(w === 'ox' ? 'inOx' : 'inRed'), str = inp.value.trim();
+  const nmW = w === 'ox' ? 'Oxidation' : 'Reduktion', nmO = w === 'ox' ? 'Reduktion' : 'Oxidation';
+  const set = (cls, t, p) => { hs['fb' + w] = {cls, t, p:[p].flat().filter(Boolean)}; renderRxn(); };
+  if (!str) return set('bad', 'Noch keine Gleichung', `Gib die Teilgleichung der ${nmW} ein. Elektronen fügst du mit dem Knopf e⁻ ein.`);
+  const U = parseEq(str, true);
+  if (U.err) return set('bad', 'Gleichung nicht lesbar', U.err);
+  const exp = HALF[S.an][w], forms = [exp, ...(exp.alt || [])], cands = forms.map(expMaps);
+  const oth = HALF[S.an][w === 'ox' ? 'red' : 'ox'], oCands = [oth, ...(oth.alt || [])].map(expMaps);
+  const hi = cands.findIndex(C => sameKeys(U.r, C.r) && sameKeys(U.p, C.p));
+  if (hi >= 0){
+    const q = propTo(U, cands[hi]);
+    if (q >= 1 && Number.isInteger(q)){ hs[w] = 'ok'; hs['form' + w] = forms[hi]; hs['fb' + w] = null; renderRxn(); return; }
+    return set('bad', 'Noch nicht richtig', ['Die Teilchen stimmen, aber die Teilgleichung ist noch nicht ausgeglichen.', balanceMsg(U),
+      'Tipp: Gleiche zuerst die Atome des Elements aus, dessen Oxidationszahl sich ändert, dann die Ladung mit Elektronen, danach mit H⁺ und zuletzt H und O mit H₂O.']);
+  }
+  if (oCands.some(C => sameKeys(U.r, C.r) && sameKeys(U.p, C.p))) return set('bad', 'Noch nicht richtig', `Das ist die ${nmO} – hier ist die ${nmW} gefragt.`);
+  if (cands.some(C => sameKeys(U.r, C.p) && sameKeys(U.p, C.r)))
+    return set('bad', 'Noch nicht richtig', w === 'ox' ? 'Die Richtung stimmt nicht: Bei der Oxidation werden Elektronen abgegeben – sie stehen auf der rechten Seite.' : 'Die Richtung stimmt nicht: Bei der Reduktion werden Elektronen aufgenommen – sie stehen auf der linken Seite.');
+  const eL = U.r.has('e⁻'), eR = U.p.has('e⁻');
+  if (!eL && !eR) return set('bad', 'Noch nicht richtig', ['In einer Teilgleichung kommen Elektronen (e⁻) vor.', HALFHINT[S.an][w]]);
+  if (w === 'ox' && eL) return set('bad', 'Noch nicht richtig', ['Bei der Oxidation werden Elektronen abgegeben – sie gehören auf die rechte Seite.', HALFHINT[S.an][w]]);
+  if (w === 'red' && eR) return set('bad', 'Noch nicht richtig', ['Bei der Reduktion werden Elektronen aufgenommen – sie gehören auf die linke Seite.', HALFHINT[S.an][w]]);
+  return set('bad', 'Noch nicht richtig', ['Prüfe die Teilchen: ' + HALFHINT[S.an][w]]);
+}
+function giveHalf(w){
+  const hs = halfSt(), e = HALF[S.an][w];
+  if (!hs[w]){ hs[w] = 'given'; hs['form' + w] = e; $(w === 'ox' ? 'inOx' : 'inRed').value = eqTxt(e); }
+  hs['fb' + w] = null;
+}
+function renderHalves(){
+  const hs = halfSt();
+  for (const w of ['ox', 'red']){
+    const W = w === 'ox' ? 'Ox' : 'Red', st = hs[w], el = $(w + 'Prev'), inp = $('in' + W);
+    inp.disabled = !!st; $('btn' + W + 'Check').disabled = !!st; $('btn' + W + 'Give').disabled = !!st;
+    if (st){ el.innerHTML = `<div class="eq ok">${eqTxt(hs['form' + w] || HALF[S.an][w])}<span class="tagl ${st === 'ok' ? 'good' : 'mid'}">${st === 'ok' ? 'richtig' : 'vorgegeben'}</span></div>`; continue; }
+    let h = '';
+    const v = inp.value.trim();
+    if (v) h += `<div class="lbl">Vorschau</div><div class="eq">${fmtF(qPrev(v).replace(/\^\s*(\d*)\s*([+-])/g, '^$1$2').replace(/<=>|<->|⇌|-->|->|=>|=/g, ' → ')).replace(/</g, '&lt;')}</div>`;
+    const fb = hs['fb' + w];
+    if (fb) h += `<div class="fb ${fb.cls}"><div class="t">${fb.t}</div>${fb.p.map(x => `<p>${x}</p>`).join('')}</div>`;
+    el.innerHTML = h;
+  }
+}
+function clearRxnInputs(){
+  $('inRxn').value = ''; $('inOx').value = ''; $('inRed').value = '';
+  for (const k in S.rxn.half){ S.rxn.half[k].fbox = null; S.rxn.half[k].fbred = null; }
+}
+function renderRxn(){
+  $('halfBlock').hidden = !RX();
+  if (RX()) renderHalves();
+  const lock = RX() && !halvesDone();
+  const key = rxnKey(), st = S.rxn.done[key], e = S.rxn.form[key] || RXN[S.an][epIdx()], el = $('rxnPrev');
+  const inp = $('inRxn');
+  inp.disabled = !!st || lock; $('btnRxnCheck').disabled = !!st || lock; $('btnRxnGive').disabled = !!st || lock;
+  $('btnCheck').disabled = !st; $('checkHint').hidden = !!st;
+  $('checkHint').textContent = RX() ? 'Erst die Teilgleichungen und die Redoxgleichung aufstellen oder vorgeben.' : 'Erst die Reaktionsgleichung aufstellen oder vorgeben.';
+  if (!st && lock){ el.innerHTML = '<p class="note" style="margin-top:0">Stelle zuerst die beiden Teilgleichungen auf (oder lass sie dir vorgeben). Multipliziere sie dann so, dass gleich viele Elektronen abgegeben und aufgenommen werden, und addiere sie.</p>'; return; }
+  if (st){
+    el.innerHTML = `<div class="eq ok">${eqTxt(e)}<span class="tagl ${st === 'ok' ? 'good' : 'mid'}">${st === 'ok' ? 'richtig' : 'vorgegeben'}</span></div>`;
+    return;
+  }
+  let h = '';
+  const v = inp.value.trim();
+  if (v){
+    const pv = fmtF(qPrev(v).replace(/\^\s*(\d*)\s*([+-])/g, '^$1$2').replace(/<=>|<->|⇌|-->|->|=>|=/g, ' → '));
+    h += `<div class="lbl">Vorschau</div><div class="eq">${pv.replace(/</g, '&lt;')}</div>`;
+  }
+  const fb = S.rxn.fb;
+  if (fb) h += `<div class="fb ${fb.cls}"><div class="t">${fb.t}</div>${fb.p.map(x => `<p>${x}</p>`).join('')}</div>`;
+  el.innerHTML = h;
+}
+function epIdx(){ const an = A(); return an.eps.length > 1 ? (+$('epSel').value || 0) : 0; }
+function vSym(){ const an = A(), T = TIT(); return `V<sub>ÄP${an.eps.length > 1 ? epIdx() + 1 : ''}</sub>(${T.f})`; }
+function givenTable(v){
+  const an = A(), T = TIT();
+  const row = (th, sym, val, d, cls) => `<tr${cls ? ` class="${cls}"` : ''}><th>${th}</th><td class="sym">${sym}</td><td class="val">${val}</td><td class="d">${d}</td></tr>`;
+  let h = `<table class="gg">`;
+  h += row('Geg.:', `V₀(${an.f})`, `= ${S.V0} mL`, 'vorgelegtes Volumen der Probe');
+  h += row('', `c(${T.f})`, `= ${fmtC(S.cT)} mol/L`, RX() ? `Konzentration der Maßlösung (${T.name})` : 'Konzentration der Maßlösung');
+  h += row('', vSym(), v > 0 ? `= ${fmt(v, 2)} mL` : '= ? mL', v > 0 ? 'abgelesenes Äquivalenzvolumen' : 'Äquivalenzvolumen – aus deiner Titration ablesen und links eintragen');
+  if (S.Vw > 0) h += row('', 'V(Wasser)', `= ${S.Vw} mL`, 'zusätzlich zugegebenes destilliertes Wasser');
+  h += row('Ges.:', `c₀(${an.cf || an.f})`, '', 'Stoffmengenkonzentration der Probe', 'sep');
+  return h + `</table>`;
+}
+function redoxEndHint(){
+  const an = A();
+  if (an.tit === 'KMnO4') return 'Titriere bis zur ersten bleibenden schwachen Rosafärbung (überschüssiges Permanganat) und lies das Volumen an der Bürette ab.';
+  if (S.an === 'I2') return S.ind === 'starch' ? 'Titriere, bis die Blaufärbung gerade verschwindet, und lies das Volumen an der Bürette ab.' : 'Titriere, bis die Gelbfärbung des Iods gerade verschwindet, und lies das Volumen an der Bürette ab.';
+  return S.ind === 'starch' ? 'Titriere bis zur ersten bleibenden Blaufärbung (überschüssiges Iod) und lies das Volumen an der Bürette ab.' : 'Titriere bis zur ersten bleibenden schwachen Gelbfärbung (überschüssiges Iod) und lies das Volumen an der Bürette ab.';
+}
+function readHint(){
+  if (!S.meter && RX()) return redoxEndHint();
+  if (S.mode === 'E' && S.graph) return 'Lies das Äquivalenzvolumen in der Mitte des Potentialsprungs der Titrationskurve ab.';
+  if (!S.meter) return 'Beobachte den Farbumschlag des Indikators und lies das zugegebene Volumen an der Bürette ab.';
+  if (!S.graph) return 'Notiere die Messwerte, zeichne die Titrationskurve selbst und lies daraus das Äquivalenzvolumen ab.';
+  return S.mode === 'ph' ? 'Lies das Äquivalenzvolumen in der Mitte des steilen Sprungs der Titrationskurve ab.' : 'Lies das Äquivalenzvolumen am Knick der Leitfähigkeitskurve ab.';
+}
+function taskHead(){
+  const an = A(), T = TIT(), v = parseNum($('inVeq').value);
+  return `<div class="task-box"><p><strong>Aufgabe – Probe Nr. ${S.task.no}:</strong> Bestimme die Stoffmengenkonzentration c₀ der ${an.name} durch Titration mit ${T.name}.</p>
+    <p>${readHint()} Stelle die Reaktionsgleichung auf, berechne c₀ und gib dein Ergebnis links ein.</p></div>
+    <div class="step">${givenTable(v)}</div>`;
+}
+function taskBody(){
+  const an = A();
+  let h = `<ol class="howto">
+      <li>Stoffmenge der verbrauchten Maßlösung: n = c · V</li>
+      <li>Stoffmengenverhältnis aus der Reaktionsgleichung</li>
+      <li>Konzentration der Probe: c₀ = n / V₀</li>
+    </ol>`;
+  if (an.eps.length > 1) h += `<p class="note">${an.name} hat zwei Äquivalenzpunkte. Wähle links aus, welchen du abgelesen hast.</p>`;
+  const fb = S.task.fb;
+  if (fb) h += `<div class="fb ${fb.cls}"><div class="t">${fb.t}</div>${fb.p.map(x => `<p>${x}</p>`).join('')}</div>`;
+  return h;
+}
+function checkResult(){
+  if (!S.rxn.done[rxnKey()]) return;
+  const an = A(), T = TIT(), cIn = parseNum($('inC0').value), v = parseNum($('inVeq').value), k = selK();
+  if (!(cIn > 0)){ S.task.fb = {cls:'bad', t:'Keine gültige Zahl', p:['Gib dein Ergebnis als Zahl in mol/L ein, z. B. 0,125.']}; renderCalc(); return; }
+  S.task.attempts++; S.task.cIn = cIn;
+  const dev = (cIn - S.c0) / S.c0, pct = `${dev >= 0 ? '+' : '−'}${fmt(Math.abs(dev) * 100, 1)} %`;
+  if (Math.abs(dev) <= 0.03){
+    if (!S.task.done){ S.task.done = true; S.task.solved++; }
+    S.task.fb = null; S.revealed = true;
+    if (RX()){ giveHalf('ox'); giveHalf('red'); } if (!S.rxn.done[rxnKey()]){ S.rxn.done[rxnKey()] = 'given'; S.rxn.form[rxnKey()] = RXN[S.an][epIdx()]; $('inRxn').value = eqTxt(RXN[S.an][epIdx()], !RX()); }
+    computeAxis(true); renderStatic(); renderTabs();
+    return;
+  }
+  const near = (x, y) => y > 0 && Math.abs(x / y - 1) <= 0.04;
+  const hints = [];
+  // falscher Äquivalenzpunkt gewählt?
+  if (v > 0 && an.eps.length > 1){
+    an.eps.forEach((kk, j) => { if (kk !== k && near(v, Veq(kk))) hints.push(`Dein V<sub>ÄP</sub> = ${fmt(v, 2)} mL gehört zum <strong>${j + 1}. Äquivalenzpunkt</strong> – ausgewählt hast du aber einen anderen. Bis zum ${j + 1}. ÄP hat jedes Teilchen ${an.f} ${kk} ${kk === 1 ? 'Proton' : 'Protonen'} abgegeben.`); });
+  }
+  if (!hints.length){
+    const cOwn = v > 0 ? S.cT * v / (k * S.V0) : NaN;
+    for (const base of [cOwn, S.c0]){
+      if (!(base > 0)) continue;
+      if (near(cIn, base * 1000) || near(cIn, base / 1000)) hints.push('Dein Ergebnis weicht um den Faktor 1000 ab. Prüfe die <strong>Einheiten</strong>: 1 L = 1000 mL, 1 mol = 1000 mmol.');
+      else if (S.Vw > 0 && near(cIn, base * S.V0 / (S.V0 + S.Vw))) hints.push(`Das zugegebene <strong>Wasser</strong> verdünnt die Probe, ändert aber nicht die Stoffmenge n(${an.f}). Rechne nur mit dem vorgelegten Volumen V₀ = ${S.V0} mL.`);
+      else if (RX() && k !== 1 && (near(cIn, base * k) || near(cIn, base * k * k) || near(cIn, base / k))){
+        const fm = S.rxn.form[rxnKey()] || RXN[S.an][0];
+        hints.push(`Prüfe das <strong>Stoffmengenverhältnis</strong> aus der Redoxgleichung: n(${an.cf}) : n(${T.cf}) = ${fm.r[0][0]} : ${fm.r[1][0]}.`);
+      }
+      else if (!RX() && an.eps.length === 1 && an.eps[0] > 1 && (near(cIn, base * 2) || near(cIn, base / 2))) hints.push(`${an.name} ist <strong>zweiprotonig</strong>: Bis zum Äquivalenzpunkt reagiert jedes Teilchen mit 2 ${T.ion}. Also gilt n(${an.f}) = ½ · n(${T.ion}).`);
+      else if (an.eps.length > 1 && (near(cIn, base * 2) || near(cIn, base / 2))) hints.push(`Prüfe das <strong>Stoffmengenverhältnis</strong>: Bis zum 1. ÄP gibt jedes Teilchen ${an.f} ein Proton ab, bis zum 2. ÄP zwei. Passt der Faktor zu dem Äquivalenzpunkt, den du abgelesen hast?`);
+      if (hints.length) break;
+    }
+    if (!hints.length && v > 0 && !near(cIn, cOwn) && near(cIn, S.cT * S.V0 / v)) hints.push(RX() ? `Hast du die <strong>Volumina vertauscht</strong>? Berechne zuerst n(${T.cf}) = c(${T.f}) · V<sub>ÄP</sub>, dann n(${an.cf}) und zuletzt c₀ = n(${an.cf}) / V₀.` : `Hast du die <strong>Volumina vertauscht</strong>? Es gilt c₀ · V₀ = c(${T.f}) · V<sub>ÄP</sub>${k > 1 ? ' / ' + k : ''}, also c₀ = c(${T.f}) · V<sub>ÄP</sub>${k > 1 ? ' / (' + k + ' · V₀)' : ' / V₀'}.`);
+    if (!hints.length && v > 0 && near(cIn, cOwn)) hints.push(Math.abs(dev) <= 0.08
+      ? `Deine Rechnung passt zu deinem V<sub>ÄP</sub> = ${fmt(v, 2)} mL, ist aber knapp daneben. Lies das Äquivalenzvolumen genauer ab – titriere in der Nähe des Sprungs tropfenweise und nimm den Wendepunkt bzw. den Knick.`
+      : `Deine Rechnung passt zu deinem V<sub>ÄP</sub> = ${fmt(v, 2)} mL – das Äquivalenzvolumen selbst stimmt aber nicht. Hast du den Äquivalenzpunkt richtig bestimmt? ${RX() ? 'Er liegt in der Mitte des Potentialsprungs bzw. beim ersten bleibenden Farbumschlag.' : 'Bei der pH-Kurve liegt er in der Mitte des steilen Sprungs, nicht am Umschlagpunkt eines ungeeigneten Indikators.'}`);
+  }
+  if (!hints.length) hints.push(Math.abs(dev) <= 0.08
+    ? 'Knapp daneben. Lies das Äquivalenzvolumen genauer ab und runde erst am Ende.'
+    : `Prüfe Ablesung und Rechnung Schritt für Schritt: n(${T.ion}) = c · V, dann das Stoffmengenverhältnis am Äquivalenzpunkt, dann c₀ = n / V₀.${v > 0 ? '' : ' Tipp: Trag auch dein abgelesenes V<sub>ÄP</sub> ein – dann sind die Hinweise genauer.'}`);
+  S.task.fb = {cls: Math.abs(dev) <= 0.08 ? 'mid' : 'bad', t:`Versuch ${S.task.attempts}: noch nicht richtig`, p:hints};
+  renderStatic(); renderCalc();
+}
+function renderCalc(){
+  const an = A(), T = TIT(), out = $('calcOut');
+  const k = selK(), v = parseNum($('inVeq').value);
+  const typ = an.type === 'acid' ? 'Säure' : 'Base', rx = RX();
+  const typL = rx ? `von ${an.cf}` : `der ${typ}`, aF = an.cf || an.f, tF = T.cf || T.f;
+  renderRxn();
+  if (S.unknown && !S.revealed){ $('calcHead').innerHTML = taskHead(); out.innerHTML = taskBody(); $('calcSideNote').textContent = S.task.attempts ? `Versuche bei dieser Probe: ${S.task.attempts}` : ''; return; }
+  $('calcSideNote').textContent = '';
+  const row = (th, sym, val, d, cls) => `<tr${cls ? ` class="${cls}"` : ''}><th>${th}</th><td class="sym">${sym}</td><td class="val">${val}</td><td class="d">${d}</td></tr>`;
+  let h = '';
+  if (S.unknown){
+    h += `<div class="eq-label">Auflösung – Probe Nr. ${S.task.no}</div><table class="gg">`;
+    h += row('', `c₀(${aF})`, `= <b>${fmtC(S.c0)} mol/L</b>`, 'tatsächliche Konzentration');
+    an.eps.forEach((kk, i) => h += row('', `V<sub>ÄP${an.eps.length > 1 ? i + 1 : ''}</sub>(${T.f})`, `= ${fmt(Veq(kk), 2)} mL`, 'exaktes Äquivalenzvolumen'));
+    if (S.task.cIn !== null) h += row('', 'dein Ergebnis', `= ${fmtSig(S.task.cIn, 4)} mol/L`,
+      S.task.done ? `<span class="result-ok">richtig nach ${S.task.attempts} ${S.task.attempts === 1 ? 'Versuch' : 'Versuchen'}</span>` : '<span class="result-bad">nicht gelöst</span>', 'sep');
+    h += `</table><div class="eq-label" style="margin-top:22px">Lösungsweg${v > 0 ? ' mit deinem abgelesenen Äquivalenzvolumen' : ''}</div>`;
+  }
+  $('calcHead').innerHTML = h + givenTable(v); h = '';
+  if (!(v > 0)){
+    h += `<p class="note">${readHint()} Trage den Wert dann links ein – die Rechnung erscheint hier Schritt für Schritt.</p>`;
+    out.innerHTML = h; return;
+  }
+  const rxnOk = !!S.rxn.done[rxnKey()];
+  const vL = v / 1000, V0L = S.V0 / 1000, n = S.cT * vL, nA = n / k, c = nA / V0L;
+  const rxn = RXN[S.an][an.eps.length > 1 ? epIdx() : 0];
+  const ratio = k === 1 ? `n(${an.f}) = n(${T.f})` : `n(${an.f}) = ½ · n(${T.f})`;
+  h += `<div class="step"><div class="eq-label">1 · Stoffmenge der verbrauchten Maßlösung</div>
+      <div class="eq">n(${tF}) = c(${T.f}) · ${vSym()} = ${fmtC(S.cT)} <span class="frac"><span>mol</span><span>L</span></span> · ${fmt(vL, 5)} L = <b>${fmtSig(n, 4)} mol</b></div>
+      <p class="why">Umrechnung: ${fmt(v, 2)} mL = ${fmt(vL, 5)} L</p></div>
+`;
+  if (!rxnOk){
+    h += `<div class="step"><div class="eq-label">2 · Stoffmenge ${typL} in der Probe</div><p class="note" style="margin-top:0">Stelle zuerst oben die <strong>${rx ? 'Redoxgleichung' : 'Reaktionsgleichung der Neutralisation'}</strong> auf (oder lass sie dir vorgeben) – aus ihr ergibt sich das Stoffmengenverhältnis.</p></div>`;
+  } else {
+  const eR = S.rxn.form[rxnKey()] || RXN[S.an][epIdx()], ca = eR.r[0][0], ct = eR.r[1][0];
+  const g0 = gcd(ca, ct), ra = ca / g0, rt = ct / g0;
+  const fr = ra === rt ? '' : rt === 1 ? `${ra} · ` : (ra === 1 && rt === 2) ? '½ · ' : `<span class="frac"><span>${ra}</span><span>${rt}</span></span> · `;
+  h += `<div class="step"><div class="eq-label">2 · Stoffmenge ${typL} in der Probe</div>
+      <div class="eq">${eqTxt(eR)}&nbsp;&nbsp;⇒&nbsp;&nbsp;n(${aF}) : n(${tF}) = ${ca} : ${ct}</div>
+      <div class="eq" style="margin-top:6px">n(${aF}) = ${fr ? `${fr}n(${tF}) = ${fr}${fmtSig(n, 4)} mol = <b>${fmtSig(nA, 4)} mol</b>` : `n(${tF}) = <b>${fmtSig(nA, 4)} mol</b>`}</div>
+      ${rx ? (ca !== ct ? `<p class="why">Laut Redoxgleichung reagieren ${ca} ${aF} mit ${ct} ${tF}.</p>` : '') : (k > 1 ? `<p class="why">Laut Gleichung reagiert jedes Teilchen ${an.f} mit ${k} ${T.f}.</p>` : '')}</div>
+    <div class="step"><div class="eq-label">3 · Konzentration der Probe</div>
+      <div class="eq big">c₀(${aF}) = <span class="frac"><span>n(${aF})</span><span>V₀(${an.f})</span></span> = <span class="frac"><span>${fmtSig(nA, 4)} mol</span><span>${fmt(V0L, 3)} L</span></span> = <b>${fmtSig(c, 4)} mol/L</b></div>
+      ${S.Vw > 0 ? `<p class="why">Die ${S.Vw} mL Wasser verdünnen die Probe, ändern aber nicht die Stoffmenge n(${aF}). Deshalb wird nur durch V₀ = ${S.V0} mL geteilt.</p>` : ''}</div>`;
+  if (!S.unknown || S.revealed){
+    const dev = (c - S.c0) / S.c0 * 100, good = Math.abs(dev) <= 2;
+    h += `<div class="eq-label" style="margin-top:22px">Vergleich</div><table class="gg">`
+      + row('', 'berechnet', `= ${fmtSig(c, 4)} mol/L`, 'aus deinem abgelesenen Äquivalenzvolumen')
+      + row('', 'tatsächlich', `= ${fmtC(S.c0)} mol/L`, 'eingestellte Konzentration der Probe')
+      + row('', 'Abweichung', `= <span class="${good ? 'result-ok' : 'result-bad'}">${dev >= 0 ? '+' : '−'}${fmt(Math.abs(dev), 1)} %</span>`, '', 'sep')
+      + `</table>`;
+    if (!good) h += `<p class="note">Eine größere Abweichung deutet auf ein ungenau abgelesenes Äquivalenzvolumen hin${an.eps.length > 1 ? ' – oder auf den falschen Äquivalenzpunkt' : ''}. Titriere in der Nähe des Äquivalenzpunkts tropfenweise.</p>`;
+  }
+  }
+  // E°-Bestimmung (Redox)
+  if (rx){
+    h += `<div class="eq-label" style="margin-top:22px">E°-Bestimmung am Halbäquivalenzpunkt</div>`;
+    if (!S.meter){
+      h += `<p class="note" style="margin-top:0">Dafür wird das Potential am Halbäquivalenzpunkt gebraucht – schalte das Potentiometer ein.</p>`;
+    } else {
+      const Vh = v / 2, p = nearestPoint(Vh), meas = p && Math.abs(p.V - Vh) <= 0.3 && Vh <= S.Vt + 1e-9;
+      h += `<div class="eq" style="margin-bottom:6px">V<sub>HÄP</sub> = ½ · V<sub>ÄP</sub> = ${fmt(Vh, 2)} mL&nbsp;&nbsp;⇒&nbsp;&nbsp;`
+        + (meas ? `gemessen: E = ${fmt(p.E, 3)} V&nbsp;&nbsp;⇒&nbsp;&nbsp;<b>E°(${an.couple}) ≈ ${fmt(p.E, 2)} V</b>` : `<span style="color:var(--text-faint)">noch kein Messwert in der Nähe</span>`) + `</div>`;
+      h += `<p class="note">Am Halbäquivalenzpunkt ist die Hälfte der Probe umgesetzt: Oxidierte und reduzierte Form des Redoxpaars ${an.couple} liegen in gleicher Konzentration vor. Nach der Nernst-Gleichung E = E° + (0,059 V / z) · lg(c(Ox) / c(Red)) gilt dort E = E°. Tabellenwert: E° = ${fmt(an.E0, 2)} V.${S.an === 'OX' ? ' Bei Oxalsäure ist das in der Praxis nur eine grobe Näherung, weil das gebildete CO₂ entweicht.' : ''}</p>`;
+    }
+  }
+  // pKs-Bestimmung
+  else if (an.hep.length){
+    h += `<div class="eq-label" style="margin-top:22px">pKs-Bestimmung am Halbäquivalenzpunkt</div>`;
+    if (!S.meter){
+      h += `<p class="note" style="margin-top:0">Dafür wird der pH-Wert am Halbäquivalenzpunkt gebraucht – schalte das pH-Meter ein.</p>`;
+    } else {
+      const v1 = v / k;
+      for (const [fr, idx] of an.hep){
+        const Vh = fr * v1, p = nearestPoint(Vh);
+        const pk = an.type === 'base' ? 'pKs(NH₄⁺)' : (an.pKs.length > 1 ? `pKs${'₁₂₃'[idx]}` : 'pKs');
+        const meas = p && Math.abs(p.V - Vh) <= 0.3 && Vh <= S.Vt + 1e-9;
+        h += `<div class="eq" style="margin-bottom:6px">V<sub>HÄP</sub> = ${fr === 0.5 ? '½' : '1½'} · V<sub>ÄP${an.eps.length > 1 ? '1' : ''}</sub> = ${fmt(Vh, 2)} mL&nbsp;&nbsp;⇒&nbsp;&nbsp;`
+          + (meas ? `gemessen: pH = ${fmt(p.pH, 2)}&nbsp;&nbsp;⇒&nbsp;&nbsp;<b>${pk} ≈ ${fmt(p.pH, 2)}</b>${an.type === 'base' ? `<br>pKb(NH₃) = 14 − ${fmt(p.pH, 2)} ≈ <b>${fmt(14 - p.pH, 2)}</b>` : ''}`
+                  : `<span style="color:var(--text-faint)">noch kein Messwert in der Nähe</span>`) + `</div>`;
+      }
+      h += `<p class="note">Am Halbäquivalenzpunkt ist die Hälfte der ${an.type === 'acid' ? 'Säure' : 'Base'} umgesetzt, es gilt c(HA) = c(A⁻). Nach der Henderson-Hasselbalch-Gleichung pH = pKs + lg(c(A⁻)/c(HA)) folgt dort pH = pKs.${S.an === 'H3PO4' ? ' Beim ersten Halbäquivalenzpunkt der Phosphorsäure weicht der pH-Wert merklich vom pKs ab, weil H₃PO₄ schon recht stark protolysiert ist.' : ''}</p>`;
+    }
+  }
+  out.innerHTML = h;
+}
+
+// ---------- Reiter: Messwerte ----------
+function renderData(){
+  const pts = S.points;
+  $('tblBody').innerHTML = RX() ? pts.map(p => `<tr><td>${fmt(p.V, 2)}</td><td>${fmt(p.E, 3)}</td></tr>`).join('')
+    : pts.map(p => `<tr><td>${fmt(p.V, 2)}</td><td>${fmt(p.pH, 2)}</td><td>${fmtK(p.k)}</td></tr>`).join('');
+  const w = $('tblBody').parentNode.parentNode; w.scrollTop = w.scrollHeight;
+}
+function tableText(sep){
+  const T = TIT();
+  if (RX()) return [`V(${T.f}) in mL${sep}E in V`].concat(S.points.map(p => [fmt(p.V, 2), fmt(p.E, 3)].join(sep))).join('\n');
+  return [`V(${T.f}) in mL${sep}pH${sep}κ in mS/cm`].concat(S.points.map(p => [fmt(p.V, 2), fmt(p.pH, 2), fmtK(p.k)].join(sep))).join('\n');
+}
+
+// ---------- Reiter: Reaktionsgleichungen ----------
+function renderEq(){
+  const an = A(), T = TIT();
+  if (!Object.keys(S.rxn.done).some(k => k.startsWith(S.an + '|'))){
+    $('tab-eq').innerHTML = '<p class="note" style="margin-top:0">Stelle zuerst im Reiter „Auswertung“ die Reaktionsgleichung auf oder lass sie dir dort vorgeben – dann werden hier die Gleichungen mit Erklärungen angezeigt.</p>';
+    return;
+  }
+  const pe = i => fmt(chemAt(Veq(an.eps[i])).pH, 2);
+  let h = '';
+  const blk = (label, eq) => `<div class="eq-label">${label}</div><div class="eq">${eq}</div>`;
+  if (RX()){ $('tab-eq').innerHTML = redoxEqHTML(); return; }
+  switch (S.an){
+    case 'HCl':
+      h += blk('Protolyse in der Probe', 'HCl + H₂O → H₃O⁺ + Cl⁻');
+      h += blk('Neutralisation (Ionenschreibweise)', 'H₃O⁺ + Cl⁻ + Na⁺ + OH⁻ → 2 H₂O + Na⁺ + Cl⁻');
+      h += blk('Nettoreaktion', '<b>H₃O⁺ + OH⁻ → 2 H₂O</b>');
+      h += `<ul class="obs"><li>Am Äquivalenzpunkt liegt nur Natriumchlorid-Lösung vor. Na⁺ und Cl⁻ reagieren nicht mit Wasser → <strong style="color:var(--text)">pH = ${pe(0)}</strong>.</li>
+        <li>Leitfähigkeit: Die sehr gut leitenden H₃O⁺-Ionen werden durch schlechter leitende Na⁺-Ionen ersetzt – κ sinkt bis zum Äquivalenzpunkt und steigt danach durch überschüssige OH⁻-Ionen wieder an.</li></ul>`;
+      break;
+    case 'H2SO4':
+      h += blk('Protolyse in der Probe', 'H₂SO₄ + H₂O → H₃O⁺ + HSO₄⁻ &nbsp;&nbsp;(vollständig)<br>HSO₄⁻ + H₂O ⇌ H₃O⁺ + SO₄²⁻ &nbsp;&nbsp;(pKs = 1,92)');
+      h += blk('Neutralisation', 'H₂SO₄ + 2 NaOH → Na₂SO₄ + 2 H₂O<br><b>H₃O⁺ + OH⁻ → 2 H₂O</b>');
+      h += `<ul class="obs"><li>Beide Protonen sind so sauer, dass sie gemeinsam titriert werden: Es gibt <strong style="color:var(--text)">nur einen Sprung</strong>, und zwar nach der Zugabe von 2 mol NaOH pro mol H₂SO₄.</li>
+        <li>pH am Äquivalenzpunkt: <strong style="color:var(--text)">${pe(0)}</strong> (Natriumsulfat-Lösung). Für die Berechnung gilt n(OH⁻) = 2 · n(H₂SO₄).</li></ul>`;
+      break;
+    case 'HCOOH':
+    case 'CH3COOH': {
+      const [ha, a] = an.sp, pk = fmt(an.pKs[0], 2);
+      h += blk('Protolyse in der Probe (unvollständig)', `${ha} + H₂O ⇌ H₃O⁺ + ${a} &nbsp;&nbsp;(pKs = ${pk})`);
+      h += blk('Neutralisation', `<b>${ha} + OH⁻ → ${a} + H₂O</b>`);
+      h += blk('Am Äquivalenzpunkt: Das Anion reagiert als Base', `${a} + H₂O ⇌ ${ha} + OH⁻`);
+      h += `<ul class="obs"><li>Vor dem Äquivalenzpunkt liegen ${ha} und ${a} nebeneinander vor – ein <strong style="color:var(--text)">Puffersystem</strong>. Deshalb steigt der pH-Wert dort nur flach an (Henderson-Hasselbalch: pH = pKs + lg c(${a})/c(${ha})).</li>
+        <li>Am Äquivalenzpunkt liegt eine Lösung der schwachen Base ${a} vor → <strong style="color:var(--text)">pH = ${pe(0)}</strong>, also im basischen Bereich. Geeignet ist ein Indikator, der im Basischen umschlägt, z. B. Phenolphthalein.</li>
+        <li>Leitfähigkeit: Anfangs gibt es kaum Ionen (schwache Säure). Durch die Bildung von Na⁺ und ${a} steigt κ schon vor dem Äquivalenzpunkt langsam an, danach durch OH⁻ deutlich steiler.</li></ul>`;
+      break; }
+    case 'H3PO4':
+      h += blk('Stufenweise Neutralisation', '1. Stufe: &nbsp;<b>H₃PO₄ + OH⁻ → H₂PO₄⁻ + H₂O</b> &nbsp;&nbsp;(pKs₁ = 2,16)<br>2. Stufe: &nbsp;<b>H₂PO₄⁻ + OH⁻ → HPO₄²⁻ + H₂O</b> &nbsp;&nbsp;(pKs₂ = 7,21)<br>3. Stufe: &nbsp;HPO₄²⁻ + OH⁻ ⇌ PO₄³⁻ + H₂O &nbsp;&nbsp;(pKs₃ = 12,32)');
+      h += `<ul class="obs"><li>Die pKs-Werte liegen weit auseinander, deshalb werden die Protonen nacheinander abgegeben – es entstehen <strong style="color:var(--text)">zwei Sprünge</strong>: ÄP 1 bei pH ${pe(0)} (Dihydrogenphosphat), ÄP 2 bei pH ${pe(1)} (Hydrogenphosphat).</li>
+        <li>Die dritte Stufe ist mit Natronlauge nicht erkennbar: HPO₄²⁻ ist eine so schwache Säure, dass im stark basischen Bereich kein Sprung mehr entsteht.</li>
+        <li>Zwischen den Äquivalenzpunkten liegen zwei Pufferbereiche. Das Volumen bis ÄP 2 ist doppelt so groß wie bis ÄP 1.</li></ul>`;
+      break;
+    case 'NaOH':
+      h += blk('Neutralisation (Ionenschreibweise)', 'Na⁺ + OH⁻ + H₃O⁺ + Cl⁻ → 2 H₂O + Na⁺ + Cl⁻');
+      h += blk('Nettoreaktion', '<b>OH⁻ + H₃O⁺ → 2 H₂O</b>');
+      h += `<ul class="obs"><li>Die Kurve verläuft spiegelbildlich zur Titration von Salzsäure mit Natronlauge: Sie fällt vom stark basischen in den stark sauren Bereich.</li>
+        <li>Am Äquivalenzpunkt liegt Natriumchlorid-Lösung vor → <strong style="color:var(--text)">pH = ${pe(0)}</strong>.</li></ul>`;
+      break;
+    case 'NH3':
+      h += blk('Protolyse in der Probe (unvollständig)', 'NH₃ + H₂O ⇌ NH₄⁺ + OH⁻ &nbsp;&nbsp;(pKb = 4,75)');
+      h += blk('Neutralisation', '<b>NH₃ + H₃O⁺ → NH₄⁺ + H₂O</b>');
+      h += blk('Am Äquivalenzpunkt: Das Ammonium-Ion reagiert als Säure', 'NH₄⁺ + H₂O ⇌ NH₃ + H₃O⁺ &nbsp;&nbsp;(pKs = 9,25)');
+      h += `<ul class="obs"><li>Vor dem Äquivalenzpunkt bilden NH₃ und NH₄⁺ einen Puffer, der pH-Wert fällt nur langsam. Am Halbäquivalenzpunkt gilt pH = pKs(NH₄⁺) = 9,25.</li>
+        <li>Am Äquivalenzpunkt liegt Ammoniumchlorid-Lösung vor → <strong style="color:var(--text)">pH = ${pe(0)}</strong>, also im sauren Bereich. Geeignet ist z. B. Methylrot.</li></ul>`;
+      break;
+  }
+  $('tab-eq').innerHTML = h;
+}
+
+// ---------- Reiter: Indikatoren ----------
+function jumpRange(k){
+  const V = Veq(k), a = chemAt(V * 0.99).pH, b = chemAt(V * 1.01).pH;
+  return [Math.min(a, b), Math.max(a, b)];
+}
+function renderInd(){
+  if (RX()){ $('tab-ind').innerHTML = redoxIndHTML(); return; }
+  const an = A(), ph = S.chem.pH;
+  const pos = p => clamp(p / 14 * 100, 0, 100);
+  const eps = an.eps.map(k => ({k, pH:chemAt(Veq(k)).pH, jr:jumpRange(k)}));
+  let h = `<div class="ph-axis"><span></span><div class="ax">${[0,2,4,6,8,10,12,14].map(x => `<span>${x}</span>`).join('')}</div><span></span></div>`;
+  for (const key of ['mo','mr','btb','pp','tp','uni']){
+    const I = IND[key];
+    const stops = [];
+    for (let p = 0; p <= 14; p += 0.25){ const c = indRGBA(key, p); stops.push(`${c[3] < 0.04 ? 'rgba(0,0,0,0)' : rgba(c)} ${pos(p)}%`); }
+    let tags = '';
+    if (I.uni) tags = `<span class="tagl">nur zur Abschätzung</span>`;
+    else eps.forEach((e, i) => {
+      const mid = (I.lo + I.hi) / 2, inJ = mid >= e.jr[0] && mid <= e.jr[1], ov = I.hi >= e.jr[0] && I.lo <= e.jr[1];
+      const cls = inJ ? 'good' : ov ? 'mid' : 'bad', txt = inJ ? 'geeignet' : ov ? 'bedingt' : 'ungeeignet';
+      tags += `<span class="tagl ${cls}">${eps.length > 1 ? 'ÄP ' + (i + 1) + ': ' : ''}${txt}</span>`;
+    });
+    const jumps = eps.map(e => `<span class="jmp" style="left:${pos(e.jr[0])}%;width:${Math.max(0.6, pos(e.jr[1]) - pos(e.jr[0]))}%"></span><span class="ep" style="left:${pos(e.pH)}%"></span>`).join('');
+    h += `<div class="ind-row"><div class="nm">${I.name}<small>${I.uni ? 'pH 1–13, fließend' : `pH ${fmt(I.lo, 1)}–${fmt(I.hi, 1)} · ${I.na} → ${I.nb}`}</small></div>
+      <div class="ind-bar"><div class="g" style="background:linear-gradient(90deg, ${stops.join(',')})"></div>${jumps}${S.meter ? `<span class="mk" style="left:calc(${pos(ph)}% - 1px)"></span>` : ''}</div>
+      <div>${tags}</div></div>`;
+  }
+  h += `<p class="note">Der helle Streifen zeigt den pH-Bereich, den die Lösung zwischen 99 % und 101 % des Äquivalenzvolumens durchläuft (der „Sprung"), die gestrichelte Linie den pH-Wert am Äquivalenzpunkt${S.meter ? ', die orangefarbene Marke den aktuellen pH-Wert' : ''}. Ein Indikator ist <strong>geeignet</strong>, wenn sein Umschlag innerhalb dieses Sprungs liegt – dann schlägt er mit einem einzigen Tropfen um.</p>`;
+  $('tab-ind').innerHTML = h;
+}
+
+// ---------- Reiter: Teilchenbilanz ----------
+function renderSp(){
+  const el = $('tab-sp');
+  if (S.unknown && !S.revealed){ el.innerHTML = '<p class="note">Im Übungsmodus ausgeblendet, weil die Teilchenbilanz die Konzentration der Probe verraten würde.</p>'; return; }
+  if (RX()){ el.innerHTML = redoxSpHTML(); return; }
+  const an = A(), ch = S.chem, V = ch.Vtot;
+  const rows = [['H₃O⁺', ch.h, '#e4785b'], ['OH⁻', ch.oh, '#6fb7ff']];
+  if (an.type === 'acid' || an.spect === 'Na') rows.push(['Na⁺', ch.Na, '#c9ced5']);
+  if (an.type === 'base' || an.spect === 'Cl') rows.push(['Cl⁻', ch.Cl, '#7fd68a']);
+  if (an.sp) an.sp.forEach((s, i) => rows.push([s, ch.C * ch.a[i], i === 0 ? '#ffb454' : ['#4fd1c5', '#b48cf0', '#f08cc0'][i - 1]]));
+  const mx = Math.max(...rows.map(r => r[1]));
+  let h = `<p class="note" style="margin-top:0">Stoffmengen der gelösten Teilchen im Kolben bei V(${TIT().f}) = ${fmt(S.Vt, 2)} mL, Gesamtvolumen ${fmt(V, 1)} mL. Wassermoleküle sind nicht dargestellt.</p>`;
+  for (const [nm, c, col] of rows){
+    h += `<div class="sp-row"><span class="nm">${nm}</span><span class="bar"><i style="width:${mx > 0 ? (c / mx * 100).toFixed(2) : 0}%;background:${col}"></i></span><span class="num mono">${fmtSig(c * V, 3)} mmol</span></div>`;
+  }
+  h += `<p class="note">Die Balken sind linear skaliert. H₃O⁺ und OH⁻ sind oft so selten, dass ihr Balken nicht sichtbar ist – obwohl genau sie den pH-Wert bestimmen.</p>`;
+  el.innerHTML = h;
+}
+
+// ---------- Redox: Reiter-Inhalte ----------
+function redoxEqHTML(){
+  const an = A(), k = an.eps[0], ep = chemAt(Veq(k)).E;
+  const blk = (label, eq) => `<div class="eq-label">${label}</div><div class="eq">${eq}</div>`;
+  const red = 'MnO₄⁻ + 8 H⁺ + 5 e⁻ → Mn²⁺ + 4 H₂O';
+  let h = '';
+  switch (S.an){
+    case 'FE':
+      h += blk('Oxidation', 'Fe²⁺ → Fe³⁺ + e⁻ &nbsp;&nbsp;| · 5');
+      h += blk('Reduktion', red);
+      h += blk('Redoxgleichung', '<b>5 Fe²⁺ + MnO₄⁻ + 8 H⁺ → 5 Fe³⁺ + Mn²⁺ + 4 H₂O</b>');
+      h += `<ul class="obs"><li>Oxidationszahlen: Fe +II → +III, Mn +VII → +II. Ein MnO₄⁻ nimmt 5 Elektronen auf und oxidiert damit 5 Fe²⁺.</li>`;
+      break;
+    case 'OX':
+      h += blk('Oxidation', 'H₂C₂O₄ → 2 CO₂ + 2 H⁺ + 2 e⁻ &nbsp;&nbsp;| · 5');
+      h += blk('Reduktion', red + ' &nbsp;&nbsp;| · 2');
+      h += blk('Redoxgleichung', '<b>5 H₂C₂O₄ + 2 MnO₄⁻ + 6 H⁺ → 10 CO₂ + 2 Mn²⁺ + 8 H₂O</b>');
+      h += `<ul class="obs"><li>Oxidationszahlen: C +III → +IV, Mn +VII → +II. 10 Elektronen werden übertragen.</li>
+        <li>Die Reaktion startet langsam und wird durch die gebildeten Mn²⁺-Ionen beschleunigt (<strong style="color:var(--text)">Autokatalyse</strong>). In der Praxis wird die Lösung auf etwa 60 °C erwärmt.</li>`;
+      break;
+    case 'H2O2':
+      h += blk('Oxidation', 'H₂O₂ → O₂ + 2 H⁺ + 2 e⁻ &nbsp;&nbsp;| · 5');
+      h += blk('Reduktion', red + ' &nbsp;&nbsp;| · 2');
+      h += blk('Redoxgleichung', '<b>5 H₂O₂ + 2 MnO₄⁻ + 6 H⁺ → 5 O₂ + 2 Mn²⁺ + 8 H₂O</b>');
+      h += `<ul class="obs"><li>Oxidationszahlen: O −I → 0, Mn +VII → +II. Wasserstoffperoxid wirkt hier als Reduktionsmittel, es entsteht Sauerstoff.</li>`;
+      break;
+    case 'I2':
+      h += blk('Reduktion', 'I₂ + 2 e⁻ → 2 I⁻');
+      h += blk('Oxidation', '2 S₂O₃²⁻ → S₄O₆²⁻ + 2 e⁻');
+      h += blk('Redoxgleichung', '<b>I₂ + 2 S₂O₃²⁻ → 2 I⁻ + S₄O₆²⁻</b>');
+      h += `<ul class="obs"><li>Oxidationszahlen: I 0 → −I, S +II → +2,5 (mittlere Oxidationszahl im Tetrathionat-Ion).</li>
+        <li>Die Iodometrie wird oft indirekt genutzt: Ein Oxidationsmittel setzt aus Iodid eine äquivalente Menge Iod frei, das dann mit Thiosulfat titriert wird.</li>`;
+      break;
+    case 'VITC':
+      h += blk('Oxidation', 'C₆H₈O₆ → C₆H₆O₆ + 2 H⁺ + 2 e⁻');
+      h += blk('Reduktion', 'I₂ + 2 e⁻ → 2 I⁻');
+      h += blk('Redoxgleichung', '<b>C₆H₈O₆ + I₂ → C₆H₆O₆ + 2 I⁻ + 2 H⁺</b>');
+      h += `<ul class="obs"><li>Ascorbinsäure (Vitamin C) wird zu Dehydroascorbinsäure oxidiert. Mit dieser Titration lässt sich der Vitamin-C-Gehalt von Säften bestimmen.</li>`;
+      break;
+  }
+  h += `<li>Potential am Äquivalenzpunkt: <strong style="color:var(--text)">E ≈ ${fmt(ep, 2)} V</strong>. Es liegt zwischen den Standardpotentialen der beiden Redoxpaare (E°(${an.couple}) = ${fmt(an.E0, 2)} V, E° der Maßlösung = ${fmt(TITR[an.tit].E0, 2)} V) – näher an dem Paar, bei dem mehr Elektronen übertragen werden.</li></ul>`;
+  return h;
+}
+function redoxIndHTML(){
+  const an = A(), k = an.eps[0];
+  const sw = V => { const col = solRGBA(chemAt(V)); return col && col[3] > 0.02 ? rgba([col[0], col[1], col[2], Math.max(0.15, col[3])]) : 'transparent'; };
+  const nm = V => solName(chemAt(V));
+  const pts = [['Beginn', 0], ['kurz vor dem ÄP', Veq(k) * 0.98], ['1 Tropfen nach dem ÄP', Veq(k) + DROP], ['Überschuss', Veq(k) * 1.2]];
+  let h = `<div class="eq-label">Farbe der Lösung mit der aktuellen Einstellung (${S.ind === 'starch' ? 'mit Stärke' : 'ohne Zusatz'})</div><div class="col-row">`
+    + pts.map(([l, V]) => `<span class="ci"><i style="background:${sw(V)}"></i>${l}<span style="color:var(--text-faint)">${nm(V)}</span></span>`).join('') + `</div>`;
+  if (an.tit === 'KMnO4'){
+    h += `<ul class="obs"><li><strong style="color:var(--text)">Selbstindikation:</strong> Permanganat-Ionen MnO₄⁻ sind intensiv violett, die entstehenden Mn²⁺-Ionen fast farblos. Solange noch Reduktionsmittel vorhanden ist, wird jeder Tropfen sofort entfärbt.</li>
+      <li>Der erste Tropfen im Überschuss färbt die Lösung bleibend schwach rosa – das ist der Endpunkt. Ein zusätzlicher Indikator ist nicht nötig.</li>
+      ${S.an === 'FE' ? '<li>Die entstehenden Fe³⁺-Ionen färben die Lösung schwach gelblich.</li>' : ''}
+      ${S.an === 'OX' ? '<li>Bei Oxalsäure verschwindet die Färbung der ersten Tropfen nur langsam, bis genug Mn²⁺ als Katalysator entstanden ist (Autokatalyse).</li>' : ''}</ul>`;
+  } else {
+    h += `<ul class="obs"><li><strong style="color:var(--text)">Stärke als Indikator:</strong> Stärke bildet mit Iod einen tiefblauen Einschlusskomplex und macht schon sehr kleine Iodmengen sichtbar.</li>
+      <li>${S.an === 'I2' ? 'Iod wird verbraucht: Die Lösung ist zunächst blau und wird am Endpunkt schlagartig farblos.' : 'Iod wird zunächst sofort verbraucht. Der erste Tropfen Iod-Lösung im Überschuss färbt die Lösung bleibend blau.'}</li>
+      <li>Ohne Stärke ist nur die gelbbraune Eigenfarbe des Iods zu sehen. Bei kleinen Konzentrationen ist sie kaum zu erkennen – der Endpunkt lässt sich dann nur ungenau bestimmen.</li>
+      ${S.an === 'I2' ? '<li>In der Praxis gibt man die Stärke erst kurz vor dem Endpunkt zu, wenn die Lösung nur noch hellgelb ist.</li>' : ''}</ul>`;
+  }
+  h += `<p class="note">Für Redox-Titrationen ohne farbige Maßlösung gibt es <strong>Redoxindikatoren</strong>, die bei einem bestimmten Potential die Farbe wechseln, z. B. Ferroin (E° ≈ 1,06 V, rot → blassblau) oder Diphenylamin (E° ≈ 0,76 V, farblos → violett). Ein Redoxindikator ist geeignet, wenn sein Umschlagpotential im Potentialsprung liegt.</p>`;
+  return h;
+}
+function redoxSpHTML(){
+  if (S.unknown && !S.revealed) return '<p class="note">Im Übungsmodus ausgeblendet, weil die Teilchenbilanz die Konzentration der Probe verraten würde.</p>';
+  const ch = S.chem, A0 = ch.nA, T0 = ch.nT, x = ch.x, y = ch.y, xr = ch.xr;
+  const SP = {
+    FE:  [['Fe²⁺', A0 * xr], ['Fe³⁺', A0 * x], ['MnO₄⁻', T0 * (1 - y)], ['Mn²⁺', T0 * y]],
+    OX:  [['H₂C₂O₄', A0 * xr], ['CO₂ (entweicht)', 2 * A0 * x], ['MnO₄⁻', T0 * (1 - y)], ['Mn²⁺', T0 * y]],
+    H2O2:[['H₂O₂', A0 * xr], ['O₂ (entweicht)', A0 * x], ['MnO₄⁻', T0 * (1 - y)], ['Mn²⁺', T0 * y]],
+    I2:  [['I₂', A0 * xr], ['I⁻', 2 * A0 * x], ['S₂O₃²⁻', T0 * (1 - y)], ['S₄O₆²⁻', T0 * y / 2]],
+    VITC:[['C₆H₈O₆', A0 * xr], ['C₆H₆O₆', A0 * x], ['I₂', T0 * (1 - y)], ['I⁻', 2 * T0 * y]]
+  }[S.an];
+  const cols = ['#ffb454', '#4fd1c5', '#b48cf0', '#f08cc0'];
+  const mx = Math.max(...SP.map(r => r[1]));
+  let h = `<p class="note" style="margin-top:0">Stoffmengen der an der Redoxreaktion beteiligten Teilchen bei V(${TIT().f}) = ${fmt(S.Vt, 2)} mL. H⁺-Ionen, Wasser und Zuschauer-Ionen (K⁺, Na⁺, SO₄²⁻) sind nicht dargestellt.</p>`;
+  SP.forEach(([nm, n], i) => {
+    h += `<div class="sp-row"><span class="nm">${nm}</span><span class="bar"><i style="width:${mx > 0 ? (n / mx * 100).toFixed(2) : 0}%;background:${cols[i]}"></i></span><span class="num mono">${fmtSig(n, 3)} mmol</span></div>`;
+  });
+  h += `<p class="note">Vor dem Äquivalenzpunkt wird die Maßlösung vollständig umgesetzt, danach bleibt sie im Überschuss in der Lösung. Die Probe enthält zu Beginn Spuren (0,1 %) der umgesetzten Form, z. B. etwas Fe³⁺ in der Fe²⁺-Lösung – sonst wäre das Potential zu Beginn nach der Nernst-Gleichung nicht definiert.</p>`;
+  return h;
+}
+
+function renderTabs(){ renderCalc(); renderEq(); renderInd(); renderSp(); }
+
+// ---------- Steuerung ----------
+function randomSample(){
+  const an = A(), kL = an.eps[an.eps.length - 1];
+  const Vt = 10 + Math.random() * 26;
+  S.c0 = Number((Vt * S.cT / (kL * S.V0)).toPrecision(3));
+  S.revealed = false;
+  S.task.no = 100 + Math.floor(Math.random() * 900);
+  S.task.total++; S.task.attempts = 0; S.task.done = false; S.task.fb = null; S.task.cIn = null;
+  $('inVeq').value = ''; $('inC0').value = '';
+  S.rxn.done = {}; S.rxn.form = {}; S.rxn.half = {}; S.rxn.fb = null; clearRxnInputs();
+}
+function resetAll(){
+  S.Vt = 0; S.Vemit = 0; S.Vref = 0; S.pending = 0; S.pendStream = false; S.tapOpen = false; S.empty = false;
+  S.points = []; S.lastRecV = 0; S.wasStream = false; S.cursorV = null; S.cursorSticky = false;
+  drops = []; plumes = []; ripples = []; dropAcc = 0; streamOn = false;
+  if (!S.unknown) S.c0 = C0[S.c0i];
+  S.chem = chemAt(0);
+  S.points.push({V:0, pH:S.chem.pH, k:S.chem.kap, E:S.chem.E});
+  computeAxis(true);
+  setTapUI(); renderStatic(); renderReadouts(); renderData(); renderTabs();
+  uiDirty = false; dataDirty = false;
+}
+function paramChanged(newSample){
+  if (S.unknown && newSample) randomSample();
+  resetAll();
+}
+function fillSelects(){
+  const rx = S.kind === 'redox';
+  const grp = list => list.map(([g, items]) => `<optgroup label="${g}">` + items.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') + '</optgroup>').join('');
+  $('selAn').innerHTML = grp(rx ? RX_AN : AB_AN); $('selAn').value = S.an;
+  const cts = rx ? TITR[A().tit].conc : AB_CT;
+  $('selCT').innerHTML = cts.map(c => `<option value="${c}">${fmtC(c)} mol/L</option>`).join(''); $('selCT').value = String(S.cT);
+  $('selInd').innerHTML = (rx ? RX_IND : AB_IND).map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); $('selInd').value = S.ind;
+  $('presetSelect').innerHTML = (rx ? RX_PRE : AB_PRE).map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  $('c0').value = S.c0i;
+}
+function setKind(kind){
+  if (kind === S.kind) return;
+  const snap = {an:S.an, c0i:S.c0i, cT:S.cT, ind:S.ind, mode:S.mode, meter:S.meter};
+  if (S.kind === 'ab') S.abState = snap; else S.rxState = snap;
+  S.kind = kind;
+  const st = kind === 'ab' ? (S.abState || {an:'CH3COOH', c0i:3, cT:0.1, ind:'pp', mode:'ph', meter:true}) : (S.rxState || {an:'FE', c0i:3, cT:0.02, ind:'none', mode:'E', meter:false});
+  S.an = st.an; S.c0i = st.c0i; S.cT = st.cT; S.ind = st.ind;
+  S.meter = st.meter; $('swMeter').checked = S.meter; S.cursorV = null;
+  fillSelects();
+  clearRxnInputs(); S.rxn.fb = null; $('inVeq').value = ''; $('inC0').value = '';
+  plumes = [];
+  setMode(st.mode);
+  paramChanged(true);
+}
+function setMode(m){
+  S.mode = m;
+  $('modePH').classList.toggle('active', m === 'ph'); $('modeK').classList.toggle('active', m === 'k');
+  computeAxis(false); renderStatic();
+}
+
+$('selAn').onchange = e => {
+  S.an = e.target.value; clearRxnInputs(); S.rxn.fb = null;
+  if (RX()){ const an = A(); S.cT = TITR[an.tit].def; S.ind = an.ind; S.c0i = an.c0i; plumes = []; fillSelects(); }
+  paramChanged(true);
+};
+let lastRxnIn = 'inOx';
+for (const id of ['inOx', 'inRed', 'inRxn']) $(id).addEventListener('focus', () => lastRxnIn = id);
+for (const [id, w] of [['Ox', 'ox'], ['Red', 'red']]){
+  $('in' + id).addEventListener('input', () => { halfSt()['fb' + w] = null; renderRxn(); });
+  $('in' + id).addEventListener('keydown', e => { if (e.key === 'Enter') checkHalf(w); });
+  $('btn' + id + 'Check').onclick = () => checkHalf(w);
+  $('btn' + id + 'Give').onclick = () => { giveHalf(w); renderRxn(); };
+}
+$('kindAB').onclick = () => setKind('ab');
+$('kindRX').onclick = () => setKind('redox');
+document.querySelectorAll('#symBar button').forEach(b => {
+  b.addEventListener('pointerdown', e => e.preventDefault());
+  b.addEventListener('click', () => {
+    const i = $(lastRxnIn); if (i.disabled) return;
+    const a = i.selectionStart ?? i.value.length, z = i.selectionEnd ?? a, ins = b.dataset.ins;
+    i.value = i.value.slice(0, a) + ins + i.value.slice(z);
+    i.focus(); i.setSelectionRange(a + ins.length, a + ins.length);
+    S.rxn.fb = null; renderRxn();
+  });
+});
+$('c0').oninput = e => { S.c0i = +e.target.value; paramChanged(false); };
+$('selV0').onchange = e => { S.V0 = +e.target.value; paramChanged(true); };
+$('selVw').onchange = e => { S.Vw = +e.target.value; paramChanged(false); };
+$('selCT').onchange = e => { S.cT = +e.target.value; paramChanged(true); };
+$('selInd').onchange = e => { S.ind = e.target.value; plumes = []; renderStatic(); renderReadouts(); };
+$('modePH').onclick = () => setMode('ph');
+$('swMeter').onchange = e => { S.meter = e.target.checked; S.cursorV = null; renderStatic(); renderTabs(); };
+$('swGraph').onchange = e => { S.graph = e.target.checked; S.cursorV = null; renderStatic(); };
+$('modeK').onclick = () => setMode('k');
+$('swBand').onchange = e => S.band = e.target.checked;
+$('swEP').onchange = e => S.ep = e.target.checked;
+$('swHEP').onchange = e => S.hep = e.target.checked;
+$('swTheo').onchange = e => S.theo = e.target.checked;
+$('swUnk').onchange = e => {
+  S.unknown = e.target.checked;
+  if (S.unknown) randomSample(); else { S.revealed = false; $('inVeq').value = ''; }
+  resetAll();
+};
+$('btnNewSample').onclick = () => { randomSample(); resetAll(); };
+$('btnReveal').onclick = () => { S.revealed = true; S.task.fb = null; if (RX()){ giveHalf('ox'); giveHalf('red'); } if (!S.rxn.done[rxnKey()]){ S.rxn.done[rxnKey()] = 'given'; S.rxn.form[rxnKey()] = RXN[S.an][epIdx()]; $('inRxn').value = eqTxt(RXN[S.an][epIdx()], !RX()); } computeAxis(true); renderStatic(); renderTabs(); };
+$('btnCheck').onclick = checkResult;
+$('inC0').addEventListener('keydown', e => { if (e.key === 'Enter') checkResult(); });
+$('inVeq').addEventListener('keydown', e => { if (e.key === 'Enter' && S.unknown && !S.revealed) $('inC0').focus(); });
+
+$('btnTap').onclick = () => {
+  if (S.empty) return;
+  S.tapOpen = !S.tapOpen;
+  if (S.tapOpen){ S.pending = 0; S.pendStream = false; dropAcc = 0.75; }
+  setTapUI();
+};
+const addPortion = (v, stream) => {
+  if (S.empty) return;
+  if (S.tapOpen){ S.tapOpen = false; setTapUI(); }
+  S.pending = r6(S.pending + v); S.pendStream = stream || S.pendStream;
+};
+$('btnDrop').onclick = () => addPortion(DROP, false);
+$('btnHalf').onclick = () => addPortion(0.5, true);
+$('btnOne').onclick = () => addPortion(1, true);
+$('btnRefill').onclick = () => { S.Vref = S.Vemit; S.empty = false; setTapUI(); };
+$('btnReset').onclick = () => resetAll();
+$('btnPreset').onclick = () => {
+  const p = PRESETS[$('presetSelect').value];
+  S.an = p.an; S.c0i = p.c0i; S.V0 = p.V0; S.Vw = p.Vw; S.cT = p.cT; S.ind = p.ind;
+  const keep = $('presetSelect').value;
+  fillSelects(); $('presetSelect').value = keep;
+  $('selV0').value = p.V0; $('selVw').value = p.Vw;
+  plumes = [];
+  S.meter = p.mode !== 'E'; S.graph = true; $('swMeter').checked = S.meter; $('swGraph').checked = true;
+  clearRxnInputs(); S.rxn.fb = null;
+  if (S.unknown){ S.unknown = false; $('swUnk').checked = false; S.revealed = false; }
+  $('inVeq').value = '';
+  setMode(p.mode);
+  resetAll();
+};
+document.querySelectorAll('.speed-group button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.speed-group button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); S.rate = +b.dataset.rate;
+}));
+document.querySelectorAll('.tabbtn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tabpanel').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $('tab-' + b.dataset.tab).classList.add('active');
+}));
+$('inVeq').addEventListener('input', renderCalc);
+$('epSel').addEventListener('change', () => { S.rxn.fb = null; $('inRxn').value = ''; renderCalc(); });
+$('inRxn').addEventListener('input', () => { S.rxn.fb = null; renderRxn(); });
+$('inRxn').addEventListener('keydown', e => { if (e.key === 'Enter') checkRxn(); });
+$('btnRxnCheck').onclick = checkRxn;
+$('btnRxnGive').onclick = () => { if (RX() && !halvesDone()) return; const e = RXN[S.an][epIdx()]; $('inRxn').value = eqTxt(e, !RX()); S.rxn.done[rxnKey()] = 'given'; S.rxn.form[rxnKey()] = e; S.rxn.fb = null; renderCalc(); renderEq(); };
+
+// Ablesen im Diagramm (Maus, Finger, Stift)
+function cursorFrom(e){
+  const r = cvG.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * WG;
+  if (x < GL - 10 || x > GR + 10) return null;
+  return clamp((x - GL) / (GR - GL), 0, 1) * S.xMax;
+}
+cvG.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) S.cursorV = cursorFrom(e); });
+cvG.addEventListener('pointerdown', e => { S.cursorV = cursorFrom(e); S.cursorSticky = e.pointerType !== 'mouse'; });
+cvG.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') S.cursorV = null; });
+
+// Tabelle kopieren / speichern
+$('btnCopy').onclick = async () => {
+  const txt = tableText('\t');
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (err) {
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+  }
+  $('copyHint').textContent = ok ? `${S.points.length} Messwerte kopiert.` : 'Kopieren nicht möglich – bitte „CSV speichern" verwenden.';
+  setTimeout(() => $('copyHint').textContent = '', 3000);
+};
+$('btnCSV').onclick = () => {
+  const blob = new Blob(['﻿' + tableText(';')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `Titration_${S.an}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+$('btnGuide').onclick = e => { e.preventDefault(); $('guideBackdrop').classList.add('open'); };
+$('closeGuide').onclick = () => $('guideBackdrop').classList.remove('open');
+$('guideBackdrop').onclick = e => { if (e.target.id === 'guideBackdrop') $('guideBackdrop').classList.remove('open'); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('guideBackdrop').classList.remove('open'); });
+
+setupCanvas();
+window.addEventListener('resize', setupCanvas);
+fillSelects();
+resetAll();
+
+let last = performance.now(), sinceUI = 0, sinceTabs = 0;
+function loop(now){
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  update(dt);
+  drawApparatus(); if (S.meter && S.graph) drawGraph();
+  sinceUI += dt; sinceTabs += dt;
+  if (uiDirty && sinceUI > 0.08){ sinceUI = 0; uiDirty = false; renderReadouts(); setTapUI(); }
+  if (dataDirty && sinceTabs > 0.4){ sinceTabs = 0; dataDirty = false; renderData(); renderTabs(); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+})();
+</script>
+
+<script>
+(function(){
+  const bd = document.getElementById("changelogBackdrop");
+  document.getElementById("btnChangelog").addEventListener("click", e=>{ e.preventDefault(); bd.classList.add("open"); });
+  document.getElementById("closeChangelog").addEventListener("click", ()=>bd.classList.remove("open"));
+  bd.addEventListener("click", e=>{ if(e.target===bd) bd.classList.remove("open"); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") bd.classList.remove("open"); });
+})();
+</script>
+</body>
+</html>
