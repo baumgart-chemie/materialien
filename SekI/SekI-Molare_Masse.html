@@ -84,6 +84,8 @@ section.block{margin-bottom:26px;}
 .btn.ghost{background:transparent;}
 .btn.check-btn{width:100%; padding:10px 14px; font-size:14px; border-color:var(--teal-dim); color:var(--teal);}
 .btn.check-btn:hover:not(:disabled){border-color:var(--teal); background:var(--teal-dim); color:var(--text);}
+.btn.check-btn.step-btn{margin-top:10px; padding:7px 12px; font-size:13px;}
+.stepbox.passed .btn.check-btn.step-btn{border-color:#35573a; color:var(--good);}
 .btn:disabled{opacity:.4; cursor:not-allowed;}
 .btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
 
@@ -277,7 +279,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     </div>
     <div class="modal-body">
       <h3>Worum es geht</h3>
-      <p>Zu einer Verbindung mit gegebener Summenformel sollst du die <strong>molare Masse M</strong> berechnen. Sie gibt an, wie viel Gramm ein Mol des Stoffes wiegt (Einheit <strong>g/mol</strong>). Du zählst dazu die Atome, liest die Atommassen im PSE ab und rechnest alles zusammen. Am Ende prüfst du einmal. Die Prüfung meldet, in welchem Schritt noch Fehler stecken.</p>
+      <p>Zu einer Verbindung mit gegebener Summenformel sollst du die <strong>molare Masse M</strong> berechnen. Sie gibt an, wie viel Gramm ein Mol des Stoffes wiegt (Einheit <strong>g/mol</strong>). Du zählst dazu die Atome, liest die Atommassen im PSE ab und rechnest alles zusammen. Jeder Schritt hat einen eigenen <strong>Prüfen-Knopf</strong>, so siehst du sofort, ob dein Zwischenergebnis stimmt. Die Aufgabe ist gelöst, wenn alle drei Schritte richtig sind.</p>
 
       <h3>Schritt 1: Atome zählen</h3>
       <ol>
@@ -297,10 +299,10 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
         <li>Die Summe in u ist die Masse eines Teilchens. Die molare Masse hat <strong>denselben Zahlenwert</strong>, nur mit der Einheit g/mol.</li>
       </ol>
       <div class="formula-box">Ca(OH)<sub>2</sub>: Ca 1 · 40,1 = 40,1 · O 2 · 16,0 = 32,0 · H 2 · 1,0 = 2,0<br>M(Ca(OH)<sub>2</sub>) = 40,1 + 32,0 + 2,0 = 74,1 g/mol</div>
-      <p>Kommazahlen kannst du mit Komma oder Punkt eingeben. Mit <strong>Enter</strong> in einem Eingabefeld prüfst du.</p>
+      <p>Kommazahlen kannst du mit Komma oder Punkt eingeben. Mit <strong>Enter</strong> in einem Eingabefeld prüfst du den Schritt, in dem du gerade schreibst.</p>
 
       <h3>Einstellungen</h3>
-      <p><strong>Einfach</strong>: Elemente und Verbindungen aus zwei Elementen. <strong>Mehratomig</strong>: Verbindungen aus drei oder mehr Elementen, auch mit Elementen an mehreren Stellen. <strong>Klammern</strong>: Formeln mit Klammern. Mit dem Häkchen kommen auch Salze mit <strong>Kristallwasser</strong> vor. Die Teilchen-Darstellung zeigt deine eingetragene Anzahl als Kugeln und darunter, welchen Anteil jedes Element an der Masse hat.</p>
+      <p><strong>Zweiatomig</strong>: Elementmoleküle und Verbindungen aus zwei Elementen. <strong>Mehratomig</strong>: Verbindungen aus drei oder mehr Elementen, auch mit Elementen an mehreren Stellen. <strong>Klammern</strong>: Formeln mit Klammern. Mit dem Häkchen kommen auch Salze mit <strong>Kristallwasser</strong> vor. Die Teilchen-Darstellung zeigt deine eingetragene Anzahl als Kugeln und darunter, welchen Anteil jedes Element an der Masse hat.</p>
 
       <h3>Tipp, Lösung, Auswertung</h3>
       <p>„Tipp“ hilft in vier Stufen: Zählregeln, Elemente im PSE markieren, Anzahl der Atome, Rechnung. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. „Lösung zeigen“ beendet die Aufgabe ohne Wertung. Der Tab <strong>Lösungsweg</strong> erklärt jeden Schritt, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
@@ -316,6 +318,12 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">25.10.2026</span></div>
+      <ul>
+        <li><strong>Prüfen je Schritt:</strong> Atome zählen, Atommassen ablesen und molare Masse berechnen haben jeweils einen eigenen Prüfen-Knopf. Enter prüft den Schritt, in dem gerade geschrieben wird.</li>
+        <li>Stimmt die molare Masse, werden die vorherigen Schritte mitgeprüft. Die Aufgabe ist gelöst, sobald alle drei Schritte richtig sind.</li>
+        <li>Die Aufgabenstufe „Einfach“ heißt jetzt „Zweiatomig“.</li>
+      </ul>
       <div class="vh-ver"><span class="v">V1.0</span><span class="d">14.10.2026</span></div>
       <ul>
         <li>Erste Version: molare Masse aus der vorgegebenen Summenformel berechnen – Atome zählen, Atommassen im PSE ablesen, M in g/mol berechnen.</li>
@@ -333,7 +341,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <h2>Aufgabe</h2>
       <p class="sub-label">Art der Formel</p>
       <div class="mode-toggle big" id="modeToggle">
-        <button data-mode="e">Einfach</button>
+        <button data-mode="e">Zweiatomig</button>
         <button data-mode="m">Mehratomig</button>
         <button data-mode="k">Klammern</button>
         <button data-mode="mix" class="active">Gemischt</button>
@@ -399,7 +407,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
       <div class="task-meta">
         <span class="task-num mono" id="taskNum">Aufgabe 1</span>
-        <span class="chip" id="taskLevel">Einfach</span>
+        <span class="chip" id="taskLevel">Zweiatomig</span>
         <span class="task-ctx" id="taskCtx">Berechne die molare Masse der Verbindung.</span>
       </div>
       <div class="task-prompt" id="taskPrompt"></div>
@@ -415,17 +423,19 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
           <div class="stepbox" id="box1">
             <div class="sh"><span><span class="n">1</span>Atome zählen</span><span class="st" id="st1">offen</span></div>
             <div id="countRows"></div>
+            <button class="btn check-btn step-btn" id="btnCheck1" data-step="1">Anzahl prüfen</button>
           </div>
           <div class="stepbox" id="box2">
             <div class="sh"><span><span class="n">2</span>Atommassen ablesen (u)</span><span class="st" id="st2">offen</span></div>
             <div id="massRows"></div>
+            <button class="btn check-btn step-btn" id="btnCheck2" data-step="2">Atommassen prüfen</button>
           </div>
           <div class="stepbox" id="box3">
             <div class="sh"><span><span class="n">3</span>Molare Masse berechnen</span><span class="st" id="st3">offen</span></div>
             <div class="unit-wrap"><input type="text" id="inM" class="num-in big" inputmode="decimal" autocomplete="off" placeholder="M"><span class="u">g/mol</span></div>
             <p class="stp-note">Summe aus Anzahl · Atommasse aller Elemente.</p>
+            <button class="btn check-btn step-btn" id="btnCheck3" data-step="3">Molare Masse prüfen</button>
           </div>
-          <button class="btn check-btn" id="btnCheck">Prüfen</button>
         </div>
       </div>
 
@@ -459,7 +469,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Molare Masse aus der Summenformel: M = Σ (Anzahl · Atommasse). Atommassen gerundet bzw. auf eine Nachkommastelle nach IUPAC; Werte in Klammern gelten für radioaktive Elemente (Massenzahl des langlebigsten Isotops).</p>
-  <p class="footer-credit">Bastian Baumgart · Molare-Masse-Trainer V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Molare-Masse-Trainer V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -595,7 +605,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     c.Mr = r2(c.p.order.reduce((s,e)=>s + c.p.cnt[e]*EL[e].mr, 0));
     c.Mp = r2(c.p.order.reduce((s,e)=>s + c.p.cnt[e]*EL[e].mp, 0));
   }));
-  const KIND = {e:["Einfach","l1"], m:["Mehratomig","l2"], k:["Klammern","l3"], hy:["Kristallwasser","l3"]};
+  const KIND = {e:["Zweiatomig","l1"], m:["Mehratomig","l2"], k:["Klammern","l3"], hy:["Kristallwasser","l3"]};
 
   // ---------- PSE ----------
   function cellHTML(e){
@@ -682,7 +692,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     $("box2").classList.toggle("passed", t.okA && !t.shown); $("st2").textContent = st(t.okA);
     $("box3").classList.toggle("passed", t.okM && !t.shown); $("st3").textContent = st(t.okM);
     document.querySelectorAll(".cnt-in, .mass-in").forEach(i=>i.readOnly = t.done);
-    $("btnCheck").disabled = t.done;
+    ["btnCheck1","btnCheck2","btnCheck3"].forEach(id=>$(id).disabled = t.done);
     $("btnHint").disabled = t.done;
     $("btnSolve").disabled = t.done;
     draw();
@@ -776,55 +786,83 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     return `Die Atommasse von ${e.n} stimmt nicht. Suche ${e.s} im PSE und lies die Zahl unter dem Symbol ab.`;
   }
 
-  function check(){
-    const t = task; if(t.done) return;
-    t.touched = true;
-    const c = t.c, els = c.p.order, inp = readInputs(), msgs = [];
-
-    // --- Teil 1: Anzahl ---
-    let allN = true, missingN = false;
+  // Teil 1: Anzahl der Atome
+  function evalN(inp, msgs, mark){
+    const els = task.c.p.order; let all = true, missing = false;
     els.forEach(s=>{
       const v = inp.n[s], el = $("n_"+s);
-      if(v===null){ missingN = true; allN = false; el.classList.remove("ok","bad"); return; }
+      if(v===null){ missing = true; all = false; if(mark) el.classList.remove("ok","bad"); return; }
       const m = countMsg(s, v);
-      el.classList.toggle("ok", !m); el.classList.toggle("bad", !!m);
-      if(m){ msgs.push(["bad", m]); allN = false; }
+      if(mark){ el.classList.toggle("ok", !m); el.classList.toggle("bad", !!m); }
+      if(m){ msgs.push(["bad", m]); all = false; }
     });
-    if(missingN) msgs.push(["info", "Trage für jedes Element die Anzahl der Atome ein."]);
-    t.okN = allN;
-
-    // --- Teil 2: Atommassen ---
-    let allA = true, missingA = false;
+    if(missing) msgs.push(["info", "Trage für jedes Element die Anzahl der Atome ein."]);
+    return all;
+  }
+  // Teil 2: Atommassen
+  function evalA(inp, msgs, mark){
+    const els = task.c.p.order; let all = true, missing = false;
     els.forEach(s=>{
       const v = inp.m[s], el = $("m_"+s);
-      if(v===null){ missingA = true; allA = false; el.classList.remove("ok","bad"); return; }
+      if(v===null){ missing = true; all = false; if(mark) el.classList.remove("ok","bad"); return; }
       const m = massMsg(s, v, inp.n[s]);
-      el.classList.toggle("ok", !m); el.classList.toggle("bad", !!m);
-      if(m){ msgs.push(["bad", m]); allA = false; }
+      if(mark){ el.classList.toggle("ok", !m); el.classList.toggle("bad", !!m); }
+      if(m){ msgs.push(["bad", m]); all = false; }
     });
-    if(missingA) msgs.push(["info", "Trage für jedes Element die Atommasse aus dem PSE ein."]);
-    t.okA = allA;
-
-    // --- Teil 3: molare Masse ---
-    const M = inp.M;
+    if(missing) msgs.push(["info", "Trage für jedes Element die Atommasse aus dem PSE ein."]);
+    return all;
+  }
+  // Teil 3: molare Masse
+  function evalM(inp, msgs){
+    const c = task.c, els = c.p.order, M = inp.M;
+    const allN = els.every(s=>inp.n[s]===c.p.cnt[s]);
+    const allA = els.every(s=>massOK(s, inp.m[s]));
     const expOwn = allA ? els.reduce((a,s)=>a + c.p.cnt[s]*inp.m[s], 0) : null;
-    t.okM = M!==null && !isNaN(M) && ((expOwn!==null && near(M, expOwn, 0.15)) || near(M, c.Mr, 0.15) || near(M, c.Mp, 0.15));
-    $("inM").classList.toggle("ok", t.okM); $("inM").classList.toggle("bad", !t.okM && M!==null);
+    const ok = M!==null && !isNaN(M) && ((expOwn!==null && near(M, expOwn, 0.15)) || near(M, c.Mr, 0.15) || near(M, c.Mp, 0.15));
+    $("inM").classList.toggle("ok", ok); $("inM").classList.toggle("bad", !ok && M!==null);
     if(M===null) msgs.push(["info", "Trage die molare Masse in g/mol ein."]);
     else if(isNaN(M)) msgs.push(["bad", "Gib die molare Masse als Zahl ein (Komma erlaubt)."]);
-    else if(!t.okM){
+    else if(!ok){
       const nAll = els.every(s=>validN(inp.n[s])), mAll = els.every(s=>validM(inp.m[s]));
       const stud = nAll && mAll ? els.reduce((a,s)=>a + inp.n[s]*inp.m[s], 0) : null;
       const plain = mAll ? els.reduce((a,s)=>a + inp.m[s], 0) : null;
       if(stud!==null && near(M, stud, 0.15) && !(allN && allA)){
-        msgs.push(["bad", `Deine Rechnung passt zu deinen Eingaben, das ist ein Folgefehler. Korrigiere zuerst ${!allN ? "die Anzahl der Atome" : "die Atommassen"}, dann ändert sich auch die molare Masse.`]);
+        msgs.push(["bad", `Deine Rechnung passt zu deinen Eingaben, das ist ein Folgefehler. Prüfe zuerst ${!allN ? "Schritt 1 (Anzahl der Atome)" : "Schritt 2 (Atommassen)"}, dann ändert sich auch die molare Masse.`]);
       } else if(plain!==null && near(M, plain, 0.15) && els.some(s=>c.p.cnt[s]>1)){
         msgs.push(["bad", "Du hast die Atommassen nur addiert. Jede Atommasse muss vorher mit der Anzahl der Atome multipliziert werden."]);
       } else if(near(M, c.Mr*1000, 1) || near(M, c.Mp*1000, 1) || near(M, c.Mr/1000, 0.001) || near(M, c.Mp/1000, 0.001)){
         msgs.push(["bad", "Achte auf die Einheit: Gesucht ist die molare Masse in g/mol. Sie hat denselben Zahlenwert wie die Teilchenmasse in u."]);
       } else {
-        msgs.push(["bad", `Die molare Masse stimmt noch nicht. Rechne für jedes Element Anzahl · Atommasse und addiere alle Teilergebnisse.`]);
+        msgs.push(["bad", "Die molare Masse stimmt noch nicht. Rechne für jedes Element Anzahl · Atommasse und addiere alle Teilergebnisse."]);
         if(stud!==null && allN && allA) msgs.push(["hint", `Kontrolle deiner Teilergebnisse: ${els.map(s=>`${s} ${fmt(inp.n[s]*inp.m[s])}`).join(" + ")}`]);
+      }
+    }
+    return ok;
+  }
+
+  function check(step){
+    const t = task; if(t.done) return;
+    t.touched = true;
+    const c = t.c, els = c.p.order, inp = readInputs(), msgs = [], good = [];
+    if(step===1){
+      t.okN = evalN(inp, msgs, true);
+      if(t.okN) good.push(t.okA && t.okM ? "Die Anzahl der Atome stimmt." : "Die Anzahl der Atome stimmt. Weiter mit Schritt 2: Atommassen im PSE ablesen.");
+    } else if(step===2){
+      t.okA = evalA(inp, msgs, true);
+      if(t.okA) good.push(t.okN && t.okM ? "Die Atommassen stimmen." : "Die Atommassen stimmen. Weiter mit Schritt 3: molare Masse berechnen.");
+    } else {
+      t.okM = evalM(inp, msgs);
+      if(t.okM){
+        // vorherige Schritte mitprüfen
+        const pre = [];
+        if(!t.okN) t.okN = evalN(inp, pre, true);
+        if(!t.okA) t.okA = evalA(inp, pre, true);
+        if(t.okN && t.okA) good.push("Die molare Masse stimmt.");
+        else {
+          const open = [!t.okN && "Schritt 1", !t.okA && "Schritt 2"].filter(Boolean).join(" und ");
+          good.push(`Die molare Masse stimmt, aber in ${open} ist noch ein Fehler.`);
+          msgs.push(...pre.filter(m=>m[0]==="bad"));
+        }
       }
     }
 
@@ -832,21 +870,23 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       t.done = true;
       const firstTry = !t.wrong && t.hint===0;
       stats.solved++; if(firstTry) stats.first++; stats.streak++;
+      const M = inp.M;
+      const own = els.reduce((a,s)=>a + c.p.cnt[s]*inp.m[s], 0);
       $("inM").value = fmt(M);
       $("feedback").innerHTML = fb("good", `Richtig${firstTry ? " im ersten Versuch" : ""}! M(<span class="nm">${fHTML(c.f)}</span>) = ${fmt(M)} g/mol`) +
-        fb("info", `Rechnung: ${els.map(s=>`${c.p.cnt[s]} · ${fmt(inp.m[s])}`).join(" + ")} = ${fmt(expOwn)}. Die Teilchenmasse beträgt ${fmt(expOwn)} u, ein Mol ${c.name} wiegt also ${fmt(expOwn)} g.`);
+        fb("info", `Rechnung: ${els.map(s=>`${c.p.cnt[s]} · ${fmt(inp.m[s])}`).join(" + ")} = ${fmt(own)}. Die Teilchenmasse beträgt ${fmt(own)} u, ein Mol ${c.name} wiegt also ${fmt(own)} g.`);
       t.usedMasses = Object.assign({}, inp.m);
       logHistory(t, firstTry ? "first" : "ok");
       renderTask(); renderWay(); updateStats();
       return;
     }
     if(msgs.some(m=>m[0]==="bad")){ t.wrong = true; stats.streak = 0; }
-    const good = [];
-    if(t.okN) good.push("Die Anzahl der Atome stimmt.");
-    if(t.okA) good.push("Die Atommassen stimmen.");
-    if(t.okM && !(t.okN && t.okA)) good.push("Die molare Masse stimmt, aber in den Schritten davor ist noch ein Fehler.");
     $("feedback").innerHTML = good.map(m=>fb("good", m)).join("") + msgs.map(m=>fb(m[0], m[1])).join("");
     renderTask(); updateStats();
+    if(good.length && !msgs.length){
+      const next = step===1 ? document.querySelector("#massRows input") : step===2 ? $("inM") : null;
+      if(next && !next.value) next.focus({preventScroll:true});
+    }
   }
 
   // ---------- Tipps ----------
@@ -962,10 +1002,14 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     draw();
   }
   document.querySelector(".inputs").addEventListener("input", onInput);
-  document.querySelector(".inputs").addEventListener("keydown", ev=>{ if(ev.key==="Enter" && ev.target.classList.contains("num-in")) check(); });
+  document.querySelector(".inputs").addEventListener("keydown", ev=>{
+    const el = ev.target;
+    if(ev.key!=="Enter" || !el.classList.contains("num-in")) return;
+    check(el.classList.contains("cnt-in") ? 1 : el.classList.contains("mass-in") ? 2 : 3);
+  });
 
   $("btnNew").addEventListener("click", newTask);
-  $("btnCheck").addEventListener("click", check);
+  ["btnCheck1","btnCheck2","btnCheck3"].forEach(id=>$(id).addEventListener("click", ()=>check(+$(id).dataset.step)));
   $("btnHint").addEventListener("click", hint);
   $("btnSolve").addEventListener("click", solve);
 
