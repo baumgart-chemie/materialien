@@ -44,6 +44,13 @@ header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--am
 header .status.running{color:var(--amber); border-color:var(--amber-dim);}
 header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
 header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; align-self:center; color:var(--text-dim); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:5px 11px 5px 9px; white-space:nowrap;
+}
+.back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+.back-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.back-btn .ar{color:var(--teal); font-size:14px; line-height:1;}
 .guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
 .guide-link:hover{border-bottom-color:var(--teal);}
 @media (max-width:600px){ header{padding:18px 16px 14px;} }
@@ -259,6 +266,7 @@ svg .lp.n{stroke:var(--nitro);}
 </head>
 <body>
 <header>
+  <a href="../index.html" class="back-btn" title="Zur Übersicht aller Simulationen"><span class="ar" aria-hidden="true">←</span>Zurück</a>
   <h1>Nomenklatur – funktionelle Gruppen</h1>
   <span class="tag">Carbonsäuren, Aldehyde, Ketone, Alkohole und Amine nach IUPAC benennen</span>
   <a href="#" class="guide-link" id="btnGuide">Anleitung</a>

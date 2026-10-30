@@ -31,6 +31,26 @@ header{
 header h1{font-size:20px; letter-spacing:.2px;}
 header .tag{color:var(--text-dim); font-size:13.5px;}
 
+/* QR-Code zur Startseite */
+.qr-btn{
+  margin-left:auto; align-self:center; display:flex; align-items:center; gap:10px;
+  background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:5px 12px 5px 5px;
+  color:var(--text-dim); font:inherit; font-size:12.5px; line-height:1.3; text-align:left; cursor:pointer;
+}
+.qr-btn:hover{border-color:var(--teal); color:var(--text);}
+.qr-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.qr-btn .qr-svg{width:66px; height:66px; display:block; border-radius:2px;}
+.qr-btn b{display:block; color:var(--text); font-weight:600;}
+.qr-modal{display:none; position:fixed; inset:0; z-index:100; background:rgba(8,10,12,.82); align-items:center; justify-content:center; padding:20px;}
+.qr-modal.open{display:flex;}
+.qr-box{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:22px 24px 20px; text-align:center; max-width:94vw;}
+.qr-box .qr-svg{width:min(62vh,80vw,520px); height:auto; display:block; margin:0 auto; border-radius:4px;}
+.qr-box .qr-url{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:clamp(16px,2.6vw,26px); color:var(--text); margin:16px 0 4px; word-break:break-all;}
+.qr-box .qr-hint{font-size:13px; color:var(--text-dim); margin:0 0 14px;}
+.qr-close{background:var(--panel-alt); border:1px solid var(--line); color:var(--text); border-radius:var(--radius); padding:8px 18px; font:inherit; font-size:13px; cursor:pointer;}
+.qr-close:hover{border-color:var(--text-faint);}
+@media (max-width:600px){ .qr-btn span{display:none;} .qr-btn{padding:4px;} }
+
 /* Rubrik-Navigation als Tabs */
 nav{
   position:sticky; top:0; z-index:10; background:var(--bg);
@@ -99,7 +119,20 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 <header>
   <h1>Chemie</h1>
   <span class="tag">Interaktive Simulationen und Übungen</span>
+  <button type="button" class="qr-btn" id="qrBtn" aria-haspopup="dialog" title="QR-Code vergrößern">
+    <svg class="qr-svg" viewBox="0 0 37 37" role="img" aria-label="QR-Code: https://chemie.mail-baumgart.de/" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#000" d="M4 4h7v1h-7zM12 4h3v1h-3zM17 4h3v1h-3zM23 4h2v1h-2zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h2v1h-2zM16 5h2v1h-2zM20 5h3v1h-3zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM14 6h3v1h-3zM20 6h1v1h-1zM22 6h2v1h-2zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h2v1h-2zM18 7h2v1h-2zM21 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM13 8h1v1h-1zM15 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM23 8h1v1h-1zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM14 9h2v1h-2zM17 9h1v1h-1zM19 9h2v1h-2zM22 9h2v1h-2zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM19 11h6v1h-6zM4 12h1v1h-1zM6 12h2v1h-2zM9 12h3v1h-3zM16 12h2v1h-2zM19 12h1v1h-1zM21 12h3v1h-3zM26 12h1v1h-1zM29 12h1v1h-1zM31 12h2v1h-2zM5 13h1v1h-1zM9 13h1v1h-1zM11 13h1v1h-1zM13 13h1v1h-1zM16 13h4v1h-4zM22 13h7v1h-7zM32 13h1v1h-1zM6 14h1v1h-1zM8 14h6v1h-6zM15 14h1v1h-1zM17 14h1v1h-1zM20 14h1v1h-1zM22 14h1v1h-1zM26 14h1v1h-1zM30 14h2v1h-2zM4 15h5v1h-5zM12 15h4v1h-4zM20 15h1v1h-1zM22 15h7v1h-7zM32 15h1v1h-1zM5 16h1v1h-1zM7 16h1v1h-1zM10 16h2v1h-2zM13 16h1v1h-1zM18 16h2v1h-2zM21 16h1v1h-1zM23 16h1v1h-1zM29 16h2v1h-2zM4 17h2v1h-2zM11 17h1v1h-1zM14 17h2v1h-2zM18 17h1v1h-1zM20 17h2v1h-2zM23 17h2v1h-2zM26 17h1v1h-1zM30 17h3v1h-3zM5 18h1v1h-1zM7 18h4v1h-4zM13 18h1v1h-1zM15 18h3v1h-3zM19 18h2v1h-2zM23 18h1v1h-1zM25 18h3v1h-3zM30 18h3v1h-3zM4 19h5v1h-5zM11 19h6v1h-6zM18 19h1v1h-1zM20 19h1v1h-1zM24 19h1v1h-1zM27 19h2v1h-2zM31 19h1v1h-1zM4 20h1v1h-1zM6 20h3v1h-3zM10 20h4v1h-4zM15 20h1v1h-1zM18 20h2v1h-2zM22 20h3v1h-3zM27 20h3v1h-3zM31 20h1v1h-1zM5 21h1v1h-1zM9 21h1v1h-1zM15 21h2v1h-2zM18 21h1v1h-1zM20 21h1v1h-1zM22 21h1v1h-1zM24 21h1v1h-1zM27 21h1v1h-1zM29 21h3v1h-3zM4 22h1v1h-1zM6 22h2v1h-2zM9 22h4v1h-4zM17 22h6v1h-6zM24 22h1v1h-1zM26 22h1v1h-1zM28 22h1v1h-1zM30 22h1v1h-1zM6 23h1v1h-1zM11 23h2v1h-2zM14 23h2v1h-2zM17 23h5v1h-5zM24 23h1v1h-1zM26 23h3v1h-3zM30 23h1v1h-1zM4 24h5v1h-5zM10 24h2v1h-2zM15 24h1v1h-1zM17 24h6v1h-6zM24 24h7v1h-7zM12 25h2v1h-2zM15 25h1v1h-1zM24 25h1v1h-1zM28 25h5v1h-5zM4 26h7v1h-7zM12 26h3v1h-3zM16 26h1v1h-1zM18 26h1v1h-1zM20 26h5v1h-5zM26 26h1v1h-1zM28 26h2v1h-2zM31 26h1v1h-1zM4 27h1v1h-1zM10 27h1v1h-1zM12 27h3v1h-3zM17 27h2v1h-2zM24 27h1v1h-1zM28 27h2v1h-2zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM13 28h1v1h-1zM19 28h1v1h-1zM21 28h2v1h-2zM24 28h5v1h-5zM30 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM12 29h2v1h-2zM16 29h1v1h-1zM19 29h2v1h-2zM23 29h3v1h-3zM27 29h3v1h-3zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h3v1h-3zM18 30h1v1h-1zM20 30h4v1h-4zM27 30h1v1h-1zM30 30h1v1h-1zM32 30h1v1h-1zM4 31h1v1h-1zM10 31h1v1h-1zM16 31h1v1h-1zM19 31h2v1h-2zM22 31h1v1h-1zM24 31h1v1h-1zM26 31h2v1h-2zM29 31h1v1h-1zM31 31h1v1h-1zM4 32h7v1h-7zM12 32h1v1h-1zM15 32h3v1h-3zM22 32h4v1h-4zM27 32h1v1h-1zM31 32h1v1h-1z"/></svg>
+    <span><b>Auf dem Handy öffnen</b>QR-Code antippen zum Vergrößern</span>
+  </button>
 </header>
+
+<div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-label="QR-Code zur Startseite">
+  <div class="qr-box">
+    <svg class="qr-svg" viewBox="0 0 37 37" role="img" aria-label="QR-Code: https://chemie.mail-baumgart.de/" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#000" d="M4 4h7v1h-7zM12 4h3v1h-3zM17 4h3v1h-3zM23 4h2v1h-2zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h2v1h-2zM16 5h2v1h-2zM20 5h3v1h-3zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM14 6h3v1h-3zM20 6h1v1h-1zM22 6h2v1h-2zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h2v1h-2zM18 7h2v1h-2zM21 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM13 8h1v1h-1zM15 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM23 8h1v1h-1zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM14 9h2v1h-2zM17 9h1v1h-1zM19 9h2v1h-2zM22 9h2v1h-2zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM19 11h6v1h-6zM4 12h1v1h-1zM6 12h2v1h-2zM9 12h3v1h-3zM16 12h2v1h-2zM19 12h1v1h-1zM21 12h3v1h-3zM26 12h1v1h-1zM29 12h1v1h-1zM31 12h2v1h-2zM5 13h1v1h-1zM9 13h1v1h-1zM11 13h1v1h-1zM13 13h1v1h-1zM16 13h4v1h-4zM22 13h7v1h-7zM32 13h1v1h-1zM6 14h1v1h-1zM8 14h6v1h-6zM15 14h1v1h-1zM17 14h1v1h-1zM20 14h1v1h-1zM22 14h1v1h-1zM26 14h1v1h-1zM30 14h2v1h-2zM4 15h5v1h-5zM12 15h4v1h-4zM20 15h1v1h-1zM22 15h7v1h-7zM32 15h1v1h-1zM5 16h1v1h-1zM7 16h1v1h-1zM10 16h2v1h-2zM13 16h1v1h-1zM18 16h2v1h-2zM21 16h1v1h-1zM23 16h1v1h-1zM29 16h2v1h-2zM4 17h2v1h-2zM11 17h1v1h-1zM14 17h2v1h-2zM18 17h1v1h-1zM20 17h2v1h-2zM23 17h2v1h-2zM26 17h1v1h-1zM30 17h3v1h-3zM5 18h1v1h-1zM7 18h4v1h-4zM13 18h1v1h-1zM15 18h3v1h-3zM19 18h2v1h-2zM23 18h1v1h-1zM25 18h3v1h-3zM30 18h3v1h-3zM4 19h5v1h-5zM11 19h6v1h-6zM18 19h1v1h-1zM20 19h1v1h-1zM24 19h1v1h-1zM27 19h2v1h-2zM31 19h1v1h-1zM4 20h1v1h-1zM6 20h3v1h-3zM10 20h4v1h-4zM15 20h1v1h-1zM18 20h2v1h-2zM22 20h3v1h-3zM27 20h3v1h-3zM31 20h1v1h-1zM5 21h1v1h-1zM9 21h1v1h-1zM15 21h2v1h-2zM18 21h1v1h-1zM20 21h1v1h-1zM22 21h1v1h-1zM24 21h1v1h-1zM27 21h1v1h-1zM29 21h3v1h-3zM4 22h1v1h-1zM6 22h2v1h-2zM9 22h4v1h-4zM17 22h6v1h-6zM24 22h1v1h-1zM26 22h1v1h-1zM28 22h1v1h-1zM30 22h1v1h-1zM6 23h1v1h-1zM11 23h2v1h-2zM14 23h2v1h-2zM17 23h5v1h-5zM24 23h1v1h-1zM26 23h3v1h-3zM30 23h1v1h-1zM4 24h5v1h-5zM10 24h2v1h-2zM15 24h1v1h-1zM17 24h6v1h-6zM24 24h7v1h-7zM12 25h2v1h-2zM15 25h1v1h-1zM24 25h1v1h-1zM28 25h5v1h-5zM4 26h7v1h-7zM12 26h3v1h-3zM16 26h1v1h-1zM18 26h1v1h-1zM20 26h5v1h-5zM26 26h1v1h-1zM28 26h2v1h-2zM31 26h1v1h-1zM4 27h1v1h-1zM10 27h1v1h-1zM12 27h3v1h-3zM17 27h2v1h-2zM24 27h1v1h-1zM28 27h2v1h-2zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM13 28h1v1h-1zM19 28h1v1h-1zM21 28h2v1h-2zM24 28h5v1h-5zM30 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM12 29h2v1h-2zM16 29h1v1h-1zM19 29h2v1h-2zM23 29h3v1h-3zM27 29h3v1h-3zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h3v1h-3zM18 30h1v1h-1zM20 30h4v1h-4zM27 30h1v1h-1zM30 30h1v1h-1zM32 30h1v1h-1zM4 31h1v1h-1zM10 31h1v1h-1zM16 31h1v1h-1zM19 31h2v1h-2zM22 31h1v1h-1zM24 31h1v1h-1zM26 31h2v1h-2zM29 31h1v1h-1zM31 31h1v1h-1zM4 32h7v1h-7zM12 32h1v1h-1zM15 32h3v1h-3zM22 32h4v1h-4zM27 32h1v1h-1zM31 32h1v1h-1z"/></svg>
+    <p class="qr-url">chemie.mail-baumgart.de</p>
+    <p class="qr-hint">Mit der Kamera scannen, um die Simulationen auf dem eigenen Gerät zu öffnen.</p>
+    <button type="button" class="qr-close" id="qrClose">Schließen</button>
+  </div>
+</div>
 
 <nav id="nav"></nav>
 
@@ -130,8 +163,8 @@ const rubriken = [
         titel: "Berechnung der molaren Masse",
         beschreibung: "Von der Summenformel zur molaren Masse – Atommassen im Periodensystem ablesen und mit der Anzahl der Atome verrechnen.",
         link: "SekI/SekI-Molare_Masse.html",
-        version: "1.1",
-        neu: "eigener Prüfen-Button für jeden Teilschritt, Stufe „Zweiatomig“"
+        version: "1.2",
+        neu: "PSE zeigt bei „gerundet“ gerundete Atommassen, eigener Prüfen-Button für jeden Teilschritt"
       },
       {
         titel: "Summenformeln aufstellen",
@@ -162,15 +195,21 @@ const rubriken = [
         neu: "Formel zeichnen (iPad & Stift), Mehrfachauswahl der Stoffklassen, Fehlerbehebungen im Freihand-Modus"
       },
       {
+        titel: "Simulation „Erdölraffination“",
+        beschreibung: "Erdölaufbereitung zu Kraftstoffen – Rohöl wählen, Destillation, Konversion & Veredelung mit eigenen Betriebsbedingungen durchspielen.",
+        link: "EP/EP-Raffination.html",
+        version: "1.0"
+      },
+      {
         titel: "Verbrennungsenthalpie von Alkanen",
         beschreibung: "Reaktionsgleichung der Verbrennung aufstellen und ΔcH mit mittleren Bindungsenthalpien abschätzen – mit Energiediagramm & Vergleich mit Literaturwerten.",
         link: "EP/EP-Verbrennungsenthalpie.html",
         version: "1.2"
       },
       {
-        titel: "Simulation „Erdölraffination“",
-        beschreibung: "Erdölaufbereitung zu Kraftstoffen – Rohöl wählen, Destillation, Konversion & Veredelung mit eigenen Betriebsbedingungen durchspielen.",
-        link: "EP/EP-Raffination.html",
+        titel: "Oxidationszahlen bestimmen",
+        beschreibung: "Anorganische Verbindungen & Ionen per Summenregel, organische Verbindungen in Valenzstrichformeln – dazu Oxidation und Reduktion in Redoxreaktionen erkennen.",
+        link: "EP/EP-Oxidationszahlen.html",
         version: "1.0"
       }
   ]},
@@ -200,6 +239,12 @@ const rubriken = [
         titel: "Simulation „Galvanische Zelle“",
         beschreibung: "Halbzellen kombinieren – Elektrodenvorgänge, Nernst-Gleichung & Zellspannung.",
         link: "Q2/2-Galvanische_Zelle.html",
+        version: "1.0"
+      },
+      {
+        titel: "Redoxgleichungen aufstellen",
+        beschreibung: "Teilgleichungen mit Oxidationszahlen, Gesamtgleichung mit Elektronenausgleich & Stoffgleichung – 44 anorganische und organische Redoxreaktionen in drei Stufen, Strukturformeln & Drag & Drop.",
+        link: "Q2/2-Redoxgleichungen.html",
         version: "1.0"
       }
   ]},
@@ -263,6 +308,15 @@ rubriken.forEach(r => {
       ${inhalt}
     </section>`);
 });
+
+/* QR-Code vergrößern */
+const qrModal = document.getElementById("qrModal");
+const qrOpen = () => { qrModal.classList.add("open"); document.getElementById("qrClose").focus(); };
+const qrShut = () => { qrModal.classList.remove("open"); document.getElementById("qrBtn").focus(); };
+document.getElementById("qrBtn").addEventListener("click", qrOpen);
+document.getElementById("qrClose").addEventListener("click", qrShut);
+qrModal.addEventListener("click", e => { if (e.target === qrModal) qrShut(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && qrModal.classList.contains("open")) qrShut(); });
 
 /* aktive Rubrik in der Navigation markieren */
 const links = [...nav.querySelectorAll("a")];

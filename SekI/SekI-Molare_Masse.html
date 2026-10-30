@@ -32,6 +32,13 @@ header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--am
 header .status.running{color:var(--amber); border-color:var(--amber-dim);}
 header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
 header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; align-self:center; color:var(--text-dim); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:5px 11px 5px 9px; white-space:nowrap;
+}
+.back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+.back-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.back-btn .ar{color:var(--teal); font-size:14px; line-height:1;}
 .guide-link{color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim); padding-bottom:1px;}
 .guide-link:hover{border-bottom-color:var(--teal);}
 @media (max-width:600px){ header{padding:18px 16px 14px;} }
@@ -265,6 +272,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 <body>
 
 <header>
+  <a href="../index.html" class="back-btn" title="Zur Übersicht aller Simulationen"><span class="ar" aria-hidden="true">←</span>Zurück</a>
   <h1>Berechnung der molaren Masse</h1>
   <span class="tag">Von der Summenformel zur molaren Masse</span>
   <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
@@ -290,7 +298,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       </ol>
 
       <h3>Schritt 2: Atommassen ablesen</h3>
-      <p>Die <strong>Atommasse</strong> steht im PSE unter dem Elementsymbol (Einheit u). Verwechsle sie nicht mit der <strong>Ordnungszahl</strong> oben links. Im PSE stehen die Atommassen mit einer Nachkommastelle. Du darfst sie auch auf ganze Zahlen runden (Chlor 35,5 und Kupfer 63,5 bleiben). Beide Varianten werden als richtig erkannt. Mit welchen Werten Tipps und Lösungsweg rechnen, stellst du links bei „Rechnen mit Atommassen“ ein.</p>
+      <p>Die <strong>Atommasse</strong> steht im PSE unter dem Elementsymbol (Einheit u). Verwechsle sie nicht mit der <strong>Ordnungszahl</strong> oben links. Links bei „Rechnen mit Atommassen“ stellst du ein, ob das PSE die Atommassen mit einer Nachkommastelle oder gerundet anzeigt (gerundet: ganze Zahlen, z. B. Chlor 36 und Kupfer 64). Tipps und Lösungsweg rechnen mit denselben Werten. Bei der Prüfung werden beide Varianten als richtig erkannt.</p>
 
       <h3>Schritt 3: Molare Masse berechnen</h3>
       <ol>
@@ -318,6 +326,10 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.2</span><span class="d">28.10.2026</span></div>
+      <ul>
+        <li><strong>Gerundete Atommassen im PSE:</strong> Ist „gerundet“ gewählt, zeigt auch das Periodensystem die gerundeten Werte (ganze Zahlen; Chlor 36 und Kupfer 64 werden aufgerundet). Bei „eine Nachkommastelle“ bleibt es wie bisher.</li>
+      </ul>
       <div class="vh-ver"><span class="v">V1.1</span><span class="d">25.10.2026</span></div>
       <ul>
         <li><strong>Prüfen je Schritt:</strong> Atome zählen, Atommassen ablesen und molare Masse berechnen haben jeweils einen eigenen Prüfen-Knopf. Enter prüft den Schritt, in dem gerade geschrieben wird.</li>
@@ -357,7 +369,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
         <button data-p="p" class="active">eine Nachkommastelle</button>
         <button data-p="r">gerundet</button>
       </div>
-      <p class="note" style="margin-top:-6px">Das PSE zeigt die Atommassen immer mit einer Nachkommastelle. Die Einstellung legt fest, mit welchen Werten Tipps und Lösungsweg rechnen. Gerundet: ganze Zahlen, nur Chlor (35,5) und Kupfer (63,5) mit Nachkommastelle. Bei der Prüfung werden beide Varianten akzeptiert.</p>
+      <p class="note" style="margin-top:-6px">Die Einstellung gilt für das PSE, die Tipps und den Lösungsweg. Gerundet: ganze Zahlen, ,5 wird aufgerundet (Chlor 36, Kupfer 64). Bei der Prüfung werden beide Varianten akzeptiert.</p>
     </section>
 
     <section class="block">
@@ -469,7 +481,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Molare Masse aus der Summenformel: M = Σ (Anzahl · Atommasse). Atommassen gerundet bzw. auf eine Nachkommastelle nach IUPAC; Werte in Klammern gelten für radioaktive Elemente (Massenzahl des langlebigsten Isotops).</p>
-  <p class="footer-credit">Bastian Baumgart · Molare-Masse-Trainer V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Molare-Masse-Trainer V1.2 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -493,8 +505,8 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
   ROWS.forEach((row,pi)=>row.forEach((d,gi)=>{ if(d) EL[d[0]] = {s:d[0], z:d[1], n:d[2], c:d[3], mp:d[4], rad:!!d[5], g:gi+1, p:pi+1}; }));
   TM.forEach(d=>{ EL[d[0]] = {s:d[0], z:d[1], n:d[2], c:d[3], mp:d[4], g:null, p:d[1]===47?5:4, tm:true}; });
   // gerundete Atommassen (Schulwerte): ganze Zahlen, Cl und Cu mit ,5
-  const HALF = {Cl:35.5, Cu:63.5};
-  Object.values(EL).forEach(e=>{ e.mr = HALF[e.s] !== undefined ? HALF[e.s] : Math.round(e.mp); });
+  // gerundete Atommassen: ganze Zahlen, ,5 wird aufgerundet (Cl 36, Cu 64)
+  Object.values(EL).forEach(e=>{ e.mr = Math.round(e.mp); });
 
   const CLS = {m:"Metall", h:"Halbmetall", n:"Nichtmetall", e:"Edelgas"};
   const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII"];
@@ -610,7 +622,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
   // ---------- PSE ----------
   function cellHTML(e){
     const k = {m:"", h:" hm", n:" nm", e:" eg"}[e.c];
-    const mv = e.rad ? `(${e.mp})` : fmt(e.mp, true);
+    const mv = e.rad ? `(${e.mp})` : fm(massOf(e.s));
     const gp = e.tm ? "Nebengruppe" : `${ROMAN[e.g]}. Hauptgruppe`;
     return `<button class="cell${k}" data-s="${e.s}" title="${e.n}" aria-label="${e.n}, Atommasse ${mv} u, ${gp}"><span class="z">${e.z}</span><span class="sy">${e.s}</span><span class="ms">${mv}</span></button>`;
   }
@@ -627,11 +639,13 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     TM.forEach(d=> t += cellHTML(EL[d[0]]));
     $("pseTM").innerHTML = t;
     if(task && task.hintMarked) markHint(task.c.p.order);
+    if(selSym) showInfo(selSym);
   }
+  let selSym = null;
   function showInfo(s){
-    const e = EL[s];
+    const e = EL[s]; selSym = s;
     document.querySelectorAll(".pse .cell").forEach(c=>c.classList.toggle("sel", c.dataset.s===s));
-    const mv = e.rad ? `(${e.mp})` : fmt(e.mp, true);
+    const mv = e.rad ? `(${e.mp})` : fm(massOf(e.s));
     const pos = e.tm ? "Nebengruppenmetall" : `${ROMAN[e.g]}. Hauptgruppe · ${e.p}. Periode · ${CLS[e.c]}`;
     $("pseInfo").innerHTML = `<b>${e.n}</b> (${e.s}) · Ordnungszahl <span class="a">${e.z}</span> · Atommasse <span class="a">${mv} u</span><br>${pos}`;
   }

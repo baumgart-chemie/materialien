@@ -50,6 +50,13 @@ header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--am
 header .status.running{color:var(--amber); border-color:var(--amber-dim);}
 header .status.done .dot{background:var(--teal);}
 header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; align-self:center; color:var(--text-dim); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:5px 11px 5px 9px; white-space:nowrap;
+}
+.back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+.back-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.back-btn .ar{color:var(--teal); font-size:14px; line-height:1;}
 .guide-link{
   color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
   padding-bottom:1px;
@@ -237,6 +244,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 <body>
 
 <header>
+  <a href="../index.html" class="back-btn" title="Zur Übersicht aller Simulationen"><span class="ar" aria-hidden="true">←</span>Zurück</a>
   <h1>Simulation „Erdölraffination“</h1>
   <span class="tag">Erdölaufbereitung – Destillation, Konversion &amp; Veredelung zu Kraftstoffen</span>
   <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
@@ -251,10 +259,10 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     </div>
     <div class="modal-body">
       <h3>Worum geht es?</h3>
-      <p>Rohöl ist ein Gemisch aus Tausenden Kohlenwasserstoffen. In der Raffinerie wird es zunächst durch <strong>Destillation</strong> in Fraktionen mit unterschiedlichen Siedebereichen getrennt. Weil die Fraktionen in Menge und Qualität nicht zum Bedarf passen, folgen <strong>Konversionsverfahren</strong> (Cracken) und <strong>Veredelungsverfahren</strong> (Reformieren, Isomerisieren, Entschwefeln).</p>
+      <p>Rohöl ist ein Gemisch aus Tausenden Kohlenwasserstoffen. In der Raffinerie wird es zunächst durch <strong>Destillation</strong> in Fraktionen mit unterschiedlichen Siedebereichen getrennt. Weil die Fraktionen in Menge und Qualität nicht zum Bedarf passen, folgen <strong>Konversionsverfahren</strong> (Cracken) und <strong>Veredelungsverfahren</strong> (Reformieren, Entschwefeln).</p>
 
       <h3>Bedienung</h3>
-      <p>Links wählst du das <strong>Rohöl</strong> und schaltest die Anlagenteile ein oder aus. Die Verfahren werden über Knöpfe zu- und abgeschaltet und lassen sich beliebig kombinieren; laufen beide Cracker, teilen sie sich das Vakuumgasöl. Alle Ergebnisse unten (Produktbilanz, Fraktionen) passen sich sofort an.</p>
+      <p>Links wählst du das <strong>Rohöl</strong> und schaltest die Anlagenteile ein oder aus. Die Verfahren werden über Knöpfe zu- und abgeschaltet und lassen sich beliebig kombinieren. Alle Ergebnisse unten (Produktbilanz, Fraktionen) passen sich sofort an.</p>
       <p>Mit <strong>„Anlage starten“</strong> werden 1000 t Rohöl verarbeitet: Die Ströme fließen durch die Anlage und die Produkttanks füllen sich. Wird während des Laufs ein Verfahren zu- oder abgeschaltet, beginnt der Lauf mit leeren Tanks neu. Temperaturen lassen sich auch während des Laufs verändern. <strong>Tippe ein Anlagenteil an</strong>, um eine kurze Erklärung zu erhalten.</p>
 
       <h3>Atmosphärische Destillation</h3>
@@ -262,18 +270,18 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <p>Ist der Ofen zu kalt, verdampft weniger und mehr Material bleibt im Rückstand. Oberhalb von etwa 380 °C beginnen sich langkettige Moleküle bereits im Ofen zu zersetzen und es bildet sich Koks.</p>
 
       <h3>Vakuumdestillation &amp; Cracken</h3>
-      <p>Der Rückstand würde bei Normaldruck erst oberhalb von 400 °C sieden und sich dabei zersetzen. Bei vermindertem Druck sinken die Siedetemperaturen, sodass sich <strong>Vakuumgasöl</strong> abtrennen lässt. Es ist der Einsatzstoff für den <strong>Cracker</strong>: Der katalytische Cracker liefert vor allem Benzin und Gase, der Hydrocracker unter Wasserstoff vor allem Kerosin und Diesel.</p>
+      <p>Der Rückstand würde bei Normaldruck erst oberhalb von 400 °C sieden und sich dabei zersetzen. Bei vermindertem Druck sinken die Siedetemperaturen, sodass sich <strong>Vakuumgasöl</strong> abtrennen lässt. Es ist der Einsatzstoff für den <strong>katalytischen Cracker</strong>, der daraus vor allem Benzin und Gase erzeugt.</p>
 
       <h3>Veredelung</h3>
-      <p>Destillatbenzin ist wenig klopffest (niedrige Oktanzahl). Der <strong>Reformer</strong> wandelt Alkane in Aromaten um und liefert dabei Wasserstoff, die <strong>Isomerisierung</strong> erzeugt verzweigte Alkane. Die <strong>Entschwefelung</strong> entfernt Schwefelverbindungen mit Wasserstoff als Schwefelwasserstoff, aus dem elementarer Schwefel gewonnen wird.</p>
+      <p>Destillatbenzin ist wenig klopffest (niedrige Oktanzahl). Der <strong>Reformer</strong> wandelt Alkane in Aromaten um und liefert dabei Wasserstoff. Die <strong>Entschwefelung</strong> entfernt Schwefelverbindungen mit Wasserstoff als Schwefelwasserstoff, aus dem elementarer Schwefel gewonnen wird.</p>
 
       <h3>Auswertung</h3>
-      <p><strong>Produktbilanz:</strong> Mengen je 1000 t Rohöl, Vergleich mit dem Bedarf und Prüfung der Anforderungen an Superbenzin (ROZ ≥ 95, Schwefel ≤ 10 mg/kg) und Diesel (Schwefel ≤ 10 mg/kg).<br>
+      <p><strong>Produktbilanz:</strong> Mengen je 1000 t Rohöl, Vergleich mit dem Bedarf und Prüfung der Anforderungen an Ottokraftstoff (Normalbenzin ROZ ≥ 91, Super ROZ ≥ 95, Schwefel ≤ 10 mg/kg) und Diesel (Schwefel ≤ 10 mg/kg).<br>
       <strong>Fraktionen:</strong> Siedekurve des gewählten Rohöls mit den Fraktionsgrenzen, Kettenlängen und Verwendungen.<br>
       <strong>Verfahren &amp; Reaktionen:</strong> Beispielgleichungen zu allen Verfahren.</p>
 
       <h3>Ideen zum Ausprobieren</h3>
-      <p>Vergleiche die Benzinausbeute einer reinen Destillation mit dem Bedarf. Wie viel mehr Benzin liefert der katalytische Cracker, wie viel mehr Diesel ein Hydrocracker? Warum erreicht Destillatbenzin nicht die Norm für Superbenzin? Was passiert beim schweren Rohöl mit dem Schwefelgehalt des schweren Heizöls?</p>
+      <p>Vergleiche die Benzinausbeute einer reinen Destillation mit dem Bedarf. Wie viel mehr Benzin liefert der katalytische Cracker? Warum erreicht Destillatbenzin nicht einmal die Anforderung an Normalbenzin, und welche Reformertemperatur ist dafür nötig? Was passiert beim schweren Rohöl mit dem Schwefelgehalt des schweren Heizöls?</p>
     </div>
   </div>
 </div>
@@ -285,9 +293,16 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
     </div>
     <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.1</span><span class="d">29.10.2026</span></div>
+        <ul>
+          <li>Hydrocracker und Isomerisierung entfernt; zur Auswahl stehen Vakuumdestillation, Entschwefelung, katalytischer Cracker und Reformer.</li>
+          <li><strong>Entschwefelung im Fließbild:</strong> eigener, deutlich sichtbarer Anlagenblock, durch den Benzin, Kerosin und Gasöl laufen; Anzeige des gewonnenen Schwefels.</li>
+          <li>Qualitätsprüfung des Benzins nach Normalbenzin (ROZ ≥ 91) und Super (ROZ ≥ 95).</li>
+          <li>„Zurück“-Knopf zur Übersicht.</li>
+        </ul>
       <div class="vh-ver"><span class="v">V1.0</span><span class="d">17.10.2026</span></div>
         <ul>
-          <li>Erste Version der Simulation: vier Rohölsorten, atmosphärische Destillation mit einstellbarer Ofentemperatur und Fraktionsgrenzen, Vakuumdestillation, katalytischer Cracker und Hydrocracker, Reformieren, Isomerisieren und Entschwefeln.</li>
+          <li>Erste Version der Simulation: vier Rohölsorten, atmosphärische Destillation mit einstellbarer Ofentemperatur und Fraktionsgrenzen, Vakuumdestillation, katalytischer Cracker, Reformieren und Entschwefeln.</li>
           <li>Animiertes Fließbild mit Produkttanks; Anlagenteile lassen sich zur Erklärung antippen.</li>
           <li>Auswertung mit Produktbilanz und Bedarfsvergleich, Qualitätsprüfung (Oktanzahl, Schwefelgehalt), Siedekurve und Beispielreaktionen.</li>
           <li>Anleitung zur Bedienung.</li>
@@ -311,14 +326,12 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
     <section class="block">
       <h2>Verfahren</h2>
-      <p class="sub-note" style="margin-top:-4px">Die atmosphärische Destillation läuft immer. Weitere Verfahren durch Antippen zu- oder abschalten – beliebig kombinierbar. Die Cracker benötigen Vakuumgasöl; die Vakuumdestillation wird dann automatisch eingeschaltet.</p>
+      <p class="sub-note" style="margin-top:-4px">Die atmosphärische Destillation läuft immer. Weitere Verfahren durch Antippen zu- oder abschalten – beliebig kombinierbar. Der katalytische Cracker benötigt Vakuumgasöl; die Vakuumdestillation wird dann automatisch eingeschaltet.</p>
       <div class="ptog-grid" id="procToggles">
         <button class="ptog" data-key="vac"><span class="led"></span>Vakuum&shy;destillation</button>
         <button class="ptog" data-key="hds"><span class="led"></span>Entschwefelung</button>
         <button class="ptog" data-key="fcc"><span class="led"></span>Katalytischer Cracker</button>
         <button class="ptog" data-key="ref"><span class="led"></span>Reformer</button>
-        <button class="ptog" data-key="hc"><span class="led"></span>Hydrocracker</button>
-        <button class="ptog" data-key="iso"><span class="led"></span>Isomerisierung</button>
       </div>
       <div class="ptog-quick">
         <button class="btn ghost" id="allOff">Alle aus</button>
@@ -334,10 +347,6 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       <div id="fccControls" style="display:none">
         <div class="row"><label>Katalytischer Cracker</label><span class="val mono" id="vFCC">510 °C</span></div>
         <input type="range" id="rFCC" min="480" max="540" value="510" step="5">
-      </div>
-      <div id="hcControls" style="display:none">
-        <div class="row"><label>Hydrocracker</label><span class="val mono" id="vHC">410 °C</span></div>
-        <input type="range" id="rHC" min="380" max="440" value="410" step="5">
       </div>
       <div id="refControls" style="display:none">
         <div class="row"><label>Reformer</label><span class="val mono" id="vRef">500 °C</span></div>
@@ -434,22 +443,11 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
           <p class="eq">C₁₆H₃₄ → C₈H₁₈ + C₈H₁₆<small>Hexadecan → Octan + Octen</small></p>
           <p class="eq">C₁₀H₂₂ → C₇H₁₆ + C₃H₆<small>Decan → Heptan + Propen</small></p>
         </div>
-        <div class="proc" data-unit="hc">
-          <h3>Hydrocracken</h3>
-          <p>Cracken unter hohem Wasserstoffdruck (über 100 bar) an bifunktionellen Katalysatoren. Es entstehen gesättigte, schwefelarme Produkte, vor allem Kerosin und Diesel.</p>
-          <p class="eq">C₁₆H₃₄ + H₂ → 2 C₈H₁₈<small>Hexadecan + Wasserstoff → Octan</small></p>
-        </div>
         <div class="proc" data-unit="ref">
           <h3>Katalytisches Reformieren</h3>
           <p>An Platin-Katalysatoren bei etwa 500 °C werden aus Alkanen und Cycloalkanen Aromaten mit hoher Oktanzahl. Nebenprodukt ist Wasserstoff, der in der Entschwefelung gebraucht wird. Schwefel vergiftet den Katalysator.</p>
           <p class="eq">C₇H₁₆ → C₇H₈ + 4 H₂<small>Heptan (ROZ 0) → Toluol (ROZ ≈ 120)</small></p>
           <p class="eq">C₆H₁₂ → C₆H₆ + 3 H₂<small>Cyclohexan → Benzol</small></p>
-        </div>
-        <div class="proc" data-unit="iso">
-          <h3>Isomerisierung</h3>
-          <p>Unverzweigte Alkane des Leichtbenzins werden in verzweigte Isomere mit gleicher Summenformel umgewandelt. Verzweigte Alkane sind deutlich klopffester.</p>
-          <p class="eq">n-Pentan (ROZ ≈ 62) → 2-Methylbutan (ROZ ≈ 92)<small>beide C₅H₁₂</small></p>
-          <p class="eq">Oktanzahl-Skala: n-Heptan = 0 · Isooctan (2,2,4-Trimethylpentan) = 100</p>
         </div>
         <div class="proc" data-unit="hds">
           <h3>Entschwefelung &amp; Claus-Verfahren</h3>
@@ -459,7 +457,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
         </div>
         <div class="proc" data-unit="blend">
           <h3>Mischen (Blending)</h3>
-          <p>Fertige Kraftstoffe sind Mischungen mehrerer Raffinerieströme. Beim Superbenzin werden Reformat, Isomerisat, Crackbenzin und Butan so kombiniert, dass Oktanzahl, Dampfdruck und Schwefelgehalt die Norm erfüllen. Dem Diesel wird zusätzlich Biodiesel (FAME) beigemischt.</p>
+          <p>Fertige Kraftstoffe sind Mischungen mehrerer Raffinerieströme. Beim Ottokraftstoff werden Reformat, Crackbenzin, Leichtbenzin und Butan so kombiniert, dass Oktanzahl, Dampfdruck und Schwefelgehalt die Norm erfüllen. Für Super (ROZ ≥ 95) sind zusätzlich Oktanzahlverbesserer nötig, z. B. Isomerisat, Ethanol (E5/E10) oder ETBE. Dem Diesel wird Biodiesel (FAME) beigemischt.</p>
         </div>
       </div>
     </div>
@@ -469,7 +467,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
 <footer>
   <p class="footer-note">Simulierte Daten zu Lehrzwecken · Siedekurven, Ausbeuten, Oktanzahlen und Schwefelgehalte beruhen auf stark vereinfachten Modellen und gerundeten Richtwerten; sie bilden keine reale Raffinerie exakt ab.</p>
-  <p class="footer-credit">Bastian Baumgart · Simulation „Erdölraffination“ V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+  <p class="footer-credit">Bastian Baumgart · Simulation „Erdölraffination“ V1.1 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
 </footer>
 
 <script>
@@ -506,7 +504,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
   const S = {
     crude:"light", furnace:360, cutBK:180, cutKG:250,
-    vac:false, fcc:false, hc:false, tFCC:510, tHC:410, ref:false, tRef:500, iso:false, hds:false,
+    vac:false, fcc:false, tFCC:510, ref:false, tRef:500, hds:false,
     speed:1, running:false, processed:0, total:1000,
     tanks:{lpg:0, ben:0, ker:0, die:0, hvy:0}, sel:null
   };
@@ -594,11 +592,10 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       resBypass = f.res;
     }
 
-    // Cracker (beide können gleichzeitig laufen; dann je die Hälfte des Vakuumgasöls)
-    let crkGas = 0, crkBen = 0, crkKer = 0, lco = 0, hcDie = 0, crkHvy = 0, naphHC = 0;
+    // Katalytischer Cracker
+    let crkGas = 0, crkBen = 0, lco = 0, crkHvy = 0;
     let sCrkBen = 0, sLco = 0, smHvy = 0;
-    const nCrk = (S.fcc ? 1 : 0) + (S.hc ? 1 : 0);
-    const feedF = (S.vac && S.fcc) ? vgo/nCrk : 0, feedH = (S.vac && S.hc) ? vgo/nCrk : 0;
+    const feedF = (S.vac && S.fcc) ? vgo : 0;
     if(feedF > 0){
       const x = (S.tFCC-480)/60, X = 0.55 + 0.25*x;
       crkGas += feedF*X*(0.17+0.12*x);
@@ -610,22 +607,9 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       sCrkBen = s.vgo*0.12; sLco = s.vgo*1.6; smHvy += slurry*s.vgo*2.2;
       sRec += Math.max(0, feedF*s.vgo - (crkBen*sCrkBen + lco*sLco + slurry*s.vgo*2.2));
     }
-    if(feedH > 0){
-      const x = (S.tHC-380)/60, X = 0.6 + 0.35*x;
-      crkGas += feedH*X*0.06;
-      naphHC  = feedH*X*0.24;
-      crkKer  = feedH*X*0.28;
-      hcDie   = feedH*X*0.42;
-      const unc = feedH*(1-X);
-      crkHvy += unc; smHvy += unc*s.vgo*0.1;
-      h2cons += feedH*0.025;
-      sRec += feedH*s.vgo - (hcDie*5 + crkKer*5 + naphHC*1 + unc*s.vgo*0.1);
-    }
-    const vgoRest = vgo - feedF - feedH;             // nicht gecracktes Vakuumgasöl → schweres Heizöl
+    const vgoRest = vgo - feedF;                     // nicht gecracktes Vakuumgasöl → schweres Heizöl
     crkHvy += vgoRest; smHvy += vgoRest*s.vgo;
-    const crkDie = lco + hcDie;
-    if(nCrk > 0 && !S.vac) warn.push("Die Cracker werden mit Vakuumgasöl beschickt. Ohne Vakuumdestillation steht kein Einsatzstoff zur Verfügung – schalte die Vakuumdestillation ein.");
-    if(feedF > 0 && feedH > 0) warn.push("Beide Cracker laufen: Das Vakuumgasöl wird im Modell je zur Hälfte auf den katalytischen Cracker und den Hydrocracker verteilt.");
+    const crkDie = lco, crkKer = 0;
 
     // Entschwefelung (Hydrotreating der Destillate und Crackprodukte)
     const HDS_KEEP = 0.0002;
@@ -640,19 +624,16 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       h2cons += 0.2*sRem/1e6 + 0.003*treated;
     }
 
-    // Isomerisierung
-    let lnOut = f.ln, lnRON = 70, isoGas = 0;
-    if(S.iso){ lnOut = f.ln*0.98; isoGas = f.ln*0.02; lnRON = 89; }
+    const lnOut = f.ln, lnRON = 72;
 
     // Reformer
-    const refFeed = f.hn + naphHC;
-    const sRefFeed = refFeed > 0 ? (f.hn*sHN + naphHC*1)/refFeed : 0;
-    let hnOut = refFeed, hnRON = refFeed > 0 ? (f.hn*55 + naphHC*60)/refFeed : 55, refGas = 0, sHnOut = sRefFeed;
+    const refFeed = f.hn, sRefFeed = sHN;
+    let hnOut = refFeed, hnRON = 55, refGas = 0, sHnOut = sRefFeed;
     if(S.ref){
       const x = (S.tRef-470)/60, Y = 0.90 - 0.12*x;
       const h2 = refFeed*(0.02 + 0.015*x);
       hnOut = refFeed*Y;
-      hnRON = 90 + 14*x;
+      hnRON = 92 + 14*x;
       refGas = refFeed*(1-Y);
       h2prod += h2;
       if(!S.hds){
@@ -662,7 +643,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     }
 
     // Produkte (Massenanteile bezogen auf das Rohöl)
-    const gasTot = f.gas + crkGas + isoGas + Math.max(0, refGas - h2prod);
+    const gasTot = f.gas + crkGas + Math.max(0, refGas - h2prod);
     const p = {
       lpg: gasTot*0.6,
       ben: lnOut + hnOut + crkBen,
@@ -674,15 +655,15 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     const q = {};
     q.benRON = p.ben > 0 ? (lnOut*lnRON + hnOut*hnRON + crkBen*93)/p.ben : 0;
     q.benS   = p.ben > 0 ? (lnOut*sLN + hnOut*(S.ref && S.hds ? 0.5 : sHnOut) + crkBen*sCrkBen)/p.ben : 0;
-    q.kerS   = p.ker > 0 ? (f.ker*sKER + crkKer*5)/p.ker : 0;
-    q.dieS   = p.die > 0 ? (f.go*sGO + lco*sLco + hcDie*5)/p.die : 0;
+    q.kerS   = p.ker > 0 ? sKER : 0;
+    q.dieS   = p.die > 0 ? (f.go*sGO + lco*sLco)/p.die : 0;
     const hvyS = (resBypass*s.res + vr*s.vr + smHvy);
     q.hvyS   = p.hvy > 0 ? hvyS/p.hvy : 0;
-    if(h2cons > h2prod + 1e-9 && (S.hds || S.hc)){
+    if(h2cons > h2prod + 1e-9 && S.hds){
       warn.push("Der Wasserstoffbedarf ist größer als die Produktion im Reformer. Die Fehlmenge (" + fmt((h2cons-h2prod)*S.total,1) + " t je 1000 t Rohöl) wird aus Erdgas durch Dampfreformierung erzeugt.");
     }
-    return {c, st, AE, bk, kg, f, s, vgo, vr, resBypass, crkGas, crkBen, crkKer, crkDie, crkHvy, naphHC,
-            lnOut, hnOut, refGas, refFeed, isoGas, p, own, q, coke, sRec: sRec/1e6, h2prod, h2cons, warn, kOver};
+    return {c, st, AE, bk, kg, f, s, vgo, vr, resBypass, crkGas, crkBen, crkKer, crkDie, crkHvy,
+            lnOut, hnOut, refGas, refFeed, p, own, q, coke, sRec: sRec/1e6, h2prod, h2cons, warn, kOver};
   }
 
   // ---------- Fließbild ----------
@@ -697,9 +678,8 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     crude:{x:30,  y:380, w:80,  h:90,  name:"Rohöltank"},
     furn: {x:150, y:400, w:80,  h:60,  name:"Röhrenofen"},
     col:  {x:280, y:30,  w:60,  h:450, name:"Destillationskolonne"},
-    hds:  {x:390, y:96,  w:40,  h:264, name:"Entschwefelung"},
+    hds:  {x:372, y:92,  w:58,  h:272, name:"Entschwefelung"},
     vac:  {x:410, y:390, w:50,  h:110, name:"Vakuumkolonne"},
-    iso:  {x:520, y:100, w:110, h:36,  name:"Isomerisierung"},
     ref:  {x:520, y:154, w:110, h:36,  name:"Reformer"},
     crk:  {x:520, y:384, w:110, h:56,  name:"Cracker"}
   };
@@ -712,15 +692,13 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     {pts:[[650,60],[930,60]],   col:"gas", f:m=>m.p.lpg},
     {pts:[[630,162],[660,162],[660,60]], col:"gas", f:m=>m.refGas},
     {pts:[[630,392],[650,392],[650,60]], col:"gas", f:m=>m.crkGas},
-    {pts:[[340,118],[520,118]], col:"ben", f:m=>m.f.ln},
-    {pts:[[630,118],[700,118],[700,150]], col:"ben", f:m=>m.lnOut},
+    {pts:[[340,118],[700,118],[700,150]], col:"ben", f:m=>m.f.ln},
     {pts:[[340,172],[520,172]], col:"ben", f:m=>m.f.hn},
     {pts:[[630,172],[700,172],[700,150]], col:"ben", f:m=>m.hnOut},
     {pts:[[630,404],[700,404],[700,150]], col:"ben", f:m=>m.crkBen},
     {pts:[[700,150],[930,150]], col:"ben", f:m=>m.p.ben},
     {pts:[[340,245],[690,245]], col:"ker", f:m=>m.f.ker},
     {pts:[[690,245],[930,245]], col:"ker", f:m=>m.p.ker},
-    {pts:[[630,416],[690,416],[690,245]], col:"ker", f:m=>m.crkKer},
     {pts:[[340,340],[680,340]], col:"die", f:m=>m.f.go},
     {pts:[[680,340],[930,340]], col:"die", f:m=>m.p.die},
     {pts:[[630,426],[680,426],[680,340]], col:"die", f:m=>m.crkDie},
@@ -731,8 +709,6 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     {pts:[[630,436],[720,436],[720,445]], col:"hvy", f:m=>m.crkHvy},
     {pts:[[720,445],[930,445]], col:"hvy", f:m=>m.p.hvy}
   ];
-  // Hydrocracker-Naphtha fließt zum Reformer (eigene kleine Leitung)
-  ROUTES.push({pts:[[575,384],[575,190]], col:"ben", f:m=>m.naphHC});
   ROUTES.forEach(r=>{
     r.seg = []; r.len = 0;
     for(let i=1;i<r.pts.length;i++){
@@ -769,9 +745,8 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
   function unitOn(k){
     if(k==="vac") return S.vac;
-    if(k==="crk") return (S.fcc || S.hc) && S.vac;
+    if(k==="crk") return S.fcc && S.vac;
     if(k==="ref") return S.ref;
-    if(k==="iso") return S.iso;
     if(k==="hds") return S.hds;
     return true;
   }
@@ -895,7 +870,6 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       c.fillText("Vakuumrückstand", 466, 510);
     }
 
-    drawUnitBox(c, "iso");
     drawUnitBox(c, "ref");
     drawUnitBox(c, "crk");
 
@@ -924,6 +898,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
   function drawUnitBox(c, k, vertical){
     const u = UNITS[k], on = unitOn(k);
     const teal = css("--teal"), tealDim = css("--teal-dim"), line = css("--line"), text = css("--text"), faint = css("--text-faint");
+    if(vertical){ drawHDS(c, u, on); return; }
     c.globalAlpha = on ? 1 : .5;
     c.fillStyle = on ? "rgba(79,209,197,.08)" : "#171b1f";
     c.strokeStyle = S.sel===k ? teal : (on ? tealDim : line);
@@ -932,7 +907,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     rr(c, u.x, u.y, u.w, u.h, 4); c.fill(); c.stroke(); c.setLineDash([]);
     c.globalAlpha = 1;
     let label = u.name;
-    if(k==="crk") label = (S.fcc && S.hc) ? "Kat. Cracker +|Hydrocracker" : (S.hc ? "Hydrocracker" : (S.fcc ? "Katalytischer|Cracker" : "Cracker"));
+    if(k==="crk") label = "Katalytischer|Cracker";
     c.fillStyle = on ? text : faint; c.textAlign = "center";
     if(vertical){
       c.save(); c.translate(u.x + u.w/2, u.y + u.h/2); c.rotate(-Math.PI/2);
@@ -943,13 +918,40 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       if(parts.length > 1){
         c.font = "600 12px " + FONT;
         c.fillText(parts[0], u.x + u.w/2, u.y + 17); c.fillText(parts[1], u.x + u.w/2, u.y + 32);
-        c.font = "11px " + MONO; c.fillStyle = css("--amber"); c.fillText(on ? ((S.fcc && S.hc) ? S.tFCC + " / " + S.tHC + " °C" : S.tFCC + " °C") : "aus", u.x + u.w/2, u.y + 48);
+        c.font = "11px " + MONO; c.fillStyle = css("--amber"); c.fillText(on ? S.tFCC + " °C" : "aus", u.x + u.w/2, u.y + 48);
         return;
       }
       c.fillText(label, u.x + u.w/2, u.y + u.h/2 + (on ? 5 : -2));
       if(!on){ c.font = "11px " + FONT; c.fillText("aus", u.x + u.w/2, u.y + u.h/2 + 13); }
-      else if(k==="crk"){ c.font = "11px " + MONO; c.fillStyle = css("--amber"); c.fillText(S.tHC + " °C", u.x + u.w/2, u.y + u.h/2 + 20); }
       else if(k==="ref"){ /* Platz knapp: Temperatur steht in der Seitenleiste */ }
+    }
+  }
+
+  function drawHDS(c, u, on){
+    const teal = css("--teal"), tealDim = css("--teal-dim"), line = css("--line"), text = css("--text"), faint = css("--text-faint"), amber = css("--amber");
+    c.fillStyle = on ? "#132422" : "#171b1f";
+    c.strokeStyle = S.sel==="hds" ? teal : (on ? teal : line);
+    c.lineWidth = S.sel==="hds" ? 2.5 : 1.8;
+    if(!on) c.setLineDash([5,4]);
+    rr(c, u.x, u.y, u.w, u.h, 5); c.fill(); c.stroke(); c.setLineDash([]);
+    // Ein- und Austrittsstutzen der vier Ströme
+    [[118,"ben"],[172,"ben"],[245,"ker"],[340,"die"]].forEach(([y,k])=>{
+      c.fillStyle = COL[k]; c.globalAlpha = on ? .9 : .4;
+      c.fillRect(u.x - 3, y - 4, 6, 8); c.fillRect(u.x + u.w - 3, y - 4, 6, 8);
+    });
+    c.globalAlpha = 1;
+    // Beschriftung senkrecht
+    c.save(); c.translate(u.x + u.w/2, on ? 186 : u.y + u.h/2); c.rotate(-Math.PI/2);
+    c.textAlign = "center"; c.fillStyle = on ? text : faint;
+    c.font = "600 14px " + FONT; c.fillText("Entschwefelung", 0, -4);
+    c.font = "11px " + FONT; c.fillStyle = on ? amber : faint;
+    c.fillText(on ? "+ H₂  →  H₂S  →  Schwefel" : "aus – Ströme laufen ungereinigt durch", 0, 13);
+    c.restore();
+    // gewonnener Schwefel unter der Box
+    if(on){
+      c.fillStyle = "#e6d36a"; c.font = "600 11px " + FONT; c.textAlign = "center";
+      c.fillText("Schwefel", u.x + u.w/2, 290);
+      c.font = "11px " + MONO; c.fillText(fmt(M.sRec*S.total,1) + " t", u.x + u.w/2, 304);
     }
   }
 
@@ -960,19 +962,18 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
     col:"<strong>Atmosphärische Destillationskolonne.</strong> Der Dampf steigt durch die Glockenböden nach oben und kühlt sich dabei ab. Stoffe mit hoher Siedetemperatur kondensieren weiter unten, leicht siedende weiter oben. So entstehen Fraktionen mit bestimmten Siedebereichen – reine Stoffe erhält man nicht.",
     hds:"<strong>Entschwefelung (Hydrotreating).</strong> Schwefelverbindungen reagieren bei etwa 350 °C und 30–60 bar an Co-Mo-Katalysatoren mit Wasserstoff zu Schwefelwasserstoff, aus dem im Claus-Verfahren Schwefel gewonnen wird. Kraftstoffe in der EU dürfen höchstens 10 mg Schwefel pro kg enthalten.",
     vac:"<strong>Vakuumdestillation.</strong> Der Rückstand der atmosphärischen Destillation wird bei 20–50 hPa erneut destilliert. Bei vermindertem Druck sinken die Siedetemperaturen, sodass sich Vakuumgasöl ohne Zersetzung abtrennen lässt. Übrig bleibt der Vakuumrückstand (Bitumen, schweres Heizöl).",
-    iso:"<strong>Isomerisierung.</strong> Unverzweigte Alkane des Leichtbenzins (vor allem Pentan und Hexan) werden an Platin-Katalysatoren in verzweigte Isomere umgewandelt. Die Oktanzahl steigt im Modell von etwa 70 auf 89.",
     ref:"<strong>Reformer.</strong> Aus Alkanen und Cycloalkanen des Schwerbenzins entstehen an Platin-Katalysatoren Aromaten mit hoher Oktanzahl. Je höher die Reaktortemperatur, desto höher die Oktanzahl – aber desto mehr Gas entsteht und desto geringer ist die Benzinausbeute. Nebenprodukt: Wasserstoff.",
-    crk:"<strong>Cracker.</strong> Langkettige Moleküle des Vakuumgasöls werden in kürzere gespalten. <em>Katalytischer Cracker</em> (ca. 500 °C, Zeolith-Katalysator im Wirbelbett): viel Benzin mit hoher Oktanzahl und Alkene. <em>Hydrocracker</em> (ca. 400 °C, über 100 bar H₂): vor allem Kerosin und Diesel, schwefelfrei, verbraucht Wasserstoff. Höhere Temperatur bedeutet höheren Umsatz.",
+    crk:"<strong>Katalytischer Cracker.</strong> Langkettige Moleküle des Vakuumgasöls werden bei etwa 500 °C an einem Zeolith-Katalysator im Wirbelbett in kürzere Alkane und Alkene gespalten. Es entstehen vor allem Benzin mit hoher Oktanzahl und Gase. Höhere Temperatur bedeutet höheren Umsatz, aber mehr Gas und Koks.",
     tank_lpg:"<strong>Flüssiggas (LPG).</strong> Propan und Butan, unter Druck verflüssigt. Verwendung als Autogas, Heiz- und Campinggas sowie als Chemierohstoff. Methan und Ethan (Raffineriegas) dienen als Brennstoff in der Raffinerie selbst.",
-    tank_ben:"<strong>Benzin (Ottokraftstoff).</strong> Gemisch aus Isomerisat, Reformat, Crackbenzin und Destillatbenzin. Superbenzin muss eine Research-Oktanzahl (ROZ) von mindestens 95 haben und darf höchstens 10 mg/kg Schwefel enthalten. Ein Teil des Destillatbenzins (Naphtha) geht als Rohstoff in die chemische Industrie.",
+    tank_ben:"<strong>Benzin (Ottokraftstoff).</strong> Gemisch aus Reformat, Crackbenzin und Leichtbenzin. Normalbenzin muss eine Research-Oktanzahl (ROZ) von mindestens 91, Superbenzin von mindestens 95 haben und darf höchstens 10 mg/kg Schwefel enthalten. Ein Teil des Destillatbenzins (Naphtha) geht als Rohstoff in die chemische Industrie.",
     tank_ker:"<strong>Kerosin.</strong> Treibstoff für Düsenflugzeuge (Jet A-1). Wichtig sind ein niedriger Gefrierpunkt (unter −47 °C) und ein ausreichend hoher Flammpunkt.",
-    tank_die:"<strong>Diesel / leichtes Heizöl.</strong> Mittelschwere Fraktion aus Gasöl, Hydrocracker-Diesel und Kreislauföl aus dem katalytischen Cracker. Dieselkraftstoff darf höchstens 10 mg/kg Schwefel enthalten. In Europa ist der Bedarf an Diesel deutlich größer als an Benzin.",
+    tank_die:"<strong>Diesel / leichtes Heizöl.</strong> Mittelschwere Fraktion aus Gasöl und Kreislauföl aus dem katalytischen Cracker. Dieselkraftstoff darf höchstens 10 mg/kg Schwefel enthalten. In Europa ist der Bedarf an Diesel deutlich größer als an Benzin.",
     tank_hvy:"<strong>Schweres Heizöl / Bitumen.</strong> Rückstandsprodukte für Schiffsantriebe, Kraftwerke und Straßenbau. Seit 2020 gilt für Schiffskraftstoff weltweit ein Schwefelgrenzwert von 0,5 %. Der Bedarf ist gering – Konversionsanlagen verarbeiten diese Fraktion deshalb zu leichteren Produkten."
   };
   function showInfo(k){
     S.sel = k;
     $("unitInfo").innerHTML = INFO[k] || '<span class="muted">Tippe ein Anlagenteil im Fließbild an, um eine Erklärung zu erhalten.</span>';
-    document.querySelectorAll(".proc").forEach(p=> p.classList.toggle("hl", p.dataset.unit===k || (k==="crk" && p.dataset.unit==="hc" && S.hc)));
+    document.querySelectorAll(".proc").forEach(p=> p.classList.toggle("hl", p.dataset.unit===k || false));
     drawPlant();
   }
   plant.addEventListener("pointerup", e=>{
@@ -999,7 +1000,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
       let qual = "–", req = '<span class="dim">–</span>';
       if(pr.k==="ben"){
         qual = "ROZ " + fmt(q.benRON) + " · S " + sStr(q.benS);
-        req = check(q.benRON >= 95) + " ROZ ≥ 95 &nbsp; " + check(q.benS <= 10) + " S ≤ 10 mg/kg";
+        req = check(q.benRON >= 91) + " Normal ROZ ≥ 91 &nbsp; " + check(q.benRON >= 95) + " Super ROZ ≥ 95 &nbsp; " + check(q.benS <= 10) + " S ≤ 10 mg/kg";
       } else if(pr.k==="ker"){
         qual = "S " + sStr(q.kerS); req = check(q.kerS <= 3000) + " S ≤ 0,3 %";
       } else if(pr.k==="die"){
@@ -1017,7 +1018,7 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
 
     // Readouts
     $("roBen").textContent = fmt(p.ben*100,1) + " %";
-    const ron = $("roRON"); ron.textContent = fmt(q.benRON); ron.className = "v mono " + (q.benRON >= 95 ? "ok" : "bad");
+    const ron = $("roRON"); ron.textContent = fmt(q.benRON); ron.className = "v mono " + (q.benRON >= 95 ? "ok" : (q.benRON >= 91 ? "" : "bad"));
     const sd = $("roSDie"); sd.textContent = sStr(q.dieS); sd.className = "v mono " + (q.dieS <= 10 ? "ok" : "bad");
 
     // Fraktionen
@@ -1144,20 +1145,18 @@ footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
   bindRange("rCutKG", "vCutKG", "cutKG", " °C");
   bindRange("rRef", "vRef", "tRef", " °C");
   bindRange("rFCC", "vFCC", "tFCC", " °C");
-  bindRange("rHC", "vHC", "tHC", " °C");
 
-  const PROC_KEYS = ["vac","hds","fcc","ref","hc","iso"];
+  const PROC_KEYS = ["vac","hds","fcc","ref"];
   function syncControls(){
     document.querySelectorAll(".ptog").forEach(b=> b.classList.toggle("on", !!S[b.dataset.key]));
     $("refControls").style.display = S.ref ? "" : "none";
     $("fccControls").style.display = S.fcc ? "" : "none";
-    $("hcControls").style.display  = S.hc  ? "" : "none";
   }
   document.querySelectorAll(".ptog").forEach(b=> b.addEventListener("click", ()=>{
     const k = b.dataset.key; S[k] = !S[k];
     // Cracker brauchen Vakuumgasöl: Vakuumdestillation automatisch mitschalten
-    if((k==="fcc" || k==="hc") && S[k]) S.vac = true;
-    if(k==="vac" && !S.vac){ S.fcc = false; S.hc = false; }
+    if(k==="fcc" && S.fcc) S.vac = true;
+    if(k==="vac" && !S.vac) S.fcc = false;
     procChanged();
   }));
   $("allOff").addEventListener("click", ()=>{ PROC_KEYS.forEach(k=> S[k] = false); procChanged(); });

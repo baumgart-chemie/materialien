@@ -28,6 +28,13 @@ header{
 }
 header h1{font-size:20px; letter-spacing:.2px;}
 header .tag{color:var(--text-dim); font-size:13.5px;}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; align-self:center; color:var(--text-dim); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:5px 11px 5px 9px; white-space:nowrap;
+}
+.back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+.back-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.back-btn .ar{color:var(--teal); font-size:14px; line-height:1;}
 
 nav{
   position:sticky; top:0; z-index:10; background:var(--bg);
@@ -85,12 +92,12 @@ footer a{color:var(--text-dim); border-bottom-color:var(--line);}
 <body>
 
 <header>
+  <a href="index.html" class="back-btn" title="Zur Übersicht aller Simulationen"><span class="ar" aria-hidden="true">←</span>Zurück</a>
   <h1>Chemie</h1>
   <span class="tag">Impressum &amp; Datenschutz</span>
 </header>
 
 <nav>
-  <a class="back" href="index.html">← Zur Übersicht</a>
   <a href="#impressum">Impressum</a>
   <a href="#datenschutz">Datenschutz</a>
 </nav>
@@ -161,7 +168,7 @@ footer a{color:var(--text-dim); border-bottom-color:var(--line);}
   <p>Wenden Sie sich dazu bitte an die oben genannte E-Mail-Adresse.</p>
 
   <h3>6. Beschwerderecht</h3>
-  <p>Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Zuständig ist die Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover.</p>
+  <p>Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Zuständig ist der Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover.</p>
 
   <p class="stand">Stand: September 2026</p>
 </section>

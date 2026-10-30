@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Redoxgleichungen aufstellen</title>
+<style>
+:root{
+  --bg:#14171a; --panel:#1b1f23; --panel-alt:#20252a; --raise:#262c32;
+  --line:#31383e; --line-soft:#262c31;
+  --text:#e7e4dd; --text-dim:#9aa2a9; --text-faint:#5f6870;
+  --amber:#ffb454; --amber-dim:#8a6535;
+  --teal:#4fd1c5; --teal-dim:#2c5b56;
+  --good:#7fd68a;
+  --danger:#e4785b; --danger-dim:#6b3a2d;
+  --oxy:#ff8a7a; --nitro:#8fb4ff; --hal:#9bd88f;
+  --screen:#0e1113; --grid:#233029; --bond:#b9c0c6;
+  --radius:3px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-weight:600; margin:0;}
+sub,sup{line-height:0;}
+/* Ladung über dem Index (SO₄²⁻) */
+.ic{display:inline-grid; font-size:.64em; line-height:1; vertical-align:baseline; margin-left:.04em; justify-items:start;}
+.ic > span{grid-area:1 / 1;}
+.ic .c{transform:translateY(-.78em);}
+.ic .i{transform:translateY(.4em);}
+.fx{display:inline-block; white-space:nowrap;}
+.term .f .ic .i, .pal button .ic .i{color:inherit;}
+.term .f .ic .i{color:var(--teal);}
+
+/* header */
+header{
+  padding:22px 28px 18px; border-bottom:1px solid var(--line);
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:20px; letter-spacing:.2px;}
+header .tag{color:var(--text-dim); font-size:13.5px;}
+header .status{
+  margin-left:auto; font-size:12.5px; padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; color:var(--text-dim); display:flex; align-items:center; gap:7px;
+}
+header .status .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+header .status.running .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+header .status.running{color:var(--amber); border-color:var(--amber-dim);}
+header .status.done .dot{background:var(--teal); box-shadow:0 0 6px var(--teal);}
+header .status.done{color:var(--teal); border-color:var(--teal-dim);}
+header .status.shown .dot{background:var(--danger);}
+header .status.shown{color:var(--danger); border-color:var(--danger-dim);}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; align-self:center; color:var(--text-dim); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:5px 11px 5px 9px; white-space:nowrap;
+}
+.back-btn:hover{color:var(--text); border-color:var(--text-faint);}
+.back-btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.back-btn .ar{color:var(--teal); font-size:14px; line-height:1;}
+.guide-link{
+  color:var(--teal); font-size:13.5px; text-decoration:none; border-bottom:1px solid var(--teal-dim);
+  padding-bottom:1px;
+}
+.guide-link:hover{border-bottom-color:var(--teal);}
+@media (max-width:600px){ header{padding:18px 16px 14px;} }
+
+.modal-backdrop{
+  display:none; position:fixed; inset:0; background:rgba(8,10,12,.7); z-index:100;
+  align-items:center; justify-content:center; padding:24px 16px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:var(--panel); border:1px solid var(--line); border-radius:5px;
+  width:100%; max-width:640px; max-height:82vh; overflow-y:auto; padding:22px 26px 26px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.modal-head h2{font-size:17px;}
+.modal-close{background:none; border:none; color:var(--text-dim); font-size:22px; line-height:1; cursor:pointer; padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body h3{font-size:13.5px; color:var(--amber); margin:18px 0 6px; font-weight:600;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p, .modal-body li{font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 6px;}
+.modal-body ol, .modal-body ul{padding-left:20px; margin:0 0 6px;}
+.modal-body strong{color:var(--text); font-weight:600;}
+.modal-body sub, .modal-body sup{font-size:.72em;}
+.formula-box{
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--text);
+  background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px; margin:6px 0 8px;
+  overflow-x:auto; white-space:nowrap; line-height:1.7;
+}
+.vh-ver{display:flex; align-items:baseline; gap:10px; margin:18px 0 6px;}
+.vh-ver:first-child{margin-top:0;}
+.vh-ver .v{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:1px 7px;}
+.vh-ver .d{font-size:12px; color:var(--text-faint);}
+
+/* layout */
+.wrap{display:grid; grid-template-columns: 330px 1fr; gap:0; align-items:start;}
+@media (max-width:920px){ .wrap{grid-template-columns:1fr;} }
+.sidebar{
+  border-right:1px solid var(--line); padding:20px 20px 60px;
+  max-height:calc(100vh - 70px); overflow-y:auto;
+}
+@media (max-width:920px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); max-height:none; padding-bottom:24px;} }
+.main{padding:20px 24px 60px; min-width:0;}
+@media (max-width:600px){ .sidebar{padding:18px 16px 24px;} .main{padding:18px 16px 50px;} }
+
+section.block{margin-bottom:26px;}
+.block h2{
+  font-size:12.5px; color:var(--text-dim); font-weight:600;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft); margin-bottom:14px; letter-spacing:.2px;
+}
+.sub-label{font-size:13px; color:var(--text-dim); margin:0 0 6px;}
+.mode-toggle{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:12px;}
+.mode-toggle button{flex:1; background:var(--panel-alt); color:var(--text-dim); border:none; padding:8px 6px; font-size:12.5px; cursor:pointer; font-family:inherit;}
+.mode-toggle button + button{border-left:1px solid var(--line);}
+.mode-toggle button.active{background:var(--teal-dim); color:var(--text);}
+.mode-toggle button:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+.check-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--text-dim); margin-bottom:12px; cursor:pointer; line-height:1.4;}
+.check-row input{accent-color:var(--teal); width:15px; height:15px; margin:1px 0 0; flex:none;}
+.field-full{margin-bottom:14px;}
+select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  padding:7px 9px; border-radius:var(--radius); font-size:13.5px; font-family:inherit;
+}
+select:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+
+.btn{
+  border-radius:var(--radius); border:1px solid var(--line); background:var(--panel-alt);
+  color:var(--text); font-size:13px; padding:8px 14px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.btn:hover{border-color:var(--text-faint);}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#0d1614;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.note{font-size:12px; color:var(--text-faint); line-height:1.5; margin-top:10px; max-width:62ch;}
+
+.lib-wrap{border:1px solid var(--line-soft); border-radius:4px; overflow:hidden;}
+.lib-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.lib-table td{padding:5px 8px; border-bottom:1px solid var(--line-soft); color:var(--text-dim); line-height:1.4;}
+.lib-table td.k{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; width:1%; white-space:nowrap;}
+.lib-table tr.grp td{color:var(--text-faint); font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; padding-top:10px; background:var(--bg);}
+.lib-table tr:last-child td{border-bottom:none;}
+.lib-table sub, .lib-table sup{font-size:.75em;}
+details.rules{margin-bottom:26px;}
+details.rules summary{list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--text-dim); font-weight:600; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); letter-spacing:.2px;}
+details.rules summary::-webkit-details-marker{display:none;}
+details.rules summary:hover{border-color:var(--text-faint); color:var(--text);}
+details.rules summary:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+details.rules .rules-state{font-weight:500; color:var(--teal); font-size:12px;}
+details.rules .rules-state::after{content:"anzeigen +";}
+details.rules[open] .rules-state::after{content:"ausblenden −";}
+details.rules[open] summary{margin-bottom:12px;}
+
+/* Aufgaben-Screen */
+.screen-card{border:1px solid var(--line); background:var(--screen); border-radius:4px; padding:14px 14px 6px;}
+.screen-top{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+.task-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+.task-num{font-size:11.5px; color:var(--text-faint);}
+.chip{font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;}
+.chip.l1{color:var(--good); border-color:#35573a;}
+.chip.l2{color:var(--amber); border-color:var(--amber-dim);}
+.chip.l3{color:var(--danger); border-color:var(--danger-dim);}
+.chip.anorg{color:var(--teal); border-color:var(--teal-dim);}
+.chip.org{color:var(--nitro); border-color:#34466b;}
+.chip.ox{color:var(--good); border-color:#35573a;}
+.chip.red{color:var(--nitro); border-color:#34466b;}
+.task-prompt{font-size:19px; margin:8px 0 4px; color:var(--text);}
+.task-ctx{font-size:14px; color:var(--text-dim); line-height:1.55; margin:0 0 4px; max-width:80ch;}
+.task-ctx .fm, .fm{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text); white-space:nowrap;}
+.fm sub, .fm sup, .rg sub, .rg sup{font-size:.68em;}
+
+.steps-col{display:flex; flex-direction:column; gap:14px; margin:14px 0 4px;}
+.stepbox{border:1px solid var(--line-soft); border-radius:4px; padding:10px 12px 12px; background:var(--panel); transition:opacity .15s; min-width:0;}
+.stepbox .sh{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:10px; letter-spacing:.2px;}
+.stepbox .sh .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); border:1px solid var(--amber-dim); border-radius:var(--radius); padding:0 6px; margin-right:6px; font-size:11px;}
+.stepbox .sh .opt-l{font-weight:500; color:var(--text-faint); margin-left:6px;}
+.stepbox .sh .st{font-weight:500; font-size:11.5px; color:var(--text-faint); white-space:nowrap;}
+.sh-r{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+.btn-del{background:none; border:1px solid transparent; color:var(--text-faint); font-size:11.5px; padding:2px 8px; border-radius:var(--radius); cursor:pointer; font-family:inherit; font-weight:500; white-space:nowrap;}
+.btn-del::before{content:"⟲ ";}
+.btn-del:hover{color:var(--danger); border-color:var(--danger-dim);}
+.btn-del:focus-visible{outline:2px solid var(--teal); outline-offset:1px;}
+.btn-del.confirm{color:var(--danger); border-color:var(--danger); background:#33201b;}
+.half-head .btn-del{margin-left:auto;}
+.stepbox.passed{border-color:#35573a;}
+.stepbox.passed .sh .st{color:var(--good);}
+.stepbox.passed .sh .n{color:var(--good); border-color:#35573a;}
+.stepbox.revealed .sh .st{color:var(--danger);}
+.stepbox.locked{opacity:.42;}
+.stepbox.locked .sbody{pointer-events:none;}
+.stp-note{font-size:12px; color:var(--text-faint); line-height:1.45; margin:0 0 10px; max-width:80ch;}
+.stp-note sub, .stp-note sup{font-size:.72em;}
+.btn.step-check{width:100%; margin-top:12px;}
+
+.half{border:1px solid var(--line-soft); border-radius:4px; background:var(--screen); padding:10px 10px 12px; margin-bottom:10px;}
+.half.ok{border-color:#35573a;}
+.half-head{display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; margin-bottom:10px;}
+.half-head .hl{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:12px;}
+.half-head .rg{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px; color:var(--text); display:inline-flex; flex-wrap:wrap; align-items:center; max-width:100%; min-width:0;}
+.half-head .rg .arr{color:var(--teal); margin:0 .45em;}
+.on-row{display:flex; flex-wrap:wrap; gap:10px 26px; align-items:flex-end; margin-bottom:12px;}
+.field label, .field .lbl{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
+.field .lbl b{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text);}
+.field .lbl small{color:var(--text-faint);}
+.on-in{display:flex; align-items:center; gap:8px;}
+.on-in .arr{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+input.num-in{background:var(--panel-alt); border:1px solid var(--line); color:var(--amber); padding:6px 8px; border-radius:var(--radius); font-size:15px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; text-align:center;}
+input.num-in::placeholder{color:var(--text-faint); font-size:12px;}
+input.num-in:focus{outline:2px solid var(--teal-dim); outline-offset:1px;}
+input.num-in.on{width:78px;}
+input.num-in.fac{width:56px;}
+.field .mode-toggle{margin:0; min-width:220px;}
+
+/* Gleichungsbaukasten */
+.eq-wrap{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:start;}
+@media (max-width:780px){ .eq-wrap{grid-template-columns:1fr;} }
+.eqb{display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; min-width:0;}
+.tray{flex:1 1 220px; min-width:0; position:relative; border:1px solid var(--line); border-radius:4px; background:var(--panel); padding:22px 8px 8px; cursor:pointer;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size:28px 28px; background-blend-mode:normal;}
+.tray::before{content:""; position:absolute; inset:0; background:var(--panel); opacity:.8; pointer-events:none; border-radius:4px;}
+.tray > *{position:relative;}
+.tray.act{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal-dim);}
+.tray .stylelbl{position:absolute; left:8px; top:5px; font-size:10.5px; color:var(--text-faint); letter-spacing:.3px; z-index:1;}
+.tray.act .stylelbl{color:var(--teal);}
+.terms{display:flex; flex-wrap:wrap; align-items:center; gap:6px 4px; min-height:36px;}
+.terms .empty{font-size:12px; color:var(--text-faint);}
+.terms .op{font-size:18px; color:var(--text-faint); padding:0 2px;}
+.term{display:inline-flex; align-items:center; gap:1px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-alt); padding:2px 2px 2px 3px;}
+.term .f{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:18px; color:var(--text); white-space:nowrap; padding:0 4px 0 2px;}
+.term .f sub, .term .f sup{font-size:.62em;}
+.term .f sub{color:var(--teal);}
+.term.is-e .f{color:var(--amber);}
+input.coef{width:30px; height:28px; border:1px solid var(--line); background:var(--raise); color:var(--amber); border-radius:var(--radius); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:16px; text-align:center; padding:0;}
+input.coef::placeholder{color:var(--text-faint);}
+input.coef:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 1px var(--teal);}
+.term .tb{border:none; background:none; color:var(--text-faint); width:22px; height:26px; cursor:pointer; font-size:14px; line-height:1; border-radius:var(--radius); font-family:inherit;}
+.term .tb:hover{color:var(--text); background:var(--raise);}
+.term .tb:focus-visible{outline:2px solid var(--teal); outline-offset:-1px;}
+.eqb .arrow{align-self:center; color:var(--teal); font-size:24px; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; padding:0 2px;}
+@media (max-width:600px){ .eqb .arrow{flex-basis:100%; text-align:center; line-height:1; transform:rotate(90deg); height:22px;} }
+.pal-wrap{border-top:1px dashed var(--line-soft); padding-top:10px; margin-top:10px;}
+.pal-top{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:8px;}
+.pal-lbl{font-size:12px; color:var(--text-faint);}
+.pal-top .mode-toggle{margin:0;}
+.pal-top .mode-toggle button{padding:4px 12px; font-size:12px;}
+.pal{display:flex; flex-wrap:wrap; gap:6px;}
+.pal button{
+  min-width:50px; min-height:38px; padding:0 10px; border-radius:var(--radius); border:1px solid var(--line);
+  background:var(--panel); color:var(--text); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
+  font-size:15px; cursor:pointer; touch-action:manipulation;
+}
+.pal button sub, .pal button sup{font-size:.68em;}
+.pal button:hover{border-color:var(--text-faint);}
+.pal button{cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;}
+.pal button:active{cursor:grabbing;}
+.drag-ghost{position:fixed; z-index:200; pointer-events:none; transform:translate(-50%,-50%) scale(1.08); display:flex; align-items:center; justify-content:center;
+  min-width:50px; min-height:38px; padding:0 10px; border-radius:var(--radius); border:1px solid var(--teal); background:var(--panel-alt); color:var(--text);
+  font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px; box-shadow:0 6px 18px rgba(0,0,0,.45); opacity:.95;}
+.drag-ghost.is-e{color:var(--amber);}
+.drag-ghost sub, .drag-ghost sup{font-size:.68em;}
+.dragging .tray{border-style:dashed;}
+.tray.drop{border-style:solid; border-color:var(--amber); box-shadow:0 0 0 2px var(--amber-dim);}
+.tray.drop .stylelbl{color:var(--amber);}
+input.coef.bump{animation:bump .35s ease-out;}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25); border-color:var(--amber)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){ input.coef.bump{animation:none;} }
+.pal button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.pal button.std{color:var(--text-dim); border-style:dashed;}
+.pal button.is-e{color:var(--amber);}
+
+/* Strukturformeln */
+.mol-w{display:inline-flex; align-items:center; vertical-align:middle; gap:3px; line-height:1;}
+.mol-w .sfx{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px; color:var(--text);}
+.mol-w .sfx sup{font-size:.68em;}
+svg.mol{display:block; max-width:none; overflow:visible;}
+svg.mol line{stroke:var(--bond); stroke-width:1.4; stroke-linecap:round;}
+svg.mol text{fill:var(--text); font-size:13px; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; text-anchor:middle; dominant-baseline:central;}
+svg.mol text.ox{fill:var(--oxy);}
+svg.mol circle.chg{fill:none; stroke:var(--text); stroke-width:1.1;}
+svg.mol line.chg{stroke:var(--text); stroke-width:1.2;}
+svg.mol line.lp{stroke-width:1.6;}
+svg.mol line.lp.ox{stroke:var(--oxy);}
+.pal button .mol-w{padding:4px 0;}
+.pal button .mol-w .sfx{font-size:12px;}
+.term .f .mol-w{padding:2px 0;}
+.ref .mol-w, .facrow .mol-w, .step .mol-w, .half-head .mol-w{margin:2px 0;}
+
+.bil{border:1px solid var(--line-soft); border-radius:4px; background:var(--panel); font-size:12.5px; border-collapse:collapse; min-width:170px;}
+.bil th{font-weight:500; color:var(--text-faint); font-size:10.5px; padding:5px 10px; border-bottom:1px solid var(--line-soft); text-align:center; letter-spacing:.3px;}
+.bil td{padding:3px 10px; text-align:center; border-bottom:1px solid var(--line-soft); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-variant-numeric:tabular-nums;}
+.bil tr:last-child td{border-bottom:none;}
+.bil td.el{color:var(--text); font-weight:600; text-align:left; font-family:inherit;}
+.bil td.n{color:var(--amber);}
+.bil tr.ok td.s{color:var(--good);}
+.bil tr.no td.s{color:var(--danger);}
+.bil tr.no td.n{color:var(--danger);}
+.bil-empty{font-size:12px; color:var(--text-faint); padding:6px 2px;}
+
+.facs{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen); margin-bottom:6px;}
+.facrow{display:flex; align-items:center; gap:10px 12px; padding:8px 10px; border-bottom:1px solid var(--line-soft); flex-wrap:wrap;}
+.facrow:last-child{border-bottom:none;}
+.facrow .hl{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--amber); font-size:12px; flex:none;}
+.facrow .rg{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px; color:var(--text); overflow-x:auto; white-space:nowrap; flex:1 1 260px; min-width:0;}
+.facrow .ec{font-size:12px; color:var(--text-faint); white-space:nowrap;}
+.facrow .x{color:var(--text-faint); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.fac-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 14px;}
+.ref{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; font-size:15px; color:var(--text); background:var(--screen); border:1px solid var(--line-soft); border-radius:4px; padding:8px 10px; margin-bottom:12px; overflow-x:auto; white-space:nowrap;}
+.ref .k{display:block; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; font-size:10.5px; color:var(--text-faint); letter-spacing:.3px; margin-bottom:3px;}
+.ref sub, .ref sup{font-size:.68em;}
+.note-box{border-color:var(--teal-dim); color:var(--text-dim); margin:0 0 12px;}
+.note-box b{color:var(--text); font-weight:600;}
+.locked-msg{font-size:12.5px; color:var(--text-faint);}
+
+.feedback{display:flex; flex-direction:column; gap:6px; margin:12px 0 0;}
+.feedback:empty{display:none;}
+.feedback.stale .fb:not(.hint){opacity:.5;}
+.fb{font-size:13px; line-height:1.5; padding:8px 11px; border-radius:4px; border:1px solid var(--line-soft); background:var(--panel);}
+.fb.good{color:var(--good); border-color:#35573a;}
+.fb.bad{color:var(--danger); border-color:var(--danger-dim);}
+.fb.hint{color:var(--amber); border-color:var(--amber-dim);}
+.fb.info{color:var(--text-dim);}
+.fb sub, .fb sup{font-size:.72em;}
+.fb .fm{color:inherit;}
+
+.readout-bar{display:flex; gap:26px; padding:12px 4px 12px; flex-wrap:wrap; border-top:1px solid var(--line-soft); margin-top:12px;}
+.readout{display:flex; flex-direction:column; gap:2px;}
+.readout .k{font-size:10.5px; color:var(--text-faint);}
+.readout .v{font-size:15px; color:var(--amber);}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin:26px 0 0; border-bottom:1px solid var(--line); overflow-x:auto;}
+.tabs button{background:none; border:none; color:var(--text-dim); font-size:13px; padding:9px 4px; margin-right:22px; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; font-weight:500; white-space:nowrap;}
+.tabs button.active{color:var(--text); border-bottom-color:var(--amber);}
+.tabpanel{display:none; padding-top:18px;}
+.tabpanel.active{display:block;}
+.empty-hint{color:var(--text-faint); font-size:13px; padding:22px 4px;}
+
+.steps{display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:4px; background:var(--screen);}
+.step{display:grid; grid-template-columns:28px 170px minmax(0,1fr); gap:10px; padding:10px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.55; align-items:baseline;}
+.step:last-child{border-bottom:none;}
+.step .n{font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; color:var(--text-faint); font-size:12px;}
+.step .h{color:var(--text-dim);}
+.step .b{color:var(--text); min-width:0; overflow-x:auto;}
+.step .b .a{color:var(--amber); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;}
+.step .b .t{color:var(--teal); font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; white-space:nowrap;}
+.step .b .eqx{display:block; font-family:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace; white-space:nowrap; font-size:14.5px;}
+.step .b .sm{display:block; font-size:12.5px; color:var(--text-dim);}
+.step.final .b .eqx{font-size:16px; color:var(--teal);}
+.step sub, .step sup{font-size:.72em;}
+@media (max-width:600px){ .step{grid-template-columns:22px minmax(0,1fr);} .step .b{grid-column:2;} }
+
+.table-wrap{overflow-x:auto; border:1px solid var(--line-soft); border-radius:4px;}
+table.hist{width:100%; border-collapse:collapse; font-size:12.8px;}
+table.hist thead th{text-align:left; font-weight:500; color:var(--text-faint); font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.hist td{padding:7px 8px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
+table.hist sub, table.hist sup{font-size:.75em;}
+.s-first{color:var(--good);} .s-ok{color:var(--teal);} .s-shown{color:var(--danger);} .s-open{color:var(--text-faint); font-style:italic;}
+
+footer{padding:16px 28px 30px; color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--line-soft); margin-top:10px;}
+footer p{margin:0;}
+footer a{color:var(--text-dim); text-decoration:none; border-bottom:1px solid var(--line);}
+footer a:hover{color:var(--text); border-bottom-color:var(--text-dim);}
+footer .footer-credit{margin-top:8px; color:var(--text-dim);}
+@media (max-width:600px){ footer{padding:16px 16px 30px;} }
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../index.html" class="back-btn" title="Zur Übersicht aller Simulationen"><span class="ar" aria-hidden="true">←</span>Zurück</a>
+  <h1>Redoxgleichungen aufstellen</h1>
+  <span class="tag">Teilgleichungen, Gesamtgleichung &amp; Stoffgleichung – anorganisch und organisch</span>
+  <a href="#" class="guide-link" id="btnGuide">Anleitung</a>
+  <span class="status running" id="statusBadge"><span class="dot"></span><span id="statusText">Aufgabe offen</span></span>
+</header>
+
+<div class="modal-backdrop" id="guideBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-head">
+      <h2 id="guideTitle">Anleitung</h2>
+      <button class="modal-close" id="closeGuide" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>Worum es geht</h3>
+      <p>Bei einer <strong>Redoxreaktion</strong> gibt ein Teilchen Elektronen ab (<strong>Oxidation</strong>, die Oxidationszahl steigt) und ein anderes nimmt sie auf (<strong>Reduktion</strong>, die Oxidationszahl sinkt). Die Gleichung wird in drei Schritten aufgestellt: erst die beiden Teilgleichungen, dann die Gesamtgleichung und auf Wunsch die Stoffgleichung mit allen an der Reaktion unbeteiligten Ionen.</p>
+
+      <h3>Schritt 1: Teilgleichungen (vereinfacht)</h3>
+      <ol>
+        <li>Oxidationszahlen des Elements bestimmen, das sich verändert. Steigt sie, liegt eine Oxidation vor, sinkt sie, eine Reduktion.</li>
+        <li>Die Atome dieses Elements ausgleichen.</li>
+        <li>Elektronen ergänzen: Änderung der Oxidationszahl × Anzahl der Atome.</li>
+      </ol>
+      <p>Die übrigen Atome (z. B. O und H) und die Ladungen werden in den Teilgleichungen <strong>nicht</strong> ausgeglichen.</p>
+      <div class="formula-box">MnO<span class="ic"><span class="c">−</span><span class="i">4</span></span> → Mn<sup>2+</sup>        Mn: +VII → +II, also 5 e<sup>−</sup><br>MnO<span class="ic"><span class="c">−</span><span class="i">4</span></span> + 5 e<sup>−</sup> → Mn<sup>2+</sup></div>
+
+      <h3>Schritt 2: Gesamtgleichung</h3>
+      <ol>
+        <li>Teilgleichungen so multiplizieren, dass gleich viele Elektronen abgegeben und aufgenommen werden (<strong>kgV</strong> der Elektronenzahlen).</li>
+        <li>Addieren und die Elektronen kürzen.</li>
+        <li>Ladungen ausgleichen: in <strong>saurer Lösung</strong> mit H<sup>+</sup> (oder H<sub>3</sub>O<sup>+</sup>), in <strong>alkalischer Lösung</strong> mit OH<sup>−</sup>. Organische Reaktionen gleicht man formal mit H<sup>+</sup> aus.</li>
+        <li>O- und H-Atome mit H<sub>2</sub>O ausgleichen und weitere Teilchen ergänzen (z. B. NH<sub>3</sub> bei der Tollens-Probe).</li>
+      </ol>
+      <div class="formula-box">MnO<span class="ic"><span class="c">−</span><span class="i">4</span></span> + 5 Fe<sup>2+</sup> → Mn<sup>2+</sup> + 5 Fe<sup>3+</sup>        Ladung: links +9, rechts +17<br>MnO<span class="ic"><span class="c">−</span><span class="i">4</span></span> + 5 Fe<sup>2+</sup> + 8 H<sup>+</sup> → Mn<sup>2+</sup> + 5 Fe<sup>3+</sup> + 4 H<sub>2</sub>O</div>
+      <p>Die Koeffizienten müssen die kleinstmöglichen ganzen Zahlen sein.</p>
+
+      <h3>Schritt 3: Stoffgleichung (optional)</h3>
+      <p>Die Ionen stammen aus Salzen, Säuren oder Laugen. Ergänze die an der Reaktion unbeteiligten Ionen, sodass nur noch Stoffformeln wie KMnO<sub>4</sub> oder H<sub>2</sub>SO<sub>4</sub> in der Gleichung stehen.</p>
+
+      <h3>Bedienung</h3>
+      <p>In den Teilgleichungen sind die Teilchen des Redoxpaares bereits eingetragen. Du ergänzt die Elektronen und setzt die Koeffizienten. In der Gesamtgleichung kommen H<sup>+</sup>, OH<sup>−</sup>, H<sub>2</sub>O und weitere Teilchen hinzu. Dazu <strong>ziehst</strong> du Elektronen und Teilchen aus der Leiste unter der Gleichung in das Feld Edukte oder Produkte. Alternativ tippst du eine Seite an (oder wählst „Edukten“/„Produkten“) und tippst dann das Teilchen an. Ziehst oder tippst du ein Teilchen, das auf dieser Seite schon steht, erhöht sich sein Koeffizient um 1. Den <strong>Koeffizienten</strong> trägst du in das Feld vor der Formel ein, ein leeres Feld gilt als 1. Mit × wird ein ergänztes Teilchen wieder entfernt, die vorgegebenen Teilchen bleiben stehen. Oxidationszahlen kannst du als +2, −1, 0 oder +II eingeben.</p>
+      <p>Mit <strong>„Löschen“</strong> leerst du eine einzelne Teilgleichung, mit <strong>„Schritt löschen“</strong> oben rechts im Kasten den ganzen Schritt. Zur Sicherheit musst du ein zweites Mal auf „Wirklich löschen?“ tippen. Wird eine Teilgleichung gelöscht, sind die folgenden Schritte wieder gesperrt, bis sie erneut stimmt. Ihre Einträge bleiben dabei erhalten.</p>
+      <p>Jeder Schritt hat einen eigenen Prüfen-Button. Der nächste Schritt wird freigeschaltet, sobald der vorige stimmt. Die <strong>Atom- und Ladungsbilanz</strong> neben der Gesamt- und der Stoffgleichung lässt sich links ausschalten. Den Faktor 1 beim Elektronenausgleich musst du nicht eintragen, ein leeres Feld gilt als 1.</p>
+
+      <h3>Tipp, Lösung, Auswertung</h3>
+      <p>„Tipp“ und „Lösung zeigen“ beziehen sich immer auf den Schritt, an dem du gerade arbeitest. Mit Tipp gelöste Aufgaben zählen nicht als „im 1. Versuch“. Wird in Schritt 1 oder 2 die Lösung angezeigt, gilt die Aufgabe als „Lösung angesehen“. Der Tab <strong>Lösungsweg</strong> erklärt den Weg zur Gesamtgleichung, der <strong>Verlauf</strong> listet alle Aufgaben dieser Sitzung.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="changelogBackdrop">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+    <div class="modal-head">
+      <h2 id="changelogTitle">Versionshinweise</h2>
+      <button class="modal-close" id="closeChangelog" aria-label="Schließen">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="vh-ver"><span class="v">V1.0</span><span class="d">26.10.2026</span></div>
+      <ul>
+        <li>44 Redoxreaktionen: 24 <strong>anorganische</strong> und 20 <strong>organische</strong>, jeweils in den Stufen Leicht, Mittel und Schwer.</li>
+        <li>Drei Schritte mit eigener Prüfung: Teilgleichungen mit Oxidationszahlen, Gesamtgleichung mit Elektronenausgleich, optional die Stoffgleichung mit den an der Reaktion unbeteiligten Ionen.</li>
+        <li>Elektronen und Teilchen per Drag &amp; Drop (Maus, Finger, Stift) in die Gleichung ziehen.</li>
+        <li>Organische Teilchen als Strukturformeln (Valenzstrichformeln mit freien Elektronenpaaren).</li>
+        <li>Vereinfachte Teilgleichungen mit vorgegebenem Redoxpaar: nur Redoxelement und Elektronen ausgleichen. Ladungen, O und H folgen in der Gesamtgleichung.</li>
+        <li>Oxidation grün markiert. Schritt 3 heißt jetzt „An der Reaktion unbeteiligte Ionen ergänzen“.</li>
+        <li>Start mit Stufe Mittel. Teilgleichungen und Schritte lassen sich einzeln löschen.</li>
+        <li>Saure, alkalische und formale Ausgleiche, H<sub>3</sub>O<sup>+</sup> gleichwertig zu H<sup>+</sup>, Rückmeldung zu typischen Fehlern, Atom- und Ladungsbilanz, Tipps, Lösungsweg und Verlauf.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <section class="block">
+      <h2>Aufgabe</h2>
+      <p class="sub-label">Reaktionen</p>
+      <div class="mode-toggle" id="catToggle">
+        <button data-cat="anorg" class="active">Anorganisch</button>
+        <button data-cat="org">Organisch</button>
+        <button data-cat="mix">Beide</button>
+      </div>
+      <p class="sub-label">Stufe</p>
+      <div class="mode-toggle" id="levelToggle">
+        <button data-lvl="1">Leicht</button>
+        <button data-lvl="2" class="active">Mittel</button>
+        <button data-lvl="3">Schwer</button>
+        <button data-lvl="0">Gemischt</button>
+      </div>
+      <p class="note" id="levelNote" style="margin-top:0"></p>
+    </section>
+
+    <section class="block">
+      <h2>Aufgabe gezielt wählen</h2>
+      <div class="field-full">
+        <div style="display:flex; gap:6px;">
+          <select id="taskSelect" style="flex:1; min-width:0;" aria-label="Aufgabe gezielt wählen"></select>
+          <button class="btn ghost" id="btnLoad" style="flex:none;">Laden</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Darstellung</h2>
+      <label class="check-row" for="chkBil"><input type="checkbox" id="chkBil" checked><span>Atom- und Ladungsbilanz bei Gesamt- und Stoffgleichung anzeigen</span></label>
+    </section>
+
+    <details class="block rules" id="rulesBox">
+      <summary><span>Regeln</span><span class="rules-state" aria-hidden="true"></span></summary>
+      <div class="lib-wrap">
+        <table class="lib-table">
+          <tbody>
+            <tr class="grp"><td colspan="2">Redoxbegriffe</td></tr>
+            <tr><td class="k">OZ ↑</td><td>Oxidation = Elektronenabgabe, e<sup>−</sup> stehen rechts</td></tr>
+            <tr><td class="k">OZ ↓</td><td>Reduktion = Elektronenaufnahme, e<sup>−</sup> stehen links</td></tr>
+            <tr><td class="k">Anzahl e<sup>−</sup></td><td>Änderung der OZ × Anzahl der Atome</td></tr>
+            <tr class="grp"><td colspan="2">Teilgleichung (vereinfacht)</td></tr>
+            <tr><td class="k">1.</td><td>Atome des Redoxelements</td></tr>
+            <tr><td class="k">2.</td><td>Elektronen</td></tr>
+            <tr><td class="k">O, H, Ladung</td><td>erst in der Gesamtgleichung</td></tr>
+            <tr class="grp"><td colspan="2">Gesamtgleichung</td></tr>
+            <tr><td class="k">kgV</td><td>gleich viele e<sup>−</sup> abgeben wie aufnehmen</td></tr>
+            <tr><td class="k">addieren</td><td>Teilgleichungen addieren, e<sup>−</sup> kürzen</td></tr>
+            <tr><td class="k">sauer</td><td>Ladung mit H<sup>+</sup> bzw. H<sub>3</sub>O<sup>+</sup></td></tr>
+            <tr><td class="k">alkalisch</td><td>Ladung mit OH<sup>−</sup></td></tr>
+            <tr><td class="k">organisch</td><td>formal mit H<sup>+</sup></td></tr>
+            <tr><td class="k">H<sub>2</sub>O</td><td>O- und H-Atome ausgleichen</td></tr>
+            <tr><td class="k">Probe</td><td>Atome und Ladungen: links = rechts</td></tr>
+            <tr class="grp"><td colspan="2">Stoffgleichung</td></tr>
+            <tr><td class="k">unbeteiligte Ionen</td><td>K<sup>+</sup>, Na<sup>+</sup>, SO<span class="ic"><span class="c">2−</span><span class="i">4</span></span>, NO<span class="ic"><span class="c">−</span><span class="i">3</span></span>, Cl<sup>−</sup> … beidseitig gleich oft ergänzen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Oxidationszahlen in römischer Schreibweise. In organischen Verbindungen wird die Oxidationszahl des C-Atoms der funktionellen Gruppe betrachtet.</p>
+    </details>
+  </div>
+
+  <div class="main">
+    <div class="screen-card">
+      <div class="screen-top">
+        <button class="btn primary" id="btnNew">Neue Aufgabe</button>
+        <button class="btn ghost" id="btnHint">Tipp</button>
+        <button class="btn ghost" id="btnSolve">Lösung zeigen</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="task-num mono" id="taskNum">Aufgabe 1</span>
+        <span class="chip" id="taskCat"></span>
+        <span class="chip" id="taskLevel"></span>
+        <span class="chip" id="taskMil"></span>
+      </div>
+      <div class="task-prompt" id="taskPrompt"></div>
+      <p class="task-ctx" id="taskCtx"></p>
+
+      <div class="steps-col">
+        <div class="stepbox" id="box1">
+          <div class="sh"><span><span class="n">1</span>Teilgleichungen aufstellen</span><span class="sh-r"><button type="button" class="btn-del" id="del1" title="Beide Teilgleichungen leeren">Schritt löschen</button><span class="st" id="st1">offen</span></span></div>
+          <div class="sbody">
+            <div class="fb info note-box"><b>Vereinfachte Teilgleichungen:</b> Gleiche nur die Atome des Elements aus, dessen Oxidationszahl sich ändert, und ergänze die Elektronen. Die übrigen Atome (z. B. O und H) und die Ladungen werden erst in der Gesamtgleichung ausgeglichen.</div>
+            <p class="stp-note">Die Teilchen des Redoxpaares sind vorgegeben. Bestimme die Oxidationszahlen, entscheide, ob Oxidation oder Reduktion vorliegt, und ergänze die Elektronen.</p>
+            <div id="halves"></div>
+            <button class="btn step-check" id="btnCheck1">Teilgleichungen prüfen</button>
+          </div>
+        </div>
+
+        <div class="stepbox locked" id="box2">
+          <div class="sh"><span><span class="n">2</span>Gesamtgleichung aufstellen</span><span class="sh-r"><button type="button" class="btn-del" id="del2" title="Faktoren und Gesamtgleichung leeren" hidden>Schritt löschen</button><span class="st" id="st2">gesperrt</span></span></div>
+          <div class="sbody" id="body2"></div>
+        </div>
+
+        <div class="stepbox locked" id="box3">
+          <div class="sh"><span><span class="n">3</span>An der Reaktion unbeteiligte Ionen ergänzen<span class="opt-l">optional</span></span><span class="sh-r"><button type="button" class="btn-del" id="del3" title="Stoffgleichung leeren" hidden>Schritt löschen</button><span class="st" id="st3">gesperrt</span></span></div>
+          <div class="sbody" id="body3"></div>
+        </div>
+      </div>
+
+      <div class="readout-bar">
+        <div class="readout"><span class="k">gelöst</span><span class="v mono" id="roSolved">0</span></div>
+        <div class="readout"><span class="k">davon im 1. Versuch</span><span class="v mono" id="roFirst">0</span></div>
+        <div class="readout"><span class="k">Serie</span><span class="v mono" id="roStreak">0</span></div>
+        <div class="readout"><span class="k">Lösung angesehen</span><span class="v mono" id="roShown">0</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="way">Lösungsweg</button>
+      <button class="tabbtn" data-tab="hist">Verlauf</button>
+    </div>
+    <div class="tabpanel active" id="tab-way">
+      <div id="wayBox"><div class="empty-hint">Der Lösungsweg erscheint, sobald die Gesamtgleichung richtig ist oder die Lösung angezeigt wurde.</div></div>
+    </div>
+    <div class="tabpanel" id="tab-hist">
+      <div class="table-wrap">
+        <table class="hist">
+          <thead><tr><th>#</th><th>Reaktion</th><th>Bereich</th><th>Stufe</th><th>Stoffgleichung</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="6" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">Redoxgleichungen in Ionenschreibweise ohne Zustandsangaben, Koeffizienten als kleinstmögliche ganze Zahlen. Organische Teilchen als Valenzstrichformeln mit freien Elektronenpaaren; organische Teilgleichungen werden formal mit H<sup>+</sup> ausgeglichen, H<sub>3</sub>O<sup>+</sup> wird gleichwertig akzeptiert. Fehling-Probe und Silberspiegelprobe sind vereinfacht dargestellt.</p>
+  <p class="footer-credit">Bastian Baumgart · Redoxgleichungen V1.0 (erstellt mit Claude Pro) · <a href="#" id="btnChangelog">Versionshinweise</a> · <a href="../impressum.html#impressum">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a></p>
+</footer>
+
+<script>
+/*DATA-START*/
+const SP={
+  e:{f:'e',q:-1,n:'Elektron'},
+  H:{f:'H',q:1,n:'Wasserstoff-Ion (Proton)'},
+  H3O:{f:'H3O',q:1,n:'Oxonium-Ion'},
+  OH:{f:'OH',q:-1,n:'Hydroxid-Ion'},
+  H2O:{f:'H2O',q:0,n:'Wasser'},
+  Zn:{f:'Zn',q:0,n:'Zink'}, Zn2:{f:'Zn',q:2,n:'Zink-Ion'},
+  Cu:{f:'Cu',q:0,n:'Kupfer'}, Cu2:{f:'Cu',q:2,n:'Kupfer(II)-Ion'},
+  Ag:{f:'Ag',q:0,n:'Silber'}, Ag1:{f:'Ag',q:1,n:'Silber-Ion'},
+  Mg:{f:'Mg',q:0,n:'Magnesium'}, Mg2:{f:'Mg',q:2,n:'Magnesium-Ion'},
+  H2:{f:'H2',q:0,n:'Wasserstoff'},
+  Na:{f:'Na',q:0,n:'Natrium'}, Na1:{f:'Na',q:1,n:'Natrium-Ion'},
+  Cl2:{f:'Cl2',q:0,n:'Chlor'}, Cl1:{f:'Cl',q:-1,n:'Chlorid-Ion'}, ClO:{f:'ClO',q:-1,n:'Hypochlorit-Ion'},
+  Fe2:{f:'Fe',q:2,n:'Eisen(II)-Ion'}, Fe3:{f:'Fe',q:3,n:'Eisen(III)-Ion'},
+  I1:{f:'I',q:-1,n:'Iodid-Ion'}, I2:{f:'I2',q:0,n:'Iod'},
+  H2O2:{f:'H2O2',q:0,n:'Wasserstoffperoxid'},
+  SO2:{f:'SO2',q:0,n:'Schwefeldioxid'}, SO3:{f:'SO3',q:-2,n:'Sulfit-Ion'}, SO4:{f:'SO4',q:-2,n:'Sulfat-Ion'},
+  NO3:{f:'NO3',q:-1,n:'Nitrat-Ion'}, NO2:{f:'NO2',q:0,n:'Stickstoffdioxid'}, NO:{f:'NO',q:0,n:'Stickstoffmonooxid'},
+  MnO4:{f:'MnO4',q:-1,n:'Permanganat-Ion'}, Mn2:{f:'Mn',q:2,n:'Mangan(II)-Ion'}, MnO2:{f:'MnO2',q:0,n:'Mangandioxid (Braunstein)'},
+  Cr2O7:{f:'Cr2O7',q:-2,n:'Dichromat-Ion'}, Cr3:{f:'Cr',q:3,n:'Chrom(III)-Ion'},
+  CuO:{f:'CuO',q:0,n:'Kupfer(II)-oxid'}, Cu2O:{f:'Cu2O',q:0,n:'Kupfer(I)-oxid'},
+  O2:{f:'O2',q:0,n:'Sauerstoff'}, CO2:{f:'CO2',q:0,n:'Kohlenstoffdioxid'}, NH3:{f:'NH3',q:0,n:'Ammoniak'},
+  AgNH3:{f:'[Ag(NH3)2]',q:1,n:'Diamminsilber(I)-Ion'},
+  EtOH:{f:'CH3CH2OH',q:0,n:'Ethanol'}, EtAl:{f:'CH3CHO',q:0,n:'Ethanal'},
+  AcOH:{f:'CH3COOH',q:0,n:'Ethansäure (Essigsäure)'}, Ac:{f:'CH3COO',q:-1,n:'Ethanoat-Ion (Acetat-Ion)'},
+  MeOH:{f:'CH3OH',q:0,n:'Methanol'}, HCHO:{f:'HCHO',q:0,n:'Methanal'},
+  iPrOH:{f:'CH3CH(OH)CH3',q:0,n:'Propan-2-ol'}, Aceton:{f:'CH3COCH3',q:0,n:'Propanon (Aceton)'},
+  Ox:{f:'(COOH)2',q:0,n:'Oxalsäure (Ethandisäure)'},
+  CuSO4:{f:'CuSO4',q:0,n:'Kupfer(II)-sulfat'}, ZnSO4:{f:'ZnSO4',q:0,n:'Zinksulfat'},
+  AgNO3:{f:'AgNO3',q:0,n:'Silbernitrat'}, CuNO32:{f:'Cu(NO3)2',q:0,n:'Kupfer(II)-nitrat'},
+  HCl:{f:'HCl',q:0,n:'Chlorwasserstoff (Salzsäure)'}, MgCl2:{f:'MgCl2',q:0,n:'Magnesiumchlorid'},
+  NaCl:{f:'NaCl',q:0,n:'Natriumchlorid'}, FeCl3:{f:'FeCl3',q:0,n:'Eisen(III)-chlorid'}, FeCl2:{f:'FeCl2',q:0,n:'Eisen(II)-chlorid'},
+  KI:{f:'KI',q:0,n:'Kaliumiodid'}, KCl:{f:'KCl',q:0,n:'Kaliumchlorid'},
+  H2SO4:{f:'H2SO4',q:0,n:'Schwefelsäure'}, K2SO4:{f:'K2SO4',q:0,n:'Kaliumsulfat'}, HI:{f:'HI',q:0,n:'Iodwasserstoff'},
+  HNO3:{f:'HNO3',q:0,n:'Salpetersäure'}, KMnO4:{f:'KMnO4',q:0,n:'Kaliumpermanganat'}, FeSO4:{f:'FeSO4',q:0,n:'Eisen(II)-sulfat'},
+  MnSO4:{f:'MnSO4',q:0,n:'Mangan(II)-sulfat'}, Fe2SO43:{f:'Fe2(SO4)3',q:0,n:'Eisen(III)-sulfat'},
+  K2Cr2O7:{f:'K2Cr2O7',q:0,n:'Kaliumdichromat'}, Cr2SO43:{f:'Cr2(SO4)3',q:0,n:'Chrom(III)-sulfat'},
+  Na2SO3:{f:'Na2SO3',q:0,n:'Natriumsulfit'}, Na2SO4:{f:'Na2SO4',q:0,n:'Natriumsulfat'},
+  KOH:{f:'KOH',q:0,n:'Kaliumhydroxid'}, NaOH:{f:'NaOH',q:0,n:'Natriumhydroxid'}, NaOCl:{f:'NaOCl',q:0,n:'Natriumhypochlorit'},
+  NaAc:{f:'CH3COONa',q:0,n:'Natriumacetat'}, NaNO3:{f:'NaNO3',q:0,n:'Natriumnitrat'},
+  AgNH3NO3:{f:'[Ag(NH3)2]NO3',q:0,n:'Diamminsilber(I)-nitrat'},
+  Fe:{f:'Fe',q:0,n:'Eisen'}, ZnCl2:{f:'ZnCl2',q:0,n:'Zinkchlorid'},
+  Br1:{f:'Br',q:-1,n:'Bromid-Ion'}, Br2:{f:'Br2',q:0,n:'Brom'}, KBr:{f:'KBr',q:0,n:'Kaliumbromid'},
+  O2m:{f:'O',q:-2,n:'Oxid-Ion'}, MgO:{f:'MgO',q:0,n:'Magnesiumoxid'},
+  Al:{f:'Al',q:0,n:'Aluminium'}, Al3:{f:'Al',q:3,n:'Aluminium-Ion'}, CuCl2:{f:'CuCl2',q:0,n:'Kupfer(II)-chlorid'}, AlCl3:{f:'AlCl3',q:0,n:'Aluminiumchlorid'},
+  MnCl2:{f:'MnCl2',q:0,n:'Mangan(II)-chlorid'}, IO3:{f:'IO3',q:-1,n:'Iodat-Ion'}, KIO3:{f:'KIO3',q:0,n:'Kaliumiodat'},
+  PrOH:{f:'CH3CH2CH2OH',q:0,n:'Propan-1-ol'}, PrAl:{f:'CH3CH2CHO',q:0,n:'Propanal'}, PrCOOH:{f:'CH3CH2COOH',q:0,n:'Propansäure'},
+  Bu2OH:{f:'CH3CH(OH)CH2CH3',q:0,n:'Butan-2-ol'}, Butanon:{f:'CH3COCH2CH3',q:0,n:'Butanon'},
+  HCOOH:{f:'HCOOH',q:0,n:'Methansäure (Ameisensäure)'}, HCOO:{f:'HCOO',q:-1,n:'Methanoat-Ion (Formiat-Ion)'}, NaFo:{f:'HCOONa',q:0,n:'Natriumformiat'}
+};
+const STD=['e','H','H3O','OH','H2O'];
+const MIL={aq:'wässrige Lösung',sauer:'saure Lösung',alk:'alkalische Lösung',formal:'formaler Ausgleich mit H⁺',ohne:'ohne Lösungsmittel'};
+const CNOTE='C-Atom der funktionellen Gruppe';
+const NOSTOFF_ION='Die Gesamtgleichung enthält keine Ionen – sie ist bereits die vollständige Stoffgleichung.';
+
+const TASKS=[
+/* ---------- Anorganisch, Stufe 1 ---------- */
+{id:'zn-cu',cat:'anorg',lvl:1,mil:'aq',title:'Zink in Kupfer(II)-sulfat-Lösung',
+ text:'Ein Zinkblech wird in blaue Kupfer(II)-sulfat-Lösung gestellt. Auf dem Blech scheidet sich rotbraunes Kupfer ab, die blaue Farbe der Lösung verblasst.',
+ halves:[{atom:'Zn',from:'Zn',to:'Zn2',on:[0,2],eq:'Zn > Zn2 + 2 e'},{atom:'Cu',from:'Cu2',to:'Cu',on:[2,0],eq:'Cu2 + 2 e > Cu'}],
+ total:'Zn + Cu2 > Zn2 + Cu',
+ stoff:{intro:'Die Kupfer(II)-Ionen stammen aus Kupfer(II)-sulfat ({CuSO4}). Die Sulfat-Ionen reagieren nicht mit.',pal:['ZnSO4','Cu','CuSO4','Zn','H2O'],eq:'Zn + CuSO4 > ZnSO4 + Cu',
+  hints:['Die Sulfat-Ionen bleiben in der Lösung und bilden nach der Reaktion mit den Zink-Ionen Zinksulfat.']}},
+{id:'cu-ag',cat:'anorg',lvl:1,mil:'aq',title:'Kupfer in Silbernitrat-Lösung',
+ text:'Ein Kupferdraht wird in farblose Silbernitrat-Lösung gehängt. Am Draht wachsen glänzende Silberkristalle, die Lösung färbt sich hellblau.',
+ halves:[{atom:'Ag',from:'Ag1',to:'Ag',on:[1,0],eq:'Ag1 + e > Ag'},{atom:'Cu',from:'Cu',to:'Cu2',on:[0,2],eq:'Cu > Cu2 + 2 e'}],
+ total:'Cu + 2 Ag1 > Cu2 + 2 Ag',
+ stoff:{intro:'Die Silber-Ionen stammen aus Silbernitrat ({AgNO3}). Die Nitrat-Ionen bleiben unverändert in der Lösung.',pal:['AgNO3','Ag','Cu','CuNO32','H2O'],eq:'Cu + 2 AgNO3 > CuNO32 + 2 Ag',
+  hints:['Zu jedem Kupfer(II)-Ion gehören zwei an der Reaktion unbeteiligte Nitrat-Ionen: {Cu(NO3)2}.']}},
+{id:'mg-hcl',cat:'anorg',lvl:1,mil:'sauer',title:'Magnesium in Salzsäure',
+ text:'Magnesiumband löst sich in verdünnter Salzsäure unter heftiger Gasentwicklung. Die Knallgasprobe des Gases ist positiv.',
+ halves:[{atom:'Mg',from:'Mg',to:'Mg2',on:[0,2],eq:'Mg > Mg2 + 2 e'},{atom:'H',from:'H',to:'H2',on:[1,0],eq:'2 H + 2 e > H2'}],
+ total:'Mg + 2 H > Mg2 + H2',
+ stoff:{intro:'Salzsäure enthält Oxonium- und Chlorid-Ionen. Schreibe sie als Chlorwasserstoff ({HCl}).',pal:['HCl','MgCl2','Mg','H2','H2O'],eq:'Mg + 2 HCl > MgCl2 + H2'}},
+{id:'na-cl2',cat:'anorg',lvl:1,mil:'ohne',title:'Natrium verbrennt in Chlor',
+ text:'Ein Stück erhitztes Natrium verbrennt in Chlorgas mit gelber Flamme. Es entsteht ein weißer Feststoff: Natriumchlorid.',
+ halves:[{atom:'Na',from:'Na',to:'Na1',on:[0,1],eq:'Na > Na1 + e'},{atom:'Cl',from:'Cl2',to:'Cl1',on:[0,-1],eq:'Cl2 + 2 e > 2 Cl1'}],
+ total:'2 Na + Cl2 > 2 Na1 + 2 Cl1',
+ stoff:{intro:'Natrium- und Chlorid-Ionen bilden zusammen das Salz Natriumchlorid ({NaCl}).',pal:['Na','NaCl','Cl2'],eq:'2 Na + Cl2 > 2 NaCl'}},
+{id:'fe-i',cat:'anorg',lvl:1,mil:'aq',title:'Eisen(III)-Ionen oxidieren Iodid',
+ text:'Gibt man Eisen(III)-chlorid-Lösung zu Kaliumiodid-Lösung, färbt sich die Mischung braun: Es entsteht Iod, und die Eisen(III)-Ionen werden zu Eisen(II)-Ionen.',
+ halves:[{atom:'I',from:'I1',to:'I2',on:[-1,0],eq:'2 I1 > I2 + 2 e'},{atom:'Fe',from:'Fe3',to:'Fe2',on:[3,2],eq:'Fe3 + e > Fe2'}],
+ total:'2 Fe3 + 2 I1 > 2 Fe2 + I2',
+ stoff:{intro:'Eingesetzt werden Eisen(III)-chlorid ({FeCl3}) und Kaliumiodid ({KI}). Kalium- und Chlorid-Ionen reagieren nicht mit.',pal:['KI','FeCl3','I2','FeCl2','KCl','H2O'],eq:'2 FeCl3 + 2 KI > 2 FeCl2 + I2 + 2 KCl',
+  hints:['Zähle die Chlorid-Ionen: Aus 2 {FeCl3} werden 2 {FeCl2}. Die übrigen Chlorid-Ionen bilden mit den Kalium-Ionen Kaliumchlorid.']}},
+/* ---------- Anorganisch, Stufe 2 ---------- */
+{id:'h2o2-i',cat:'anorg',lvl:2,mil:'sauer',title:'Wasserstoffperoxid und Iodid',
+ text:'Wasserstoffperoxid oxidiert in schwefelsaurer Lösung Iodid-Ionen zu Iod; die Lösung färbt sich braun. Aus dem Wasserstoffperoxid entsteht Wasser.',
+ halves:[{atom:'O',from:'H2O2',to:'H2O',on:[-1,-2],eq:'H2O2 + 2 H + 2 e > 2 H2O'},{atom:'I',from:'I1',to:'I2',on:[-1,0],eq:'2 I1 > I2 + 2 e'}],
+ total:'H2O2 + 2 I1 + 2 H > I2 + 2 H2O',
+ stoff:{intro:'Die Iodid-Ionen stammen aus Kaliumiodid ({KI}), die {H^+}-Ionen aus Schwefelsäure ({H2SO4}).',pal:['H2O2','KI','H2SO4','I2','K2SO4','H2O','KOH'],eq:'H2O2 + 2 KI + H2SO4 > I2 + K2SO4 + 2 H2O'}},
+{id:'so2-i2',cat:'anorg',lvl:2,mil:'sauer',title:'Schwefeldioxid entfärbt Iod-Lösung',
+ text:'Leitet man Schwefeldioxid in braune Iod-Lösung, wird sie farblos. Es entstehen Sulfat- und Iodid-Ionen, die Lösung wird sauer.',
+ halves:[{atom:'S',from:'SO2',to:'SO4',on:[4,6],eq:'SO2 + 2 H2O > SO4 + 4 H + 2 e'},{atom:'I',from:'I2',to:'I1',on:[0,-1],eq:'I2 + 2 e > 2 I1'}],
+ total:'SO2 + I2 + 2 H2O > SO4 + 2 I1 + 4 H',
+ stoff:{intro:'Die entstehenden {H^+}-Ionen bilden mit Sulfat- und Iodid-Ionen Schwefelsäure ({H2SO4}) und Iodwasserstoff ({HI}).',pal:['SO2','I2','H2O','H2SO4','HI','KI'],eq:'SO2 + I2 + 2 H2O > H2SO4 + 2 HI'}},
+{id:'cu-hno3k',cat:'anorg',lvl:2,mil:'sauer',title:'Kupfer in konzentrierter Salpetersäure',
+ text:'Kupfer löst sich in konzentrierter Salpetersäure; die Lösung wird grünblau, und es entweicht braunes Stickstoffdioxid.',
+ halves:[{atom:'Cu',from:'Cu',to:'Cu2',on:[0,2],eq:'Cu > Cu2 + 2 e'},{atom:'N',from:'NO3',to:'NO2',on:[5,4],eq:'NO3 + 2 H + e > NO2 + H2O'}],
+ total:'Cu + 2 NO3 + 4 H > Cu2 + 2 NO2 + 2 H2O',
+ stoff:{intro:'Salpetersäure ({HNO3}) liefert die Nitrat-Ionen, die reduziert werden, und die {H^+}-Ionen. Weitere Nitrat-Ionen sind an der Reaktion unbeteiligt und bilden mit den Kupfer(II)-Ionen Kupfer(II)-nitrat.',pal:['HNO3','Cu','CuNO32','NO2','H2O','NO'],eq:'Cu + 4 HNO3 > CuNO32 + 2 NO2 + 2 H2O',
+  hints:['Zähle die Nitrat-Ionen: Ein Teil wird zu {NO2} reduziert, ein Teil bildet {Cu(NO3)2}. Alle stammen aus {HNO3}.']}},
+/* ---------- Anorganisch, Stufe 3 ---------- */
+{id:'mno4-fe',cat:'anorg',lvl:3,mil:'sauer',title:'Permanganat und Eisen(II)-Ionen',
+ text:'Violette Kaliumpermanganat-Lösung wird zu schwefelsaurer Eisen(II)-sulfat-Lösung getropft und dabei sofort entfärbt (Manganometrie). Es entstehen Mangan(II)- und Eisen(III)-Ionen.',
+ halves:[{atom:'Mn',from:'MnO4',to:'Mn2',on:[7,2],eq:'MnO4 + 8 H + 5 e > Mn2 + 4 H2O'},{atom:'Fe',from:'Fe2',to:'Fe3',on:[2,3],eq:'Fe2 > Fe3 + e'}],
+ total:'MnO4 + 5 Fe2 + 8 H > Mn2 + 5 Fe3 + 4 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}), Eisen(II)-sulfat ({FeSO4}) und Schwefelsäure ({H2SO4}). Eisen(III)-Ionen bilden mit Sulfat-Ionen {Fe2(SO4)3}.',pal:['KMnO4','FeSO4','H2SO4','MnSO4','Fe2SO43','K2SO4','H2O'],eq:'2 KMnO4 + 10 FeSO4 + 8 H2SO4 > 2 MnSO4 + 5 Fe2SO43 + K2SO4 + 8 H2O',
+  hints:['Eisen(III)-sulfat enthält zwei Fe-Atome. Verdopple deshalb zuerst die Ionengleichung.','Gleiche zum Schluss Kalium und Sulfat aus: Zwei {K^+} ergeben ein {K2SO4}.']}},
+{id:'cr-i',cat:'anorg',lvl:3,mil:'sauer',title:'Dichromat oxidiert Iodid',
+ text:'Orangefarbene Kaliumdichromat-Lösung oxidiert in schwefelsaurer Lösung Iodid-Ionen zu Iod. Die Chrom-Teilchen werden zu grünen Chrom(III)-Ionen reduziert.',
+ halves:[{atom:'I',from:'I1',to:'I2',on:[-1,0],eq:'2 I1 > I2 + 2 e'},{atom:'Cr',from:'Cr2O7',to:'Cr3',on:[6,3],eq:'Cr2O7 + 14 H + 6 e > 2 Cr3 + 7 H2O'}],
+ total:'Cr2O7 + 6 I1 + 14 H > 2 Cr3 + 3 I2 + 7 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumdichromat ({K2Cr2O7}), Kaliumiodid ({KI}) und Schwefelsäure ({H2SO4}). Chrom(III)-Ionen bilden mit Sulfat-Ionen {Cr2(SO4)3}.',pal:['K2Cr2O7','KI','H2SO4','Cr2SO43','I2','K2SO4','H2O'],eq:'K2Cr2O7 + 6 KI + 7 H2SO4 > Cr2SO43 + 3 I2 + 4 K2SO4 + 7 H2O',
+  hints:['Zähle alle Kalium-Ionen aus {K2Cr2O7} und {KI} und fasse sie als {K2SO4} zusammen.']}},
+{id:'mno4-so3',cat:'anorg',lvl:3,mil:'alk',title:'Permanganat und Sulfit in alkalischer Lösung',
+ text:'In alkalischer Lösung reagiert Kaliumpermanganat mit Natriumsulfit. Die violette Farbe verschwindet, und es fällt brauner Braunstein (Mangandioxid) aus. Aus den Sulfit-Ionen entstehen Sulfat-Ionen.',
+ halves:[{atom:'Mn',from:'MnO4',to:'MnO2',on:[7,4],eq:'MnO4 + 2 H2O + 3 e > MnO2 + 4 OH'},{atom:'S',from:'SO3',to:'SO4',on:[4,6],eq:'SO3 + 2 OH > SO4 + H2O + 2 e'}],
+ total:'2 MnO4 + 3 SO3 + H2O > 2 MnO2 + 3 SO4 + 2 OH',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}) und Natriumsulfit ({Na2SO3}). Die entstehenden Hydroxid-Ionen bilden mit den Kalium-Ionen Kaliumhydroxid.',pal:['KMnO4','Na2SO3','H2O','MnO2','Na2SO4','KOH','NaOH'],eq:'2 KMnO4 + 3 Na2SO3 + H2O > 2 MnO2 + 3 Na2SO4 + 2 KOH'}},
+{id:'cl2-naoh',cat:'anorg',lvl:3,mil:'alk',title:'Chlor in Natronlauge (Disproportionierung)',
+ text:'Leitet man Chlor in kalte Natronlauge, entsteht Bleichlauge mit Chlorid- und Hypochlorit-Ionen. Chlor wird dabei gleichzeitig oxidiert und reduziert.',
+ halves:[{atom:'Cl',from:'Cl2',to:'Cl1',on:[0,-1],eq:'Cl2 + 2 e > 2 Cl1'},{atom:'Cl',from:'Cl2',to:'ClO',on:[0,1],eq:'Cl2 + 4 OH > 2 ClO + 2 H2O + 2 e'}],
+ total:'Cl2 + 2 OH > Cl1 + ClO + H2O',
+ stoff:{intro:'Die Hydroxid-Ionen stammen aus Natronlauge ({NaOH}).',pal:['Cl2','NaOH','NaCl','NaOCl','H2O'],eq:'Cl2 + 2 NaOH > NaCl + NaOCl + H2O'}},
+{id:'cu-hno3v',cat:'anorg',lvl:3,mil:'sauer',title:'Kupfer in verdünnter Salpetersäure',
+ text:'Kupfer löst sich in verdünnter Salpetersäure; die Lösung wird blau. Es entsteht farbloses Stickstoffmonooxid, das sich an der Luft braun färbt.',
+ halves:[{atom:'N',from:'NO3',to:'NO',on:[5,2],eq:'NO3 + 4 H + 3 e > NO + 2 H2O'},{atom:'Cu',from:'Cu',to:'Cu2',on:[0,2],eq:'Cu > Cu2 + 2 e'}],
+ total:'3 Cu + 2 NO3 + 8 H > 3 Cu2 + 2 NO + 4 H2O',
+ stoff:{intro:'Alle Nitrat- und {H^+}-Ionen stammen aus Salpetersäure ({HNO3}). Mit den an der Reaktion unbeteiligten Nitrat-Ionen bilden die Kupfer(II)-Ionen Kupfer(II)-nitrat.',pal:['HNO3','Cu','CuNO32','NO','NO2','H2O'],eq:'3 Cu + 8 HNO3 > 3 CuNO32 + 2 NO + 4 H2O',
+  hints:['Drei {Cu(NO3)2} brauchen sechs Nitrat-Ionen, zwei weitere werden zu {NO} reduziert.']}},
+/* ---------- Organisch, Stufe 1 ---------- */
+{id:'etoh-cuo',cat:'org',lvl:1,mil:'formal',title:'Ethanol und Kupfer(II)-oxid',
+ text:'Ein schwarz oxidiertes Kupferblech wird heiß in Ethanol getaucht. Das Blech wird wieder blank-rotbraun, und es riecht stechend nach Ethanal.',
+ halves:[{atom:'C',note:CNOTE,from:'EtOH',to:'EtAl',on:[-1,1],eq:'EtOH > EtAl + 2 H + 2 e'},{atom:'Cu',from:'CuO',to:'Cu',on:[2,0],eq:'CuO + 2 H + 2 e > Cu + H2O'}],
+ total:'EtOH + CuO > EtAl + Cu + H2O',stoff:{none:NOSTOFF_ION}},
+{id:'meoh-cuo',cat:'org',lvl:1,mil:'formal',title:'Methanol und Kupfer(II)-oxid',
+ text:'Ein heißes, oxidiertes Kupferblech wird in Methanoldampf gehalten. Das Blech wird blank, und es entsteht Methanal (Formaldehyd).',
+ halves:[{atom:'Cu',from:'CuO',to:'Cu',on:[2,0],eq:'CuO + 2 H + 2 e > Cu + H2O'},{atom:'C',note:CNOTE,from:'MeOH',to:'HCHO',on:[-2,0],eq:'MeOH > HCHO + 2 H + 2 e'}],
+ total:'MeOH + CuO > HCHO + Cu + H2O',stoff:{none:NOSTOFF_ION}},
+{id:'iproh-cuo',cat:'org',lvl:1,mil:'formal',title:'Propan-2-ol und Kupfer(II)-oxid',
+ text:'Ein sekundärer Alkohol wird oxidiert: Propan-2-ol reagiert mit heißem Kupfer(II)-oxid zu Propanon (Aceton) und Kupfer.',
+ halves:[{atom:'C',note:CNOTE,from:'iPrOH',to:'Aceton',on:[0,2],eq:'iPrOH > Aceton + 2 H + 2 e'},{atom:'Cu',from:'CuO',to:'Cu',on:[2,0],eq:'CuO + 2 H + 2 e > Cu + H2O'}],
+ total:'iPrOH + CuO > Aceton + Cu + H2O',stoff:{none:NOSTOFF_ION}},
+/* ---------- Organisch, Stufe 2 ---------- */
+{id:'etoh-o2',cat:'org',lvl:2,mil:'formal',title:'Ethanol und Sauerstoff am Kupferkatalysator',
+ text:'Ethanoldampf wird mit Luft über eine heiße Kupferspirale geleitet. Der Sauerstoff oxidiert Ethanol zu Ethanal; dabei entsteht Wasser.',
+ halves:[{atom:'C',note:CNOTE,from:'EtOH',to:'EtAl',on:[-1,1],eq:'EtOH > EtAl + 2 H + 2 e'},{atom:'O',from:'O2',to:'H2O',on:[0,-2],eq:'O2 + 4 H + 4 e > 2 H2O'}],
+ total:'2 EtOH + O2 > 2 EtAl + 2 H2O',stoff:{none:NOSTOFF_ION}},
+{id:'ethanal-o2',cat:'org',lvl:2,mil:'formal',title:'Ethanal und Sauerstoff',
+ text:'Ethanal wird durch Luftsauerstoff weiter zu Ethansäure (Essigsäure) oxidiert.',
+ halves:[{atom:'O',from:'O2',to:'H2O',on:[0,-2],eq:'O2 + 4 H + 4 e > 2 H2O'},{atom:'C',note:CNOTE,from:'EtAl',to:'AcOH',on:[1,3],eq:'EtAl + H2O > AcOH + 2 H + 2 e'}],
+ total:'2 EtAl + O2 > 2 AcOH',stoff:{none:NOSTOFF_ION}},
+{id:'ethanal-ag',cat:'org',lvl:2,mil:'alk',title:'Silberspiegelprobe (vereinfacht)',
+ text:'Ethanal reduziert in alkalischer Lösung Silber-Ionen zu elementarem Silber, das sich als Spiegel an der Glaswand abscheidet. Aus Ethanal entsteht das Ethanoat-Ion (Acetat-Ion). Der Ammin-Komplex wird hier vernachlässigt.',
+ halves:[{atom:'C',note:CNOTE,from:'EtAl',to:'Ac',on:[1,3],eq:'EtAl + 3 OH > Ac + 2 H2O + 2 e'},{atom:'Ag',from:'Ag1',to:'Ag',on:[1,0],eq:'Ag1 + e > Ag'}],
+ total:'EtAl + 2 Ag1 + 3 OH > Ac + 2 Ag + 2 H2O',
+ stoff:{intro:'Eingesetzt werden Silbernitrat ({AgNO3}) und Natronlauge ({NaOH}). Das Ethanoat-Ion bildet mit einem Natrium-Ion Natriumacetat ({CH3COONa}).',pal:['EtAl','AgNO3','NaOH','NaAc','Ag','NaNO3','H2O'],eq:'EtAl + 2 AgNO3 + 3 NaOH > NaAc + 2 Ag + 2 NaNO3 + 2 H2O',
+  hints:['Drei Natrium-Ionen aus {NaOH}: eines landet im Natriumacetat, zwei bilden mit den Nitrat-Ionen {NaNO3}.']}},
+/* ---------- Organisch, Stufe 3 ---------- */
+{id:'alcotest',cat:'org',lvl:3,mil:'sauer',title:'Alcotest-Röhrchen: Ethanol und Dichromat',
+ text:'Im alten Alcotest-Röhrchen oxidiert schwefelsaure Kaliumdichromat-Lösung den Ethanol der Atemluft zu Ethanal. Die Farbe schlägt von Orange nach Grün um (Chrom(III)-Ionen).',
+ halves:[{atom:'Cr',from:'Cr2O7',to:'Cr3',on:[6,3],eq:'Cr2O7 + 14 H + 6 e > 2 Cr3 + 7 H2O'},{atom:'C',note:CNOTE,from:'EtOH',to:'EtAl',on:[-1,1],eq:'EtOH > EtAl + 2 H + 2 e'}],
+ total:'3 EtOH + Cr2O7 + 8 H > 3 EtAl + 2 Cr3 + 7 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumdichromat ({K2Cr2O7}) und Schwefelsäure ({H2SO4}). Chrom(III)-Ionen bilden mit Sulfat-Ionen {Cr2(SO4)3}.',pal:['EtOH','K2Cr2O7','H2SO4','EtAl','Cr2SO43','K2SO4','H2O'],eq:'3 EtOH + K2Cr2O7 + 4 H2SO4 > 3 EtAl + Cr2SO43 + K2SO4 + 7 H2O'}},
+{id:'etoh-mno4',cat:'org',lvl:3,mil:'sauer',title:'Ethanol und Permanganat zu Ethansäure',
+ text:'Ethanol wird von schwefelsaurer Kaliumpermanganat-Lösung vollständig zu Ethansäure oxidiert. Die violette Lösung wird farblos (Mangan(II)-Ionen).',
+ halves:[{atom:'C',note:CNOTE,from:'EtOH',to:'AcOH',on:[-1,3],eq:'EtOH + H2O > AcOH + 4 H + 4 e'},{atom:'Mn',from:'MnO4',to:'Mn2',on:[7,2],eq:'MnO4 + 8 H + 5 e > Mn2 + 4 H2O'}],
+ total:'5 EtOH + 4 MnO4 + 12 H > 5 AcOH + 4 Mn2 + 11 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}) und Schwefelsäure ({H2SO4}).',pal:['EtOH','KMnO4','H2SO4','AcOH','MnSO4','K2SO4','H2O'],eq:'5 EtOH + 4 KMnO4 + 6 H2SO4 > 5 AcOH + 4 MnSO4 + 2 K2SO4 + 11 H2O'}},
+{id:'oxal-mno4',cat:'org',lvl:3,mil:'sauer',title:'Oxalsäure und Permanganat',
+ text:'Oxalsäure wird in schwefelsaurer Lösung von Kaliumpermanganat zu Kohlenstoffdioxid oxidiert (Einstellung von Permanganat-Maßlösungen). Die Lösung entfärbt sich.',
+ halves:[{atom:'Mn',from:'MnO4',to:'Mn2',on:[7,2],eq:'MnO4 + 8 H + 5 e > Mn2 + 4 H2O'},{atom:'C',note:'beide C-Atome',from:'Ox',to:'CO2',on:[3,4],eq:'Ox > 2 CO2 + 2 H + 2 e'}],
+ total:'5 Ox + 2 MnO4 + 6 H > 10 CO2 + 2 Mn2 + 8 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}) und Schwefelsäure ({H2SO4}).',pal:['Ox','KMnO4','H2SO4','CO2','MnSO4','K2SO4','H2O'],eq:'5 Ox + 2 KMnO4 + 3 H2SO4 > 10 CO2 + 2 MnSO4 + K2SO4 + 8 H2O'}},
+{id:'fehling',cat:'org',lvl:3,mil:'alk',title:'Fehling-Probe (vereinfacht)',
+ text:'Ethanal wird mit Fehling-Lösung erwärmt. Es fällt ziegelroter Niederschlag von Kupfer(I)-oxid aus, und aus Ethanal entsteht das Ethanoat-Ion. Der Tartrat-Komplex wird vereinfacht als Kupfer(II)-Ion geschrieben.',
+ halves:[{atom:'C',note:CNOTE,from:'EtAl',to:'Ac',on:[1,3],eq:'EtAl + 3 OH > Ac + 2 H2O + 2 e'},{atom:'Cu',from:'Cu2',to:'Cu2O',on:[2,1],eq:'2 Cu2 + 2 OH + 2 e > Cu2O + H2O'}],
+ total:'EtAl + 2 Cu2 + 5 OH > Ac + Cu2O + 3 H2O',
+ stoff:{none:'In der Fehling-Lösung liegen die Kupfer(II)-Ionen als Tartrat-Komplex vor. Auf eine Stoffgleichung wird hier verzichtet.'}},
+{id:'tollens',cat:'org',lvl:3,mil:'alk',title:'Tollens-Probe mit Diamminsilber-Komplex',
+ text:'In der Tollens-Probe liegen die Silber-Ionen als Diamminsilber(I)-Komplex vor. Ethanal reduziert ihn in alkalischer Lösung zu Silber; dabei werden Ammoniak-Moleküle frei und Ethanoat-Ionen gebildet.',
+ halves:[{atom:'Ag',from:'AgNH3',to:'Ag',on:[1,0],eq:'AgNH3 + e > Ag + 2 NH3'},{atom:'C',note:CNOTE,from:'EtAl',to:'Ac',on:[1,3],eq:'EtAl + 3 OH > Ac + 2 H2O + 2 e'}],
+ total:'EtAl + 2 AgNH3 + 3 OH > Ac + 2 Ag + 4 NH3 + 2 H2O',
+ stoff:{intro:'Eingesetzt werden Diamminsilber(I)-nitrat ({[Ag(NH3)2]NO3}) und Natronlauge ({NaOH}).',pal:['EtAl','AgNH3NO3','NaOH','NaAc','Ag','NH3','NaNO3','H2O'],eq:'EtAl + 2 AgNH3NO3 + 3 NaOH > NaAc + 2 Ag + 4 NH3 + 2 NaNO3 + 2 H2O'}},
+/* ---------- Anorganisch, Stufe 1 (Ergänzung) ---------- */
+{id:'fe-cu',cat:'anorg',lvl:1,mil:'aq',title:'Eisennagel in Kupfer(II)-sulfat-Lösung',
+ text:'Ein blanker Eisennagel wird in blaue Kupfer(II)-sulfat-Lösung getaucht. Nach kurzer Zeit überzieht sich der Nagel mit rotbraunem Kupfer. Dabei gehen Eisen(II)-Ionen in Lösung.',
+ halves:[{atom:'Fe',from:'Fe',to:'Fe2',on:[0,2],eq:'Fe > Fe2 + 2 e'},{atom:'Cu',from:'Cu2',to:'Cu',on:[2,0],eq:'Cu2 + 2 e > Cu'}],
+ total:'Fe + Cu2 > Fe2 + Cu',
+ stoff:{intro:'Die Kupfer(II)-Ionen stammen aus Kupfer(II)-sulfat ({CuSO4}). Die Sulfat-Ionen sind an der Reaktion unbeteiligt.',pal:['Fe','CuSO4','FeSO4','Cu','H2O'],eq:'Fe + CuSO4 > FeSO4 + Cu'}},
+{id:'zn-hcl',cat:'anorg',lvl:1,mil:'sauer',title:'Zink in Salzsäure',
+ text:'Zinkgranalien werden mit verdünnter Salzsäure übergossen. Es bilden sich Gasbläschen, die Knallgasprobe ist positiv. Das Zink löst sich allmählich auf.',
+ halves:[{atom:'Zn',from:'Zn',to:'Zn2',on:[0,2],eq:'Zn > Zn2 + 2 e'},{atom:'H',from:'H',to:'H2',on:[1,0],eq:'2 H + 2 e > H2'}],
+ total:'Zn + 2 H > Zn2 + H2',
+ stoff:{intro:'Salzsäure enthält Oxonium- und Chlorid-Ionen. Schreibe sie als Chlorwasserstoff ({HCl}).',pal:['Zn','HCl','ZnCl2','H2','H2O'],eq:'Zn + 2 HCl > ZnCl2 + H2'}},
+{id:'cl2-br',cat:'anorg',lvl:1,mil:'aq',title:'Chlorwasser und Kaliumbromid-Lösung',
+ text:'Gibt man Chlorwasser zu farbloser Kaliumbromid-Lösung, färbt sich die Lösung gelbbraun: Es entsteht Brom. Chlor ist das stärkere Oxidationsmittel.',
+ halves:[{atom:'Cl',from:'Cl2',to:'Cl1',on:[0,-1],eq:'Cl2 + 2 e > 2 Cl1'},{atom:'Br',from:'Br1',to:'Br2',on:[-1,0],eq:'2 Br1 > Br2 + 2 e'}],
+ total:'Cl2 + 2 Br1 > 2 Cl1 + Br2',
+ stoff:{intro:'Die Bromid-Ionen stammen aus Kaliumbromid ({KBr}). Die Kalium-Ionen sind an der Reaktion unbeteiligt.',pal:['Cl2','KBr','KCl','Br2','H2O'],eq:'Cl2 + 2 KBr > 2 KCl + Br2'}},
+{id:'mg-o2',cat:'anorg',lvl:1,mil:'ohne',title:'Magnesium verbrennt an der Luft',
+ text:'Ein Magnesiumband verbrennt mit grell weißer Flamme. Es entsteht weißes Magnesiumoxid, ein Salz aus Magnesium- und Oxid-Ionen.',
+ halves:[{atom:'Mg',from:'Mg',to:'Mg2',on:[0,2],eq:'Mg > Mg2 + 2 e'},{atom:'O',from:'O2',to:'O2m',on:[0,-2],eq:'O2 + 4 e > 2 O2m'}],
+ total:'2 Mg + O2 > 2 Mg2 + 2 O2m',
+ stoff:{intro:'Magnesium- und Oxid-Ionen bilden zusammen das Salz Magnesiumoxid ({MgO}).',pal:['Mg','O2','MgO'],eq:'2 Mg + O2 > 2 MgO'}},
+{id:'al-cu',cat:'anorg',lvl:1,mil:'aq',title:'Aluminium in Kupfer(II)-chlorid-Lösung',
+ text:'Ein Stück Aluminiumfolie wird in Kupfer(II)-chlorid-Lösung gelegt. Auf der Folie scheidet sich rotbraunes Kupfer ab, die blaugrüne Lösung wird heller.',
+ halves:[{atom:'Al',from:'Al',to:'Al3',on:[0,3],eq:'Al > Al3 + 3 e'},{atom:'Cu',from:'Cu2',to:'Cu',on:[2,0],eq:'Cu2 + 2 e > Cu'}],
+ total:'2 Al + 3 Cu2 > 2 Al3 + 3 Cu',
+ stoff:{intro:'Die Kupfer(II)-Ionen stammen aus Kupfer(II)-chlorid ({CuCl2}). Die Chlorid-Ionen sind an der Reaktion unbeteiligt.',pal:['Al','CuCl2','AlCl3','Cu','H2O'],eq:'2 Al + 3 CuCl2 > 2 AlCl3 + 3 Cu',
+  hints:['Ein Aluminium-Ion braucht drei Chlorid-Ionen: {AlCl3}.']}},
+/* ---------- Anorganisch, Stufe 2 (Ergänzung) ---------- */
+{id:'h2o2-fe',cat:'anorg',lvl:2,mil:'sauer',title:'Wasserstoffperoxid oxidiert Eisen(II)-Ionen',
+ text:'Zu schwefelsaurer, blassgrüner Eisen(II)-sulfat-Lösung wird Wasserstoffperoxid gegeben. Die Lösung färbt sich gelb, es entstehen Eisen(III)-Ionen und Wasser.',
+ halves:[{atom:'O',from:'H2O2',to:'H2O',on:[-1,-2],eq:'H2O2 + 2 H + 2 e > 2 H2O'},{atom:'Fe',from:'Fe2',to:'Fe3',on:[2,3],eq:'Fe2 > Fe3 + e'}],
+ total:'H2O2 + 2 Fe2 + 2 H > 2 Fe3 + 2 H2O',
+ stoff:{intro:'Eingesetzt werden Eisen(II)-sulfat ({FeSO4}) und Schwefelsäure ({H2SO4}). Eisen(III)-Ionen bilden mit Sulfat-Ionen {Fe2(SO4)3}.',pal:['H2O2','FeSO4','H2SO4','Fe2SO43','H2O','K2SO4'],eq:'H2O2 + 2 FeSO4 + H2SO4 > Fe2SO43 + 2 H2O'}},
+{id:'mno2-hcl',cat:'anorg',lvl:2,mil:'sauer',title:'Braunstein und Salzsäure (Chlordarstellung)',
+ text:'Braunstein (Mangandioxid) wird mit konzentrierter Salzsäure erwärmt. Es entweicht gelbgrünes, stechend riechendes Chlor. In der Lösung bleiben Mangan(II)-Ionen zurück.',
+ halves:[{atom:'Mn',from:'MnO2',to:'Mn2',on:[4,2],eq:'MnO2 + 4 H + 2 e > Mn2 + 2 H2O'},{atom:'Cl',from:'Cl1',to:'Cl2',on:[-1,0],eq:'2 Cl1 > Cl2 + 2 e'}],
+ total:'MnO2 + 2 Cl1 + 4 H > Mn2 + Cl2 + 2 H2O',
+ stoff:{intro:'Salzsäure ({HCl}) liefert die Chlorid-Ionen, die oxidiert werden, und die {H^+}-Ionen. Weitere Chlorid-Ionen sind an der Reaktion unbeteiligt und bilden mit den Mangan(II)-Ionen Mangan(II)-chlorid.',pal:['MnO2','HCl','MnCl2','Cl2','H2O'],eq:'MnO2 + 4 HCl > MnCl2 + Cl2 + 2 H2O',
+  hints:['Zähle die Chlorid-Ionen: Zwei werden zu {Cl2} oxidiert, zwei bilden {MnCl2}. Alle stammen aus {HCl}.']}},
+{id:'cu-h2so4',cat:'anorg',lvl:2,mil:'sauer',title:'Kupfer in heißer konzentrierter Schwefelsäure',
+ text:'Kupfer löst sich nicht in verdünnter, wohl aber in heißer konzentrierter Schwefelsäure. Dabei entweicht stechend riechendes Schwefeldioxid, und es entstehen Kupfer(II)-Ionen.',
+ halves:[{atom:'Cu',from:'Cu',to:'Cu2',on:[0,2],eq:'Cu > Cu2 + 2 e'},{atom:'S',from:'SO4',to:'SO2',on:[6,4],eq:'SO4 + 4 H + 2 e > SO2 + 2 H2O'}],
+ total:'Cu + SO4 + 4 H > Cu2 + SO2 + 2 H2O',
+ stoff:{intro:'Schwefelsäure ({H2SO4}) liefert die Sulfat-Ionen, die reduziert werden, und die {H^+}-Ionen. Weitere Sulfat-Ionen sind an der Reaktion unbeteiligt und bilden mit den Kupfer(II)-Ionen Kupfer(II)-sulfat.',pal:['Cu','H2SO4','CuSO4','SO2','H2O'],eq:'Cu + 2 H2SO4 > CuSO4 + SO2 + 2 H2O',
+  hints:['Ein Sulfat-Ion wird zu {SO2} reduziert, ein weiteres bildet {CuSO4}. Beide stammen aus {H2SO4}.']}},
+/* ---------- Anorganisch, Stufe 3 (Ergänzung) ---------- */
+{id:'mno4-h2o2',cat:'anorg',lvl:3,mil:'sauer',title:'Permanganat und Wasserstoffperoxid',
+ text:'Schwefelsaure Kaliumpermanganat-Lösung wird zu Wasserstoffperoxid getropft. Die violette Farbe verschwindet sofort, und es perlt Sauerstoff aus. Wasserstoffperoxid wirkt hier als Reduktionsmittel.',
+ halves:[{atom:'Mn',from:'MnO4',to:'Mn2',on:[7,2],eq:'MnO4 + 8 H + 5 e > Mn2 + 4 H2O'},{atom:'O',from:'H2O2',to:'O2',on:[-1,0],eq:'H2O2 > O2 + 2 H + 2 e'}],
+ total:'2 MnO4 + 5 H2O2 + 6 H > 2 Mn2 + 5 O2 + 8 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}) und Schwefelsäure ({H2SO4}).',pal:['KMnO4','H2O2','H2SO4','MnSO4','O2','K2SO4','H2O'],eq:'2 KMnO4 + 5 H2O2 + 3 H2SO4 > 2 MnSO4 + 5 O2 + K2SO4 + 8 H2O'}},
+{id:'cr-fe',cat:'anorg',lvl:3,mil:'sauer',title:'Dichromat und Eisen(II)-Ionen (Chromatometrie)',
+ text:'Bei der Chromatometrie wird schwefelsaure Eisen(II)-sulfat-Lösung mit Kaliumdichromat-Lösung titriert. Das orangefarbene Dichromat wird zu grünen Chrom(III)-Ionen reduziert, die Eisen(II)- zu Eisen(III)-Ionen oxidiert.',
+ halves:[{atom:'Cr',from:'Cr2O7',to:'Cr3',on:[6,3],eq:'Cr2O7 + 14 H + 6 e > 2 Cr3 + 7 H2O'},{atom:'Fe',from:'Fe2',to:'Fe3',on:[2,3],eq:'Fe2 > Fe3 + e'}],
+ total:'Cr2O7 + 6 Fe2 + 14 H > 2 Cr3 + 6 Fe3 + 7 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumdichromat ({K2Cr2O7}), Eisen(II)-sulfat ({FeSO4}) und Schwefelsäure ({H2SO4}). Chrom(III)- und Eisen(III)-Ionen bilden mit Sulfat-Ionen {Cr2(SO4)3} und {Fe2(SO4)3}.',pal:['K2Cr2O7','FeSO4','H2SO4','Cr2SO43','Fe2SO43','K2SO4','H2O'],eq:'K2Cr2O7 + 6 FeSO4 + 7 H2SO4 > Cr2SO43 + 3 Fe2SO43 + K2SO4 + 7 H2O',
+  hints:['Eisen(III)-sulfat enthält zwei Fe-Atome: Aus 6 {FeSO4} werden 3 {Fe2(SO4)3}.','Zähle zum Schluss alle Sulfat-Ionen. Sie stammen aus {FeSO4} und {H2SO4}.']}},
+{id:'io3-i',cat:'anorg',lvl:3,mil:'sauer',title:'Iodat und Iodid (Komproportionierung)',
+ text:'Säuert man eine Lösung aus Kaliumiodat und Kaliumiodid mit Schwefelsäure an, färbt sie sich braun. Iodat- und Iodid-Ionen reagieren zum selben Produkt: elementarem Iod.',
+ halves:[{atom:'I',from:'IO3',to:'I2',on:[5,0],eq:'2 IO3 + 12 H + 10 e > I2 + 6 H2O'},{atom:'I',from:'I1',to:'I2',on:[-1,0],eq:'2 I1 > I2 + 2 e'}],
+ total:'IO3 + 5 I1 + 6 H > 3 I2 + 3 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumiodat ({KIO3}), Kaliumiodid ({KI}) und Schwefelsäure ({H2SO4}).',pal:['KIO3','KI','H2SO4','I2','K2SO4','H2O'],eq:'KIO3 + 5 KI + 3 H2SO4 > 3 I2 + 3 K2SO4 + 3 H2O',
+  hints:['Zähle alle Kalium-Ionen aus {KIO3} und {KI} und fasse sie als {K2SO4} zusammen.']}},
+/* ---------- Organisch, Stufe 1 (Ergänzung) ---------- */
+{id:'prop1ol-cuo',cat:'org',lvl:1,mil:'formal',title:'Propan-1-ol und Kupfer(II)-oxid',
+ text:'Ein primärer Alkohol wird oxidiert: Ein heißes, schwarz oxidiertes Kupferblech wird in Propan-1-ol getaucht. Das Blech wird blank, und es entsteht das Aldehyd Propanal.',
+ halves:[{atom:'C',note:CNOTE,from:'PrOH',to:'PrAl',on:[-1,1],eq:'PrOH > PrAl + 2 H + 2 e'},{atom:'Cu',from:'CuO',to:'Cu',on:[2,0],eq:'CuO + 2 H + 2 e > Cu + H2O'}],
+ total:'PrOH + CuO > PrAl + Cu + H2O',stoff:{none:NOSTOFF_ION}},
+{id:'bu2ol-cuo',cat:'org',lvl:1,mil:'formal',title:'Butan-2-ol und Kupfer(II)-oxid',
+ text:'Butan-2-ol ist ein sekundärer Alkohol. Mit heißem Kupfer(II)-oxid entsteht daraus das Keton Butanon, das Kupferoxid wird zu Kupfer reduziert.',
+ halves:[{atom:'Cu',from:'CuO',to:'Cu',on:[2,0],eq:'CuO + 2 H + 2 e > Cu + H2O'},{atom:'C',note:CNOTE,from:'Bu2OH',to:'Butanon',on:[0,2],eq:'Bu2OH > Butanon + 2 H + 2 e'}],
+ total:'Bu2OH + CuO > Butanon + Cu + H2O',stoff:{none:NOSTOFF_ION}},
+/* ---------- Organisch, Stufe 2 (Ergänzung) ---------- */
+{id:'meoh-o2',cat:'org',lvl:2,mil:'formal',title:'Methanol und Sauerstoff (Formaldehyd-Synthese)',
+ text:'Technisch wird Methanal (Formaldehyd) hergestellt, indem man Methanoldampf mit Luft über einen heißen Silber- oder Kupferkatalysator leitet. Dabei entsteht außerdem Wasser.',
+ halves:[{atom:'C',note:CNOTE,from:'MeOH',to:'HCHO',on:[-2,0],eq:'MeOH > HCHO + 2 H + 2 e'},{atom:'O',from:'O2',to:'H2O',on:[0,-2],eq:'O2 + 4 H + 4 e > 2 H2O'}],
+ total:'2 MeOH + O2 > 2 HCHO + 2 H2O',stoff:{none:NOSTOFF_ION}},
+{id:'hcho-ag',cat:'org',lvl:2,mil:'alk',title:'Silberspiegelprobe mit Methanal (vereinfacht)',
+ text:'Methanal reduziert in alkalischer Lösung Silber-Ionen zu einem glänzenden Silberspiegel. Aus Methanal entsteht das Methanoat-Ion (Formiat-Ion). Der Ammin-Komplex wird hier vernachlässigt.',
+ halves:[{atom:'Ag',from:'Ag1',to:'Ag',on:[1,0],eq:'Ag1 + e > Ag'},{atom:'C',note:CNOTE,from:'HCHO',to:'HCOO',on:[0,2],eq:'HCHO + 3 OH > HCOO + 2 H2O + 2 e'}],
+ total:'HCHO + 2 Ag1 + 3 OH > HCOO + 2 Ag + 2 H2O',
+ stoff:{intro:'Eingesetzt werden Silbernitrat ({AgNO3}) und Natronlauge ({NaOH}). Das Methanoat-Ion bildet mit einem Natrium-Ion Natriumformiat ({HCOONa}).',pal:['HCHO','AgNO3','NaOH','NaFo','Ag','NaNO3','H2O'],eq:'HCHO + 2 AgNO3 + 3 NaOH > NaFo + 2 Ag + 2 NaNO3 + 2 H2O',
+  hints:['Drei Natrium-Ionen aus {NaOH}: eines landet im Natriumformiat, zwei bilden mit den Nitrat-Ionen {NaNO3}.']}},
+{id:'propanal-o2',cat:'org',lvl:2,mil:'formal',title:'Propanal und Sauerstoff',
+ text:'Aldehyde lassen sich leicht weiter oxidieren. Propanal reagiert schon mit Luftsauerstoff langsam zu Propansäure.',
+ halves:[{atom:'C',note:CNOTE,from:'PrAl',to:'PrCOOH',on:[1,3],eq:'PrAl + H2O > PrCOOH + 2 H + 2 e'},{atom:'O',from:'O2',to:'H2O',on:[0,-2],eq:'O2 + 4 H + 4 e > 2 H2O'}],
+ total:'2 PrAl + O2 > 2 PrCOOH',stoff:{none:NOSTOFF_ION}},
+/* ---------- Organisch, Stufe 3 (Ergänzung) ---------- */
+{id:'prop1ol-cr',cat:'org',lvl:3,mil:'sauer',title:'Propan-1-ol und Dichromat',
+ text:'Propan-1-ol wird mit schwefelsaurer Kaliumdichromat-Lösung erwärmt. Die Lösung schlägt von Orange nach Grün um, und es entsteht Propanal.',
+ halves:[{atom:'C',note:CNOTE,from:'PrOH',to:'PrAl',on:[-1,1],eq:'PrOH > PrAl + 2 H + 2 e'},{atom:'Cr',from:'Cr2O7',to:'Cr3',on:[6,3],eq:'Cr2O7 + 14 H + 6 e > 2 Cr3 + 7 H2O'}],
+ total:'3 PrOH + Cr2O7 + 8 H > 3 PrAl + 2 Cr3 + 7 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumdichromat ({K2Cr2O7}) und Schwefelsäure ({H2SO4}). Chrom(III)-Ionen bilden mit Sulfat-Ionen {Cr2(SO4)3}.',pal:['PrOH','K2Cr2O7','H2SO4','PrAl','Cr2SO43','K2SO4','H2O'],eq:'3 PrOH + K2Cr2O7 + 4 H2SO4 > 3 PrAl + Cr2SO43 + K2SO4 + 7 H2O'}},
+{id:'iproh-cr',cat:'org',lvl:3,mil:'sauer',title:'Propan-2-ol und Dichromat',
+ text:'Auch sekundäre Alkohole werden von schwefelsaurer Dichromat-Lösung oxidiert. Aus Propan-2-ol entsteht Propanon (Aceton), die Lösung färbt sich grün.',
+ halves:[{atom:'Cr',from:'Cr2O7',to:'Cr3',on:[6,3],eq:'Cr2O7 + 14 H + 6 e > 2 Cr3 + 7 H2O'},{atom:'C',note:CNOTE,from:'iPrOH',to:'Aceton',on:[0,2],eq:'iPrOH > Aceton + 2 H + 2 e'}],
+ total:'3 iPrOH + Cr2O7 + 8 H > 3 Aceton + 2 Cr3 + 7 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumdichromat ({K2Cr2O7}) und Schwefelsäure ({H2SO4}). Chrom(III)-Ionen bilden mit Sulfat-Ionen {Cr2(SO4)3}.',pal:['iPrOH','K2Cr2O7','H2SO4','Aceton','Cr2SO43','K2SO4','H2O'],eq:'3 iPrOH + K2Cr2O7 + 4 H2SO4 > 3 Aceton + Cr2SO43 + K2SO4 + 7 H2O'}},
+{id:'meoh-mno4',cat:'org',lvl:3,mil:'sauer',title:'Methanol und Permanganat zu Methansäure',
+ text:'Methanol wird von schwefelsaurer Kaliumpermanganat-Lösung über Methanal bis zur Methansäure (Ameisensäure) oxidiert. Die violette Lösung wird farblos.',
+ halves:[{atom:'C',note:CNOTE,from:'MeOH',to:'HCOOH',on:[-2,2],eq:'MeOH + H2O > HCOOH + 4 H + 4 e'},{atom:'Mn',from:'MnO4',to:'Mn2',on:[7,2],eq:'MnO4 + 8 H + 5 e > Mn2 + 4 H2O'}],
+ total:'5 MeOH + 4 MnO4 + 12 H > 5 HCOOH + 4 Mn2 + 11 H2O',
+ stoff:{intro:'Eingesetzt werden Kaliumpermanganat ({KMnO4}) und Schwefelsäure ({H2SO4}).',pal:['MeOH','KMnO4','H2SO4','HCOOH','MnSO4','K2SO4','H2O'],eq:'5 MeOH + 4 KMnO4 + 6 H2SO4 > 5 HCOOH + 4 MnSO4 + 2 K2SO4 + 11 H2O'}},
+{id:'hcho-fehling',cat:'org',lvl:3,mil:'alk',title:'Fehling-Probe mit Methanal (vereinfacht)',
+ text:'Methanal wird mit Fehling-Lösung erwärmt. Es fällt ziegelrotes Kupfer(I)-oxid aus, aus Methanal entsteht das Methanoat-Ion. Der Tartrat-Komplex wird vereinfacht als Kupfer(II)-Ion geschrieben.',
+ halves:[{atom:'Cu',from:'Cu2',to:'Cu2O',on:[2,1],eq:'2 Cu2 + 2 OH + 2 e > Cu2O + H2O'},{atom:'C',note:CNOTE,from:'HCHO',to:'HCOO',on:[0,2],eq:'HCHO + 3 OH > HCOO + 2 H2O + 2 e'}],
+ total:'HCHO + 2 Cu2 + 5 OH > HCOO + Cu2O + 3 H2O',
+ stoff:{none:'In der Fehling-Lösung liegen die Kupfer(II)-Ionen als Tartrat-Komplex vor. Auf eine Stoffgleichung wird hier verzichtet.'}}
+];
+
+/* ---------- reine Hilfsfunktionen ---------- */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a};
+const lcm=(a,b)=>a/gcd(a,b)*b;
+function parseFormula(f){
+  if(f==='e')return {};
+  let i=0;
+  const num=()=>{let s='';while(i<f.length&&/\d/.test(f[i]))s+=f[i++];return s?parseInt(s,10):1};
+  function group(){
+    const m={};
+    while(i<f.length){
+      const ch=f[i];
+      if(ch==='('||ch==='['){i++;const inner=group();i++;const k=num();for(const el in inner)m[el]=(m[el]||0)+inner[el]*k}
+      else if(ch===')'||ch===']')return m;
+      else if(/[A-Z]/.test(ch)){let el=ch;i++;if(i<f.length&&/[a-z]/.test(f[i]))el+=f[i++];const k=num();m[el]=(m[el]||0)+k}
+      else i++;
+    }
+    return m;
+  }
+  return group();
+}
+const _comp={};
+function comp(id){return _comp[id]||(_comp[id]=parseFormula(SP[id].f))}
+function P(spec){return spec.split('>').map(side=>side.trim().split(' + ').map(t=>{t=t.trim();const m=t.match(/^(\d+)\s+(\S+)$/);return m?[+m[1],m[2]]:[1,t]}))}
+function tally(arr){const at={};let q=0;for(const [c,id] of arr){const m=comp(id);for(const el in m)at[el]=(at[el]||0)+m[el]*c;q+=SP[id].q*c}return {at,q}}
+function toNet(L,R){
+  const net={};const add=(id,c)=>{net[id]=(net[id]||0)+c};
+  for(const [c,id] of L){if(id==='H3O'){add('H',-c);add('H2O',-c)}else add(id,-c)}
+  for(const [c,id] of R){if(id==='H3O'){add('H',c);add('H2O',c)}else add(id,c)}
+  for(const k in net)if(net[k]===0)delete net[k];
+  let g=0;for(const k in net)g=gcd(g,net[k]);
+  if(g>1)for(const k in net)net[k]/=g;
+  return {net,g:g||1};
+}
+function eqNet(a,b){const ka=Object.keys(a),kb=Object.keys(b);return ka.length===kb.length&&ka.every(k=>a[k]===b[k])}
+function eCount(T){let n=0;for(const [c,id] of T[1])if(id==='e')n+=c;for(const [c,id] of T[0])if(id==='e')n-=c;return Math.abs(n)}
+function coefOf(T,id){for(const s of T)for(const [c,x] of s)if(x===id)return c;return 1}
+function sub(f){return f.replace(/([A-Za-z\)\]])(\d+)/g,'$1<sub>$2</sub>')}
+function chg(q){if(!q)return '';const a=Math.abs(q);return '<sup>'+(a>1?a:'')+(q>0?'+':'−')+'</sup>'}
+function fh(id){if(id==='e')return 'e<sup>−</sup>';const s=SP[id];
+  if(s.q){const m=s.f.match(/^(.*[A-Za-z\)\]])(\d+)$/);if(m){const a=Math.abs(s.q);return sub(m[1])+'<span class="ic"><span class="c">'+(a>1?a:'')+(s.q>0?'+':'−')+'</span><span class="i">'+m[2]+'</span></span>'}}
+  return sub(s.f)+chg(s.q)}
+const MOLIDS=new Set(['EtOH','EtAl','AcOH','Ac','MeOH','HCHO','iPrOH','Aceton','Ox','NaAc','PrOH','PrAl','PrCOOH','Bu2OH','Butanon','HCOOH','HCOO','NaFo']);
+function lbl(id){return MOLIDS.has(id)?SP[id].n:fh(id)}
+function fq(q){return q===0?'0':(q>0?'+':'−')+Math.abs(q)}
+function sortEls(set){const pr=['C','H','O'];return [...set].sort((a,b)=>{const ia=pr.indexOf(a),ib=pr.indexOf(b);if(ia>=0||ib>=0)return (ia<0?9:ia)-(ib<0?9:ib);return a.localeCompare(b)})}
+function roman(n){const m=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';for(const [v,r] of m)while(n>=v){s+=r;n-=v}return s}
+function fromRoman(s){const v={I:1,V:5,X:10};let t=0;for(let i=0;i<s.length;i++){const a=v[s[i]],b=v[s[i+1]]||0;t+=a<b?-a:a}return roman(t)===s?t:NaN}
+function fmtON(n){return n===0?'0':(n>0?'+':'−')+roman(Math.abs(n))}
+function parseON(s){
+  s=String(s||'').trim().replace(/[−–]/g,'-').replace(/\s+/g,'').toUpperCase();
+  if(!s)return null;
+  const m=s.match(/^([+-]?)(\d+|[IVX]+)$/);if(!m)return NaN;
+  const v=/^\d+$/.test(m[2])?parseInt(m[2],10):fromRoman(m[2]);
+  if(isNaN(v))return NaN;
+  return m[1]==='-'?-v:v;
+}
+function coefVal(c){const s=String(c==null?'':c).trim();if(s==='')return 1;if(/^\d+$/.test(s)&&+s>0)return +s;return NaN}
+function termsOf(list){const arr=[],bad=[];for(const t of list){const c=coefVal(t.c);if(isNaN(c))bad.push(t.id);else arr.push([c,t.id])}return {arr,bad}}
+
+/* Prüft eine Gleichung (Listen aus {id,c}) gegen die Zielgleichung */
+function checkEq(Lst,Rst,spec,kind){
+  const items=[];
+  const T=P(spec);const tn=toNet(T[0],T[1]).net;
+  const l=termsOf(Lst),r=termsOf(Rst);
+  if(l.bad.length||r.bad.length){
+    items.push(['err','Ungültiger Koeffizient bei '+[...l.bad,...r.bad].map(lbl).join(', ')+'. Erlaubt sind positive ganze Zahlen; eine leere Lücke bedeutet 1.']);
+    return {status:'err',items};
+  }
+  if(!l.arr.length||!r.arr.length){items.push(['err','Auf beiden Seiten des Reaktionspfeils müssen Teilchen stehen.']);return {status:'err',items}}
+  const {net,g}=toNet(l.arr,r.arr);
+  const sk=Object.keys(net),tk=Object.keys(tn);
+  const extra=sk.filter(k=>!(k in tn)),missing=tk.filter(k=>!(k in net));
+  const wrong=sk.filter(k=>(k in tn)&&Math.sign(net[k])!==Math.sign(tn[k]));
+  for(const k of extra){
+    if(k==='e')items.push(['err',kind==='half'?'In dieser Teilgleichung sind die Elektronen nicht richtig gesetzt.':'In der Gesamtgleichung dürfen keine Elektronen stehen. Die Zahl der abgegebenen und aufgenommenen Elektronen muss gleich sein, damit sie sich herauskürzen.']);
+    else if(k==='OH'&&('H' in tn))items.push(['err','In saurer Lösung bzw. beim formalen Ausgleich verwendet man H⁺ oder H₃O⁺, nicht OH⁻.']);
+    else if(k==='H'&&('OH' in tn))items.push(['err','In alkalischer Lösung gleicht man mit OH⁻ aus, nicht mit H⁺ bzw. H₃O⁺.']);
+    else if(k==='H')items.push(['err','H⁺ bzw. H₃O⁺ wird hier nicht benötigt.']);
+    else if(k==='OH')items.push(['err','OH⁻ wird hier nicht benötigt.']);
+    else if(k==='H2O')items.push(['err','Wasser wird hier nicht benötigt.']);
+    else items.push(['err',lbl(k)+' gehört nicht in diese Gleichung.']);
+  }
+  for(const k of missing){
+    if(k==='e')items.push(['err','Es fehlen die Elektronen.']);
+    else if(k==='H'&&extra.includes('OH')){}
+    else if(k==='OH'&&extra.includes('H')){}
+    else if(k==='H')items.push(['err','Für den Ausgleich fehlen noch H⁺- bzw. H₃O⁺-Ionen.']);
+    else if(k==='OH')items.push(['err','Für den Ausgleich fehlen noch OH⁻-Ionen.']);
+    else if(k==='H2O')items.push(['err','Für den Ausgleich der O- und H-Atome fehlt noch Wasser.']);
+    else items.push(['err','Es fehlt noch '+lbl(k)+'.']);
+  }
+  for(const k of wrong){
+    if(k==='e')items.push(['err',tn.e>0?'Die Elektronen stehen auf der falschen Seite: Bei dieser Teilreaktion werden Elektronen abgegeben, sie gehören zu den Produkten.':'Die Elektronen stehen auf der falschen Seite: Bei dieser Teilreaktion werden Elektronen aufgenommen, sie gehören zu den Edukten.']);
+    else items.push(['err',lbl(k)+' steht auf der falschen Seite.']);
+  }
+  const A=tally(l.arr),B=tally(r.arr);
+  const els=sortEls(new Set([...Object.keys(A.at),...Object.keys(B.at)]));
+  const badEl=els.filter(e=>(A.at[e]||0)!==(B.at[e]||0));
+  if(badEl.length)items.push(['err','Atombilanz stimmt nicht: '+badEl.map(e=>e+' (links '+(A.at[e]||0)+', rechts '+(B.at[e]||0)+')').join(', ')+'.']);
+  else items.push(['ok','Atombilanz ausgeglichen.']);
+  if(A.q!==B.q)items.push(['err','Ladungsbilanz stimmt nicht: links '+fq(A.q)+', rechts '+fq(B.q)+'.']);
+  else items.push(['ok','Ladungsbilanz ausgeglichen (beide Seiten '+fq(A.q)+').']);
+  if(!items.some(i=>i[0]==='err')){
+    if(!eqNet(net,tn))items.push(['err','Die Gleichung ist ausgeglichen, passt aber nicht zur beschriebenen Reaktion.']);
+    else{
+      const dup=[...new Set(Lst.map(t=>t.id))].filter(id=>Rst.some(t=>t.id===id));
+      if(dup.length)items.push(['warn','Kürze noch: '+dup.map(lbl).join(', ')+' steht auf beiden Seiten.']);
+      if(g>1){
+        if(kind==='half')items.push(['info','Alle Koeffizienten lassen sich durch '+g+' teilen. Üblich ist die gekürzte Form.']);
+        else items.push(['warn','Alle Koeffizienten lassen sich noch durch '+g+' teilen. Gib die kleinsten ganzen Zahlen an.']);
+      }
+    }
+  }
+  const status=items.some(i=>i[0]==='err')?'err':items.some(i=>i[0]==='warn')?'warn':'ok';
+  return {status,items,bal:{els,A,B}};
+}
+/*DATA-END*/
+
+
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CAT={anorg:'anorganisch',org:'organisch'};
+const LVL={1:'leicht',2:'mittel',3:'schwer'};
+const LVLNOTE={
+  1:'Leicht: Elektronenübergänge zwischen Metallen, Ionen und Elementen bzw. Alkohole mit Kupfer(II)-oxid.',
+  2:'Mittel: Ausgleich mit H⁺/H₃O⁺ und H₂O, Sauerstoff und Silber-Ionen als Oxidationsmittel.',
+  3:'Schwer: große Koeffizienten, alkalische Lösung, Disproportionierung, Dichromat, Permanganat, Fehling- und Tollens-Probe.',
+  0:'Gemischt: alle Stufen.'
+};
+const fm=html=>'<span class="fm">'+html+'</span>';
+const uniq=a=>[...new Set(a)];
+
+/* ---------- Strukturformeln (Valenzstrichformeln mit freien Elektronenpaaren) ----------
+   Atom: [Element, x, y, Anzahl H, H-Richtungen "udlr" (optional), Ladung (optional)]
+   Bindung: [i, j, Bindungsordnung]; H-Atome und freie Elektronenpaare werden ergänzt. */
+const MOLSPEC={
+  EtOH:{a:[["C",0,0,3],["C",1,0,2],["O",2,0,1]],b:[[0,1],[1,2]]},
+  EtAl:{a:[["C",0,0,3],["C",1,0,1,"r"],["O",1,-1,0]],b:[[0,1],[1,2,2]]},
+  AcOH:{a:[["C",0,0,3],["C",1,0,0],["O",1,-1,0],["O",2,0,1]],b:[[0,1],[1,2,2],[1,3]]},
+  Ac:{a:[["C",0,0,3],["C",1,0,0],["O",1,-1,0],["O",2,0,0,null,-1]],b:[[0,1],[1,2,2],[1,3]]},
+  NaAc:{a:[["C",0,0,3],["C",1,0,0],["O",1,-1,0],["O",2,0,0,null,-1]],b:[[0,1],[1,2,2],[1,3]],sfx:'Na<sup>+</sup>'},
+  MeOH:{a:[["C",0,0,3],["O",1,0,1]],b:[[0,1]]},
+  HCHO:{a:[["C",0,0,2,"ud"],["O",1,0,0]],b:[[0,1,2]]},
+  iPrOH:{a:[["C",0,0,3],["C",1,0,1,"d"],["C",2,0,3],["O",1,-1,1]],b:[[0,1],[1,2],[1,3]]},
+  Aceton:{a:[["C",0,0,3],["C",1,0,0],["C",2,0,3],["O",1,-1,0]],b:[[0,1],[1,2],[1,3,2]]},
+  Ox:{a:[["O",0,0,1],["C",1,0,0],["C",2,0,0],["O",3,0,1],["O",1,-1,0],["O",2,-1,0]],b:[[0,1],[1,2],[2,3],[1,4,2],[2,5,2]]},
+  PrOH:{a:[["C",0,0,3],["C",1,0,2],["C",2,0,2],["O",3,0,1]],b:[[0,1],[1,2],[2,3]]},
+  PrAl:{a:[["C",0,0,3],["C",1,0,2],["C",2,0,1,"r"],["O",2,-1,0]],b:[[0,1],[1,2],[2,3,2]]},
+  PrCOOH:{a:[["C",0,0,3],["C",1,0,2],["C",2,0,0],["O",2,-1,0],["O",3,0,1]],b:[[0,1],[1,2],[2,3,2],[2,4]]},
+  Bu2OH:{a:[["C",0,0,3],["C",1,0,1,"d"],["C",2,0,2],["C",3,0,3],["O",1,-1,1]],b:[[0,1],[1,2],[2,3],[1,4]]},
+  Butanon:{a:[["C",0,0,3],["C",1,0,0],["C",2,0,2],["C",3,0,3],["O",1,-1,0]],b:[[0,1],[1,2],[2,3],[1,4,2]]},
+  HCOOH:{a:[["C",0,0,1,"l"],["O",0,-1,0],["O",1,0,1]],b:[[0,1,2],[0,2]]},
+  HCOO:{a:[["C",0,0,1,"l"],["O",0,-1,0],["O",1,0,0,null,-1]],b:[[0,1,2],[0,2]]},
+  NaFo:{a:[["C",0,0,1,"l"],["O",0,-1,0],["O",1,0,0,null,-1]],b:[[0,1,2],[0,2]],sfx:'Na<sup>+</sup>'}
+};
+const VE={H:1,C:4,N:5,O:6}, ELCLS={O:'ox',N:'ni'}, DIRS={r:[1,0],l:[-1,0],u:[0,-1],d:[0,1]};
+function buildMol(spec){
+  const A=spec.a.map(a=>({el:a[0],x:a[1],y:a[2],h:a[3]||0,hd:a[4]||null,q:a[5]||0}));
+  const B=spec.b.map(b=>({i:b[0],j:b[1],o:b[2]||1}));
+  const occ=new Set(),key=(x,y)=>x+','+y;
+  A.forEach(a=>occ.add(key(a.x,a.y)));
+  const heavy=A.length;
+  for(let i=0;i<heavy;i++){
+    const a=A[i];if(!a.h)continue;
+    const nb=B.filter(b=>b.i===i||b.j===i).map(b=>{const o=A[b.i===i?b.j:b.i];return [Math.sign(o.x-a.x),Math.sign(o.y-a.y)]});
+    let order;
+    if(a.hd)order=a.hd.split('');
+    else{
+      const free=['u','d','l','r'].filter(k=>!nb.some(v=>v[0]===DIRS[k][0]&&v[1]===DIRS[k][1]));
+      if(a.h===2&&nb.length===1){const perp=nb[0][0]!==0?['u','d']:['l','r'];order=perp.filter(k=>free.includes(k)).concat(free.filter(k=>!perp.includes(k)))}
+      else{const s=nb.reduce((p,v)=>[p[0]+v[0],p[1]+v[1]],[0,0]);const dot=k=>-(DIRS[k][0]*s[0]+DIRS[k][1]*s[1]);order=free.slice().sort((k1,k2)=>dot(k2)-dot(k1))}
+    }
+    let placed=0;
+    for(const k of order){if(placed>=a.h)break;const x=a.x+DIRS[k][0],y=a.y+DIRS[k][1];if(occ.has(key(x,y)))continue;
+      occ.add(key(x,y));A.push({el:'H',x,y,h:0,q:0});B.push({i,j:A.length-1,o:1});placed++}
+  }
+  A.forEach((a,i)=>{const bs=B.filter(b=>b.i===i||b.j===i);const bo=bs.reduce((s,b)=>s+b.o,0);a.lp=(VE[a.el]-bo-a.q)/2;a.nbr=bs.map(b=>({k:b.i===i?b.j:b.i,o:b.o}))});
+  return {A,B,sfx:spec.sfx||''};
+}
+function lpDirs(M,i){
+  const a=M.A[i],k=a.lp;if(!k)return [];
+  const occ=a.nbr.map(n=>{const o=M.A[n.k];return Math.atan2(o.y-a.y,o.x-a.x)*180/Math.PI});
+  if(a.q)occ.push(-45);
+  const norm=d=>((d%360)+360)%360,diff=(p,q)=>{const d=Math.abs(norm(p)-norm(q));return Math.min(d,360-d)};
+  if(a.nbr.length===1&&!a.q){const opp=occ[0]+180;if(k===1)return [opp];if(k===2)return [opp-60,opp+60];if(k===3)return [opp,opp-90,opp+90]}
+  const res=[],cand=[0,45,90,135,180,225,270,315];
+  for(let n=0;n<k;n++){let best=null,bs=-1;cand.forEach(c=>{let s=Math.min(...occ.concat(res).map(o=>diff(c,o)));if(c%90===0)s+=1;if(s>bs){bs=s;best=c}});res.push(best)}
+  return res;
+}
+const UU=34,MOLS={};
+function molSVG(id,scale){
+  const M=MOLS[id]||(MOLS[id]=buildMol(MOLSPEC[id]));
+  const xs=M.A.map(a=>a.x),ys=M.A.map(a=>a.y),minX=Math.min(...xs),minY=Math.min(...ys);
+  const pad=14,W=(Math.max(...xs)-minX)*UU+2*pad,H=(Math.max(...ys)-minY)*UU+2*pad;
+  const X=a=>(a.x-minX)*UU+pad,Y=a=>(a.y-minY)*UU+pad,out=[];
+  M.B.forEach(b=>{
+    const p=M.A[b.i],q=M.A[b.j],dx=Math.sign(q.x-p.x),dy=Math.sign(q.y-p.y),sh=8;
+    const x1=X(p)+dx*sh,y1=Y(p)+dy*sh,x2=X(q)-dx*sh,y2=Y(q)-dy*sh;
+    (b.o===1?[0]:b.o===2?[-2.7,2.7]:[-4,0,4]).forEach(f=>{const ox=-dy*f,oy=dx*f;
+      out.push(`<line x1="${(x1+ox).toFixed(1)}" y1="${(y1+oy).toFixed(1)}" x2="${(x2+ox).toFixed(1)}" y2="${(y2+oy).toFixed(1)}"/>`)});
+  });
+  M.A.forEach((a,i)=>{
+    const cx=X(a),cy=Y(a),cls=ELCLS[a.el]||'';
+    out.push(`<text class="${cls}" x="${cx}" y="${cy}">${a.el}</text>`);
+    lpDirs(M,i).forEach(deg=>{const t=deg*Math.PI/180,c=Math.cos(t),s=Math.sin(t),R=10.5,mx=cx+R*c,my=cy+R*s,hx=-s*3.8,hy=c*3.8;
+      out.push(`<line class="lp ${cls}" x1="${(mx+hx).toFixed(1)}" y1="${(my+hy).toFixed(1)}" x2="${(mx-hx).toFixed(1)}" y2="${(my-hy).toFixed(1)}"/>`)});
+    if(a.q){const qx=cx+12.5,qy=cy-12.5;
+      out.push(`<circle class="chg" cx="${qx}" cy="${qy}" r="5"/><line class="chg" x1="${qx-2.6}" y1="${qy}" x2="${qx+2.6}" y2="${qy}"/>`+(a.q>0?`<line class="chg" x1="${qx}" y1="${qy-2.6}" x2="${qx}" y2="${qy+2.6}"/>`:''))}
+  });
+  return `<svg class="mol" viewBox="0 0 ${W} ${H}" width="${Math.round(W*scale)}" height="${Math.round(H*scale)}" role="img" aria-label="Strukturformel ${esc(SP[id].n)}">${out.join('')}</svg>`;
+}
+/* Formel für die Anzeige: organische Teilchen als Strukturformel, sonst Summenformel */
+function fs(id,size){
+  if(!MOLSPEC[id])return '<span class="fx">'+fh(id)+'</span>';
+  const M=MOLS[id]||(MOLS[id]=buildMol(MOLSPEC[id]));
+  return `<span class="mol-w" title="${esc(SP[id].n)}">${molSVG(id,size==='sm'?0.68:1)}${M.sfx?`<span class="sfx">${M.sfx}</span>`:''}</span>`;
+}
+const nmh=id=>MOLSPEC[id]?'<b>'+esc(SP[id].n)+'</b>':fm(fh(id));
+const specIds=spec=>P(spec).flat().map(x=>x[1]);
+/* vereinfachte Teilgleichung: nur Redoxpaar und Elektronen (O, H und Ladung erst in der Gesamtgleichung) */
+function simpleT(h){return P(h.eq).map(side=>side.filter(([c,id])=>id===h.from||id===h.to||id==='e'))}
+function tSpec(T){return T.map(side=>side.map(([c,id])=>(c>1?c+' ':'')+id).join(' + ')).join(' > ')}
+function simpleSpec(h){return tSpec(simpleT(h))}
+function halfPal(h){return ['e']}
+function totalPal(t){return uniq([...t.halves.flatMap(h=>[h.from,h.to,...specIds(h.eq)]).filter(id=>!STD.includes(id)),...STD])}
+function rt(text){return text.replace(/\{([^}]+)\}/g,(m,s)=>{const [f,c]=s.split('^');return fm(sub(f)+(c?'<sup>'+c.replace('-','−')+'</sup>':''))})}
+function specHtml(spec){const T=P(spec);const side=s=>s.map(([c,id])=>(c>1?c+' ':'')+fs(id)).join(' + ');return side(T[0])+' → '+side(T[1])}
+function listHtml(L,R){const side=list=>list.map(([c,id])=>(c>1?c+' ':'')+fs(id)).join(' + ')||'…';return side(L)+' → '+side(R)}
+function eqHtml(eq){const side=list=>list.map(t=>{const c=coefVal(t.c);return (c>1?c+' ':'')+fs(t.id)}).join(' + ')||'…';return side(eq.L)+' → '+side(eq.R)}
+function fromSpec(spec){const T=P(spec);const m=s=>s.map(([c,id])=>({id,c:c===1?'':String(c)}));return {L:m(T[0]),R:m(T[1])}}
+function eRaw(eq){let n=0;for(const t of eq.R)if(t.id==='e')n+=coefVal(t.c);for(const t of eq.L)if(t.id==='e')n-=coefVal(t.c);return Math.abs(n)}
+
+/* ---------- Zustand ---------- */
+const S={cat:'anorg',lvl:2,bil:true,task:null,w:null,num:0,used:new Set(),
+  stats:{solved:0,first:0,streak:0,shown:0},hist:[]};
+function unit(){return {L:[],R:[],side:'L',res:null,hint:0,shown:false,stale:false}}
+function newWork(t){return {halves:t.halves.map(h=>emptyHalf(h)),fac:['',''],facMsg:null,total:unit(),stoff:unit(),fails:0,hints:0,finished:false,histIdx:-1}}
+const ok=u=>!!(u.res&&u.res.status==='ok');
+const step1ok=w=>w.halves.every(ok);
+
+function filtered(){return TASKS.filter(t=>(S.cat==='mix'||t.cat===S.cat)&&(!S.lvl||t.lvl===S.lvl))}
+function curUnit(){
+  const w=S.w,t=S.task;
+  const i=w.halves.findIndex(u=>!ok(u));
+  if(i>=0)return {key:'h'+i,u:w.halves[i],step:1,i};
+  if(!ok(w.total))return {key:'tot',u:w.total,step:2};
+  if(t.stoff.eq&&!ok(w.stoff))return {key:'sto',u:w.stoff,step:3};
+  return null;
+}
+
+/* ---------- Seitenleiste ---------- */
+function setToggle(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('active',b.dataset[attr]===String(val)))}
+function fillSelect(){
+  const list=filtered();
+  let html='';
+  for(const l of [1,2,3]){
+    const g=list.filter(t=>t.lvl===l);if(!g.length)continue;
+    html+=`<optgroup label="${LVL[l][0].toUpperCase()+LVL[l].slice(1)}">`+g.map(t=>`<option value="${t.id}"${S.task&&t.id===S.task.id?' selected':''}>${esc(t.title)}${S.cat==='mix'?' ('+CAT[t.cat]+')':''}</option>`).join('')+'</optgroup>';
+  }
+  $('taskSelect').innerHTML=html;
+  $('levelNote').textContent=LVLNOTE[S.lvl];
+}
+$('catToggle').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.cat=b.dataset.cat;setToggle('catToggle','cat',S.cat);S.used.clear();fillSelect();newTask()});
+$('levelToggle').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.lvl=+b.dataset.lvl;setToggle('levelToggle','lvl',S.lvl);S.used.clear();fillSelect();newTask()});
+$('btnLoad').addEventListener('click',()=>{const id=$('taskSelect').value;if(id)openTask(TASKS.find(t=>t.id===id))});
+$('chkBil').addEventListener('change',e=>{S.bil=e.target.checked;document.querySelectorAll('[data-bil]').forEach(b=>{b.hidden=!S.bil})});
+$('btnNew').addEventListener('click',newTask);
+
+function newTask(){
+  const list=filtered();
+  let pool=list.filter(t=>!S.used.has(t.id)&&(!S.task||t.id!==S.task.id));
+  if(!pool.length){S.used.clear();pool=list.filter(t=>!S.task||t.id!==S.task.id);if(!pool.length)pool=list}
+  openTask(pool[Math.floor(Math.random()*pool.length)]);
+}
+function openTask(t){
+  S.task=t;S.w=newWork(t);S.used.add(t.id);S.num++;
+  S.hist.unshift({n:S.num,t,status:'open',stoff:''});S.w.hist=S.hist[0];
+  fillSelect();renderAll();renderHist();
+}
+
+/* ---------- Baukasten ---------- */
+function bilHtml(eq,only){
+  const l=termsOf(eq.L),r=termsOf(eq.R);
+  if(!eq.L.length&&!eq.R.length)return '<div class="bil-empty">Bilanz erscheint, sobald Teilchen eingetragen sind.</div>';
+  if(l.bad.length||r.bad.length)return '<div class="bil-empty">Ungültiger Koeffizient – nur ganze Zahlen ab 1.</div>';
+  const A=tally(l.arr),B=tally(r.arr);
+  const els=only?[only]:sortEls(new Set([...Object.keys(A.at),...Object.keys(B.at)]));
+  const row=(lbl,a,b,fa,fb)=>`<tr class="${a===b?'ok':'no'}"><td class="el">${lbl}</td><td class="n">${fa}</td><td class="n">${fb}</td><td class="s">${a===b?'✓':'✗'}</td></tr>`;
+  return `<table class="bil"><thead><tr><th>Bilanz</th><th>links</th><th>rechts</th><th></th></tr></thead><tbody>${els.map(e=>row(e,A.at[e]||0,B.at[e]||0,A.at[e]||0,B.at[e]||0)).join('')}${only?'':row('Ladung',A.q,B.q,fq(A.q),fq(B.q))}</tbody></table>`;
+}
+function builder(host,u,pal,key,onEdit,only){
+  const term=(t,i,s)=>`${i?'<span class="op">+</span>':''}<span class="term${t.id==='e'?' is-e':''}"><input class="coef" id="${key}-${s}-${t.id}" data-side="${s}" data-id="${t.id}" value="${esc(t.c)}" placeholder="1" inputmode="numeric" autocomplete="off" aria-label="Koeffizient vor ${esc(SP[t.id].n)}"><span class="f">${fs(t.id)}</span>${t.fixed?'':`<button type="button" class="tb" data-del="${s}:${t.id}" title="entfernen" aria-label="${esc(SP[t.id].n)} entfernen">×</button>`}</span>`;
+  const tray=s=>`<div class="tray${u.side===s?' act':''}" data-tray="${s}"><span class="stylelbl">${s==='L'?'Edukte':'Produkte'}</span><div class="terms">${u[s].length?u[s].map((t,i)=>term(t,i,s)).join(''):'<span class="empty">Teilchen hierher ziehen</span>'}</div></div>`;
+  host.innerHTML=`<div class="eq-wrap"><div class="eqb">${tray('L')}<span class="arrow" aria-hidden="true">→</span>${tray('R')}</div>${only==='none'?'':`<div data-bil${S.bil?'':' hidden'}>${bilHtml(u,only)}</div>`}</div>
+   <div class="pal-wrap"><div class="pal-top"><span class="pal-lbl">Teilchen in die Gleichung ziehen oder antippen. Antippen fügt hinzu zu</span><div class="mode-toggle"><button type="button" data-set="L" class="${u.side==='L'?'active':''}">Edukten</button><button type="button" data-set="R" class="${u.side==='R'?'active':''}">Produkten</button></div></div>
+   <div class="pal">${pal.map(id=>`<button type="button" class="${STD.includes(id)?'std':''}${id==='e'?' is-e':''}" data-add="${id}" title="${esc(SP[id].n)}" aria-label="${esc(SP[id].n)} hinzufügen">${fs(id,'sm')}</button>`).join('')}</div></div>`;
+  const re=()=>{builder(host,u,pal,key,onEdit,only);onEdit()};
+  /* Teilchen hinzufügen; ist es auf dieser Seite schon vorhanden, steigt sein Koeffizient um 1 */
+  const addTo=(side,id,focus)=>{
+    u.side=side;const ex=u[side].find(t=>t.id===id);
+    if(ex){const v=coefVal(ex.c);ex.c=String((isNaN(v)?1:v)+1)}else u[side].push({id,c:''});
+    re();const inp=$(`${key}-${side}-${id}`);
+    if(inp){inp.classList.add('bump');if(focus&&!ex&&matchMedia('(pointer:fine)').matches)inp.focus()}
+  };
+  /* Ziehen mit Maus, Finger oder Stift */
+  host.onpointerdown=e=>{
+    const b=e.target.closest('.pal button[data-add]');if(!b||(e.pointerType==='mouse'&&e.button!==0))return;
+    const id=b.dataset.add,sx=e.clientX,sy=e.clientY;let ghost=null,over=null;
+    try{b.setPointerCapture(e.pointerId)}catch(_){}
+    const move=ev=>{
+      if(!ghost){if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6)return;
+        ghost=document.createElement('div');ghost.className='drag-ghost'+(id==='e'?' is-e':'');ghost.innerHTML=b.innerHTML;document.body.appendChild(ghost);host.classList.add('dragging')}
+      ev.preventDefault();ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';
+      const el=document.elementFromPoint(ev.clientX,ev.clientY),tr=el&&el.closest('.tray'),t=tr&&host.contains(tr)?tr:null;
+      if(t!==over){if(over)over.classList.remove('drop');over=t;if(over)over.classList.add('drop')}
+    };
+    const end=ev=>{
+      b.removeEventListener('pointermove',move);b.removeEventListener('pointerup',end);b.removeEventListener('pointercancel',end);
+      try{b.releasePointerCapture(e.pointerId)}catch(_){}
+      if(!ghost)return;
+      ghost.remove();host.classList.remove('dragging');host._dragged=true;setTimeout(()=>{host._dragged=false},400);
+      if(over){over.classList.remove('drop');if(ev.type==='pointerup')addTo(over.dataset.tray,id,false)}
+    };
+    b.addEventListener('pointermove',move);b.addEventListener('pointerup',end);b.addEventListener('pointercancel',end);
+  };
+  const setSide=s=>{u.side=s;host.querySelectorAll('.tray').forEach(x=>x.classList.toggle('act',x.dataset.tray===s));host.querySelectorAll('[data-set]').forEach(b=>b.classList.toggle('active',b.dataset.set===s))};
+  host.onclick=e=>{
+    const b=e.target.closest('button');
+    if(b&&b.dataset.add){if(host._dragged){host._dragged=false;return}addTo(u.side,b.dataset.add,true);return}
+    if(b&&b.dataset.set){setSide(b.dataset.set);return}
+    if(b&&b.dataset.del){const [s,id]=b.dataset.del.split(':');u[s]=u[s].filter(t=>t.id!==id);re();return}
+    if(b&&b.dataset.move){const [s,id]=b.dataset.move.split(':');const o=s==='L'?'R':'L';const t=u[s].find(x=>x.id===id);u[s]=u[s].filter(x=>x.id!==id);
+      const ex=u[o].find(x=>x.id===id);if(ex)ex.c=String(coefVal(ex.c)+coefVal(t.c));else u[o].push(t);re();return}
+    if(e.target.closest('input'))return;
+    const tr=e.target.closest('[data-tray]');if(tr)setSide(tr.dataset.tray);
+  };
+  host.oninput=e=>{const i=e.target;if(!i.classList.contains('coef'))return;const t=u[i.dataset.side].find(x=>x.id===i.dataset.id);if(t)t.c=i.value;
+    const bb=host.querySelector('[data-bil]');if(bb)bb.innerHTML=bilHtml(u,only);onEdit()};
+}
+
+/* ---------- Rückmeldung ---------- */
+const FBC={ok:'good',err:'bad',warn:'hint',info:'info'};
+function fbHtml(u,hints){
+  let h=hints.slice(0,u.hint).map((x,i)=>`<div class="fb hint">Tipp ${i+1}: ${x}</div>`).join('');
+  if(u.res)h+=u.res.lines.map(([k,txt])=>`<div class="fb ${FBC[k]}">${txt}</div>`).join('');
+  return h;
+}
+function summarize(res,okText){
+  if(res.status==='ok')return [['ok',okText],...res.items.filter(i=>i[0]==='info')];
+  return res.items.filter(i=>i[0]!=='ok');
+}
+function stale(fbId,u){if(!u.res)return;u.stale=true;const f=$(fbId);if(f)f.classList.add('stale')}
+
+/* ---------- Tipps ---------- */
+function halfHints(t,h){
+  const T=simpleT(h),n=eCount(T),d=Math.abs(h.on[1]-h.on[0]),k=n/d,ox=h.on[1]>h.on[0];
+  const cf=coefOf(T,h.from),ct=coefOf(T,h.to);
+  const hs=[`Bestimme die Oxidationszahl von ${h.atom} in ${nmh(h.from)} und in ${nmh(h.to)}${h.note?' ('+h.note+')':''}.`,
+    `${h.atom}: ${fmtON(h.on[0])} → ${fmtON(h.on[1])}. Die Oxidationszahl ${ox?'steigt':'sinkt'}, also ${ox?'Oxidation – die Elektronen stehen bei den Produkten':'Reduktion – die Elektronen stehen bei den Edukten'}.`];
+  if(cf!==1||ct!==1)hs.push(`Gleiche zuerst die ${h.atom}-Atome aus: ${(cf>1?cf+' ':'')+nmh(h.from)} → ${(ct>1?ct+' ':'')+nmh(h.to)}.`);
+  hs.push(`Elektronen = Änderung der Oxidationszahl × Anzahl der ${h.atom}-Atome = ${d} · ${k} = ${n}.`);
+  hs.push('O- und H-Atome und die Ladungen gleichst du hier noch nicht aus. Das folgt in der Gesamtgleichung.');
+  return hs;
+}
+function sumNet(t){
+  const TA=simpleT(t.halves[0]),TB=simpleT(t.halves[1]);
+  const eA=eCount(TA),eB=eCount(TB),l=lcm(eA,eB),fA=l/eA,fB=l/eB;
+  const L=[],R=[];const put=(arr,id,c)=>{const x=arr.find(y=>y[1]===id);if(x)x[0]+=c;else arr.push([c,id])};
+  [[TA,fA],[TB,fB]].forEach(([T,f])=>{T[0].forEach(([c,id])=>put(L,id,c*f));T[1].forEach(([c,id])=>put(R,id,c*f))});
+  const mid={};L.forEach(([c,id])=>mid[id]=(mid[id]||0)-c);R.forEach(([c,id])=>mid[id]=(mid[id]||0)+c);
+  let g=0;for(const k in mid){if(!mid[k])delete mid[k];else g=gcd(g,mid[k])}
+  const ML=L.filter(([c,id])=>mid[id]<0).map(([c,id])=>[-mid[id],id]),MR=R.filter(([c,id])=>mid[id]>0).map(([c,id])=>[mid[id],id]);
+  return {eA,eB,l,fA,fB,L,R,ML,MR,g:g||1};
+}
+function totalHints(t){
+  const s=sumNet(t),tn=toNet(...P(t.total)).net;
+  const hs=[`Teilgleichung A überträgt ${s.eA} Elektronen, Teilgleichung B ${s.eB}.`,
+    `kgV(${s.eA}, ${s.eB}) = ${s.l}. Multipliziere A mit ${s.fA} und B mit ${s.fB}.`,
+    'Addiere beide Teilgleichungen und kürze die Elektronen.'];
+  if(s.g>1)hs.push(`Danach lassen sich alle Koeffizienten durch ${s.g} teilen.`);
+  if('H' in tn)hs.push(`Gleiche die Ladungen mit H⁺ bzw. H₃O⁺ aus (${MIL[t.mil]}).`);
+  else if('OH' in tn)hs.push('Gleiche die Ladungen mit OH⁻-Ionen aus (alkalische Lösung).');
+  const pair=new Set(t.halves.flatMap(h=>[h.from,h.to]));
+  const extra=Object.keys(tn).filter(id=>!pair.has(id)&&!STD.includes(id));
+  if(extra.length)hs.push('Ergänze außerdem '+extra.map(nmh).join(', ')+'.');
+  if('H2O' in tn)hs.push('Gleiche zum Schluss die O- und H-Atome mit H₂O aus.');
+  return hs;
+}
+function stoffHints(t){return ['Ersetze jedes Ion der Gesamtgleichung durch den Stoff, aus dem es stammt.',...(t.stoff.hints||[]).map(rt),'Die an der Reaktion unbeteiligten Ionen müssen links und rechts gleich oft vorkommen.']}
+function hintsFor(c){const t=S.task;return c.step===1?halfHints(t,t.halves[c.i]):c.step===2?totalHints(t):stoffHints(t)}
+
+/* ---------- Darstellung ---------- */
+function renderAll(){
+  const t=S.task;
+  $('taskNum').textContent='Aufgabe '+S.num;
+  $('taskCat').textContent=CAT[t.cat];$('taskCat').className='chip '+t.cat;
+  $('taskLevel').textContent=LVL[t.lvl];$('taskLevel').className='chip l'+t.lvl;
+  $('taskMil').textContent=MIL[t.mil];
+  $('taskPrompt').textContent=t.title;
+  $('taskCtx').innerHTML=rt(t.text);
+  $('halves').innerHTML=t.halves.map((h,i)=>`<div class="half" id="half${i}"></div>`).join('');
+  t.halves.forEach((h,i)=>renderHalf(i));
+  renderStep1State();renderStep2();renderStep3();renderWay();updateStatus();
+}
+function renderHalf(i){
+  const t=S.task,h=t.halves[i],u=S.w.halves[i],el=$('half'+i);
+  el.className='half'+(ok(u)?' ok':'');
+  el.innerHTML=`<div class="half-head"><span class="hl">Teilgleichung ${'AB'[i]}</span>${u.type?`<span class="chip ${u.type}">${u.type==='ox'?'Oxidation':'Reduktion'}</span>`:''}<button type="button" class="btn-del" data-delhalf title="Nur Teilgleichung ${'AB'[i]} leeren">Löschen</button></div>
+   <div class="on-row">
+     <div class="field"><span class="lbl">Oxidationszahl von <b>${h.atom}</b>${h.note?` <small>(${h.note})</small>`:''}</span>
+       <div class="on-in"><input class="num-in on" id="on${i}0" data-on="0" value="${esc(u.on[0])}" placeholder="vorher" autocomplete="off" aria-label="Oxidationszahl von ${h.atom} vorher"><span class="arr">→</span><input class="num-in on" id="on${i}1" data-on="1" value="${esc(u.on[1])}" placeholder="nachher" autocomplete="off" aria-label="Oxidationszahl von ${h.atom} nachher"></div></div>
+     <div class="field"><span class="lbl">Art der Teilreaktion</span>
+       <div class="mode-toggle" data-type-tg><button type="button" data-type="ox" class="${u.type==='ox'?'active':''}">Oxidation</button><button type="button" data-type="red" class="${u.type==='red'?'active':''}">Reduktion</button></div></div>
+   </div>
+   <div id="bh${i}"></div>
+   <div class="feedback${u.stale?' stale':''}" id="fbh${i}" aria-live="polite">${fbHtml(u,halfHints(t,h))}</div>`;
+  el.querySelectorAll('input.on').forEach(inp=>inp.oninput=()=>{u.on[+inp.dataset.on]=inp.value;stale('fbh'+i,u)});
+  el.querySelector('[data-type-tg]').onclick=e=>{const b=e.target.closest('button');if(!b)return;u.type=u.type===b.dataset.type?'':b.dataset.type;stale('fbh'+i,u);
+    el.querySelectorAll('[data-type]').forEach(x=>x.classList.toggle('active',x.dataset.type===u.type));
+    const head=el.querySelector('.half-head');const c=head.querySelector('.chip');if(c)c.remove();
+    if(u.type)head.querySelector('.btn-del').insertAdjacentHTML('beforebegin',`<span class="chip ${u.type}">${u.type==='ox'?'Oxidation':'Reduktion'}</span>`)};
+  const db=el.querySelector('[data-delhalf]');db.onclick=()=>armDel(db,()=>{resetHalf(i)});
+  builder($('bh'+i),u,halfPal(h),'h'+i,()=>stale('fbh'+i,u),'none');
+}
+function stepState(box,st,okFlag,shown,locked,extra){
+  const b=$(box);b.classList.toggle('passed',okFlag);b.classList.toggle('revealed',okFlag&&shown);b.classList.toggle('locked',locked);
+  $(st).textContent=extra||(locked?'gesperrt':okFlag?(shown?'Lösung angezeigt':'richtig'):'offen');
+}
+function renderStep1State(){
+  const w=S.w,o=step1ok(w);
+  stepState('box1','st1',o,w.halves.some(u=>u.shown),false);
+  $('btnCheck1').hidden=o;
+}
+function checkHalfEq(u,h){
+  const items=[],T=simpleT(h),tn=toNet(T[0],T[1]).net;
+  const l=termsOf(u.L),r=termsOf(u.R);
+  if(l.bad.length||r.bad.length)return [['err','Ungültiger Koeffizient. Erlaubt sind ganze Zahlen ab 1, ein leeres Feld bedeutet 1.']];
+  const {net,g}=toNet(l.arr,r.arr);
+  const cnt=arr=>arr.reduce((s,[c,id])=>s+(comp(id)[h.atom]||0)*c,0);
+  const a=cnt(l.arr),b=cnt(r.arr),eN=net.e||0;
+  if(a!==b)items.push(['err',`Die ${h.atom}-Atome sind noch nicht ausgeglichen (links ${a}, rechts ${b}).`]);
+  if(!eN)items.push(['err','Es fehlen die Elektronen.']);
+  else if(Math.sign(eN)!==Math.sign(tn.e))items.push(['err',tn.e>0?'Die Elektronen stehen auf der falschen Seite: Bei einer Oxidation werden Elektronen abgegeben, sie gehören zu den Produkten.':'Die Elektronen stehen auf der falschen Seite: Bei einer Reduktion werden Elektronen aufgenommen, sie gehören zu den Edukten.']);
+  else if(a===b&&Math.abs(eN)!==Math.abs(tn.e)*a/cnt(T[0]))items.push(['err',`Die Anzahl der Elektronen stimmt nicht. Elektronen = Änderung der Oxidationszahl × Anzahl der ${h.atom}-Atome.`]);
+  if(!items.length&&g>1)items.push(['info',`Alle Koeffizienten lassen sich durch ${g} teilen. Üblich ist die gekürzte Form.`]);
+  return items;
+}
+$('btnCheck1').addEventListener('click',()=>{
+  const t=S.task,w=S.w;let anyErr=false;
+  t.halves.forEach((h,i)=>{const u=w.halves[i];if(ok(u))return;
+    const items=[];const a=parseON(u.on[0]),b=parseON(u.on[1]);
+    if(a===null||b===null)items.push(['err',`Trage die Oxidationszahl von ${h.atom} vor und nach der Reaktion ein.`]);
+    else if(isNaN(a)||isNaN(b))items.push(['err','Gib die Oxidationszahlen als Zahl an, z. B. +2, −1, 0 oder +II.']);
+    else if(a!==h.on[0]||b!==h.on[1])items.push(['err',`Die Oxidationszahl von ${h.atom} ${a!==h.on[0]&&b!==h.on[1]?'vorher und nachher':a!==h.on[0]?'vorher':'nachher'} stimmt nicht.`]);
+    const type=h.on[1]>h.on[0]?'ox':'red';
+    if(!u.type)items.push(['err','Wähle aus, ob es sich um eine Oxidation oder eine Reduktion handelt.']);
+    else if(u.type!==type)items.push(['err','Oxidation und Reduktion sind vertauscht: Steigt die Oxidationszahl, liegt eine Oxidation vor.']);
+    const all=items.concat(checkHalfEq(u,h));
+    const status=all.some(x=>x[0]==='err')?'err':all.some(x=>x[0]==='warn')?'warn':'ok';
+    u.res={status,lines:summarize({status,items:all},`Teilgleichung ${'AB'[i]} ist richtig: ${type==='ox'?'Oxidation':'Reduktion'}, ${h.atom} ${fmtON(h.on[0])} → ${fmtON(h.on[1])}, ${h.atom}-Atome und Elektronen stimmen.`)};
+    u.stale=false;if(status!=='ok')anyErr=true;
+  });
+  if(anyErr)w.fails++;
+  t.halves.forEach((h,i)=>renderHalf(i));
+  renderStep1State();renderStep2();renderStep3();updateStatus();
+});
+
+function renderStep2(){
+  const t=S.task,w=S.w,o1=step1ok(w),u=w.total,host=$('body2');
+  stepState('box2','st2',ok(u),u.shown,!o1);$('del2').hidden=!o1;
+  if(!o1){host.innerHTML='<p class="locked-msg">Wird freigeschaltet, sobald beide Teilgleichungen stimmen.</p>';return}
+  host.innerHTML=`<p class="stp-note">Gleiche die Elektronenzahl aus: Mit welcher Zahl musst du jede Teilgleichung multiplizieren?</p>
+   <div class="facs">${w.halves.map((h,i)=>`<div class="facrow"><span class="hl">${'AB'[i]}</span><span class="rg">${eqHtml(h)}</span><span class="ec">${eRaw(h)} e⁻</span><span class="x">·</span><input class="num-in fac" id="fac${i}" data-fac="${i}" value="${esc(w.fac[i])}" placeholder="1" inputmode="numeric" autocomplete="off" aria-label="Faktor für Teilgleichung ${'AB'[i]}"></div>`).join('')}</div>
+   <div class="fac-actions"><button class="btn" id="btnFac">Faktoren prüfen</button>${t.lvl<3?'<button class="btn ghost" id="btnSum">Summe als Startpunkt übernehmen</button>':''}</div>
+   <div class="feedback" id="fbfac">${w.facMsg?`<div class="fb ${FBC[w.facMsg[0]]}">${w.facMsg[1]}</div>`:''}</div>
+   <p class="stp-note" style="margin-top:12px">Addiere die Teilgleichungen und kürze die Elektronen. ${{sauer:'Gleiche dann die Ladungen mit H<sup>+</sup> (oder H<sub>3</sub>O<sup>+</sup>) und zum Schluss die O- und H-Atome mit H<sub>2</sub>O aus.',alk:'Gleiche dann die Ladungen mit OH<sup>−</sup> und zum Schluss die O- und H-Atome mit H<sub>2</sub>O aus.',formal:'Gleiche dann, falls nötig, formal mit H<sup>+</sup> und zum Schluss die O- und H-Atome mit H<sub>2</sub>O aus.',aq:'Prüfe zum Schluss, ob Atome und Ladungen ausgeglichen sind.',ohne:'Prüfe zum Schluss, ob alle Atome ausgeglichen sind.'}[t.mil]}</p>
+   <div id="btot"></div>
+   ${ok(u)?'':'<button class="btn step-check" id="btnCheck2">Gesamtgleichung prüfen</button>'}
+   <div class="feedback${u.stale?' stale':''}" id="fbtot" aria-live="polite">${fbHtml(u,totalHints(t))}</div>`;
+  host.querySelectorAll('input.fac').forEach(inp=>inp.oninput=()=>{w.fac[+inp.dataset.fac]=inp.value});
+  const facs=()=>{
+    const f=w.fac.map(coefVal),valid=!f.some(isNaN);
+    if(!valid){w.facMsg=['err','Die Faktoren müssen ganze Zahlen ab 1 sein. Ein leeres Feld bedeutet 1.'];return null}
+    const nA=f[0]*eRaw(w.halves[0]),nB=f[1]*eRaw(w.halves[1]);
+    if(nA!==nB){w.facMsg=['err',`Mit diesen Faktoren werden in A ${nA} und in B ${nB} Elektronen übertragen. Beide Zahlen müssen gleich sein.`];return null}
+    w.facMsg=gcd(f[0],f[1])>1?['warn',`Je ${nA} Elektronen – das passt, geht aber kleiner. Nimm das kgV der Elektronenzahlen.`]:['ok',`Richtig: Je ${nA} Elektronen werden abgegeben und aufgenommen.`];
+    return f;
+  };
+  $('btnFac').onclick=()=>{facs();$('fbfac').innerHTML=`<div class="fb ${FBC[w.facMsg[0]]}">${w.facMsg[1]}</div>`};
+  if($('btnSum'))$('btnSum').onclick=()=>{
+    const f=facs();if(!f){$('fbfac').innerHTML=`<div class="fb bad">${w.facMsg[1]}</div>`;return}
+    const L=[],R=[];const put=(arr,id,c)=>{const x=arr.find(y=>y.id===id);if(x)x.c=String(coefVal(x.c)+c);else arr.push({id,c:String(c)})};
+    w.halves.forEach((h,i)=>{h.L.forEach(x=>put(L,x.id,coefVal(x.c)*f[i]));h.R.forEach(x=>put(R,x.id,coefVal(x.c)*f[i]))});
+    [L,R].forEach(a=>a.forEach(x=>{if(x.c==='1')x.c=''}));
+    Object.assign(u,{L,R,side:'L',res:null,stale:false});
+    w.facMsg=['info','Summe übernommen. Kürze jetzt alles, was auf beiden Seiten steht.'];renderStep2();
+  };
+  builder($('btot'),u,totalPal(t),'tot',()=>stale('fbtot',u));
+  if($('btnCheck2'))$('btnCheck2').onclick=()=>{
+    const r=checkEq(u.L,u.R,t.total,'total');
+    u.res={status:r.status,lines:summarize(r,'Die Gesamtgleichung ist richtig: Elektronen gekürzt, Atome und Ladungen ausgeglichen.')};u.stale=false;
+    if(r.status!=='ok')w.fails++;
+    afterTotal();
+  };
+}
+function afterTotal(){
+  const w=S.w;
+  if(ok(w.total)&&!w.finished){
+    w.finished=true;
+    const shown=!!w.shownAny;
+    if(shown){S.stats.shown++;S.stats.streak=0;w.hist.status='shown'}
+    else{S.stats.solved++;S.stats.streak++;if(!w.fails&&!w.hints){S.stats.first++;w.hist.status='first'}else w.hist.status='ok'}
+    w.hist.stoff=S.task.stoff.eq?'offen':'entfällt';
+    renderHist();updateReadouts();
+  }
+  renderStep2();renderStep3();renderWay();updateStatus();
+}
+
+function renderStep3(){
+  const t=S.task,w=S.w,u=w.stoff,host=$('body3'),o2=ok(w.total);
+  $('del3').hidden=!(o2&&t.stoff.eq);
+  if(!t.stoff.eq){
+    stepState('box3','st3',false,false,!o2,o2?'entfällt':null);
+    host.innerHTML=o2?`<p class="stp-note" style="margin:0">${t.stoff.none}</p>`:'<p class="locked-msg">Wird freigeschaltet, sobald die Gesamtgleichung stimmt.</p>';return;
+  }
+  stepState('box3','st3',ok(u),u.shown,!o2);
+  if(!o2){host.innerHTML='<p class="locked-msg">Wird freigeschaltet, sobald die Gesamtgleichung stimmt.</p>';return}
+  host.innerHTML=`<p class="stp-note">${rt(t.stoff.intro)}</p>
+   <div class="ref"><span class="k">Deine Gesamtgleichung</span>${eqHtml(w.total)}</div>
+   <div id="bsto"></div>
+   ${ok(u)?'':'<button class="btn step-check" id="btnCheck3">Stoffgleichung prüfen</button>'}
+   <div class="feedback${u.stale?' stale':''}" id="fbsto" aria-live="polite">${fbHtml(u,stoffHints(t))}</div>`;
+  builder($('bsto'),u,t.stoff.pal,'sto',()=>stale('fbsto',u));
+  if($('btnCheck3'))$('btnCheck3').onclick=()=>{
+    const r=checkEq(u.L,u.R,t.stoff.eq,'stoff');
+    u.res={status:r.status,lines:summarize(r,'Die Stoffgleichung ist richtig: Alle an der Reaktion unbeteiligten Ionen sind ergänzt und ausgeglichen.')};u.stale=false;
+    afterStoff();
+  };
+}
+function afterStoff(){
+  const w=S.w;
+  if(ok(w.stoff)){w.hist.stoff=w.stoff.shown?'Lösung angezeigt':'gelöst';renderHist()}
+  renderStep3();renderWay();updateStatus();
+}
+
+/* ---------- Löschen ---------- */
+function armDel(btn,fn){
+  if(btn.dataset.armed){fn();return}
+  const txt=btn.textContent;btn.dataset.armed='1';btn.classList.add('confirm');btn.textContent='Wirklich löschen?';
+  setTimeout(()=>{if(btn.isConnected&&btn.dataset.armed){delete btn.dataset.armed;btn.classList.remove('confirm');btn.textContent=txt}},3000);
+}
+/* Teilgleichung mit vorgegebenem Redoxpaar (nicht entfernbar) */
+function emptyHalf(h){return Object.assign(unit(),{type:'',on:['',''],L:[{id:h.from,c:'',fixed:true}],R:[{id:h.to,c:'',fixed:true}]})}
+function fixPair(u,h){u.L.forEach(x=>{if(x.id===h.from)x.fixed=true});u.R.forEach(x=>{if(x.id===h.to)x.fixed=true})}
+function afterReset(){renderStep1State();renderStep2();renderStep3();renderWay();updateStatus()}
+function resetHalf(i){S.w.halves[i]=emptyHalf(S.task.halves[i]);renderHalf(i);afterReset()}
+function resetStep1(){S.w.halves=S.task.halves.map(emptyHalf);S.task.halves.forEach((h,i)=>renderHalf(i));afterReset()}
+function resetStep2(){const w=S.w;w.fac=['',''];w.facMsg=null;w.total=unit();afterReset()}
+function resetStep3(){const w=S.w;w.stoff=unit();if(w.finished&&S.task.stoff.eq){w.hist.stoff='offen';renderHist()}afterReset()}
+$('del1').addEventListener('click',e=>armDel(e.currentTarget,resetStep1));
+$('del2').addEventListener('click',e=>armDel(e.currentTarget,resetStep2));
+$('del3').addEventListener('click',e=>armDel(e.currentTarget,resetStep3));
+
+/* ---------- Tipp & Lösung ---------- */
+function rerenderUnit(c){if(c.step===1)renderHalf(c.i);else if(c.step===2)renderStep2();else renderStep3()}
+$('btnHint').addEventListener('click',()=>{
+  const c=curUnit();if(!c)return;
+  const hs=hintsFor(c);
+  if(c.u.hint<hs.length){c.u.hint++;if(c.step<3)S.w.hints++}
+  else{c.u.res={status:'info',lines:[['info','Keine weiteren Tipps. Mit „Lösung zeigen“ wird dieser Schritt ausgefüllt.']]}}
+  rerenderUnit(c);
+  const fb=document.querySelector(c.step===1?'#fbh'+c.i:c.step===2?'#fbtot':'#fbsto');if(fb)fb.scrollIntoView({block:'nearest',behavior:'smooth'});
+});
+$('btnSolve').addEventListener('click',()=>{
+  const c=curUnit();if(!c)return;const t=S.task,w=S.w;
+  if(c.step<3)w.shownAny=true;
+  if(c.step===1){const h=t.halves[c.i];
+    fixPair(Object.assign(c.u,fromSpec(simpleSpec(h))),h);Object.assign(c.u,{type:h.on[1]>h.on[0]?'ox':'red',on:[fmtON(h.on[0]),fmtON(h.on[1])],shown:true,stale:false,
+      res:{status:'ok',lines:[['info',`Lösung eingesetzt: ${h.atom} ${fmtON(h.on[0])} → ${fmtON(h.on[1])}, ${eCount(simpleT(h))} Elektronen ${h.on[1]>h.on[0]?'abgegeben':'aufgenommen'}.`]]}});
+    renderHalf(c.i);renderStep1State();renderStep2();renderStep3();updateStatus();return}
+  if(c.step===2){const s=sumNet(t);w.fac=[s.fA>1?String(s.fA):'',s.fB>1?String(s.fB):''];w.facMsg=['info',`kgV(${s.eA}, ${s.eB}) = ${s.l}: A · ${s.fA}, B · ${s.fB}.`];
+    Object.assign(c.u,fromSpec(t.total),{shown:true,stale:false,res:{status:'ok',lines:[['info','Lösung eingesetzt. Den Weg findest du unten im Tab „Lösungsweg“.']]}});afterTotal();return}
+  Object.assign(c.u,fromSpec(t.stoff.eq),{shown:true,stale:false,res:{status:'ok',lines:[['info','Lösung eingesetzt.']]}});afterStoff();
+});
+
+/* ---------- Status, Zähler, Verlauf, Lösungsweg ---------- */
+function updateStatus(){
+  const w=S.w,b=$('statusBadge');
+  $('btnHint').disabled=$('btnSolve').disabled=!curUnit();
+  if(!ok(w.total)){b.className='status running';$('statusText').textContent=step1ok(w)?'Schritt 2 offen':'Schritt 1 offen';return}
+  const shown=!!w.shownAny;
+  b.className='status '+(shown?'shown':'done');
+  $('statusText').textContent=shown?'Lösung angezeigt':(S.task.stoff.eq&&!ok(w.stoff)?'gelöst · Schritt 3 optional':'gelöst');
+}
+function updateReadouts(){$('roSolved').textContent=S.stats.solved;$('roFirst').textContent=S.stats.first;$('roStreak').textContent=S.stats.streak;$('roShown').textContent=S.stats.shown}
+function renderHist(){
+  const ST={open:['s-open','offen'],first:['s-first','im 1. Versuch'],ok:['s-ok','gelöst'],shown:['s-shown','Lösung angesehen']};
+  $('histBody').innerHTML=S.hist.length?S.hist.map(h=>`<tr><td class="mono">${h.n}</td><td>${esc(h.t.title)}</td><td>${CAT[h.t.cat]}</td><td>${LVL[h.t.lvl]}</td><td>${h.stoff||'–'}</td><td class="${ST[h.status][0]}">${ST[h.status][1]}</td></tr>`).join(''):'<tr><td colspan="6" class="empty-hint">Noch keine Aufgaben bearbeitet.</td></tr>';
+}
+function renderWay(){
+  const t=S.task,w=S.w;
+  if(!ok(w.total)){$('wayBox').innerHTML='<div class="empty-hint">Der Lösungsweg erscheint, sobald die Gesamtgleichung richtig ist oder die Lösung angezeigt wurde.</div>';return}
+  const s=sumNet(t);let n=0;const step=(h,b,cls='')=>`<div class="step ${cls}"><span class="n">${++n}</span><span class="h">${h}</span><span class="b">${b}</span></div>`;
+  let html='';
+  t.halves.forEach((h,i)=>{const T=simpleT(h),e=eCount(T),d=Math.abs(h.on[1]-h.on[0]),ox=h.on[1]>h.on[0];
+    html+=step(`Teilgleichung ${'AB'[i]}: ${ox?'Oxidation':'Reduktion'}`,`<span class="sm">${h.atom}${h.note?' ('+h.note+')':''}: <span class="a">${fmtON(h.on[0])}</span> → <span class="a">${fmtON(h.on[1])}</span>, also ${d} · ${e/d} = ${e} e⁻ ${ox?'abgegeben':'aufgenommen'}.</span><span class="eqx">${specHtml(simpleSpec(h))}</span>`)});
+  html+=step('Elektronenausgleich',`kgV(${s.eA}, ${s.eB}) = <span class="a">${s.l}</span> → A · <span class="a">${s.fA}</span>, B · <span class="a">${s.fB}</span>`);
+  html+=step('Addition',`<span class="eqx">${listHtml(s.L,s.R)}</span>`);
+  const dv=([c,id])=>[c/s.g,id],ML=s.ML.map(dv),MR=s.MR.map(dv);
+  html+=step('Elektronen kürzen',`${s.g>1?`<span class="sm">Danach alle Koeffizienten durch ${s.g} teilen.</span>`:''}<span class="eqx">${listHtml(ML,MR)}</span>`);
+  const TT=P(t.total),tn=toNet(TT[0],TT[1]).net,qs=arr=>arr.reduce((q,[c,id])=>q+SP[id].q*c,0),qL=qs(ML),qR=qs(MR);
+  const sd=id=>tn[id]<0?'auf der Eduktseite':'auf der Produktseite',parts=[];
+  parts.push(`Ladung: links ${fq(qL)}, rechts ${fq(qR)}`+(qL===qR?' – bereits ausgeglichen.':'.'));
+  const vb=id=>coefOf(TT,id)===1?'gleicht':'gleichen';
+  if('H' in tn)parts.push(`${coefOf(TT,'H')} H⁺ ${sd('H')} ${vb('H')} die Ladung aus.`);
+  if('OH' in tn)parts.push(`${coefOf(TT,'OH')} OH⁻ ${sd('OH')} ${vb('OH')} die Ladung aus.`);
+  const pair=new Set(t.halves.flatMap(h=>[h.from,h.to]));
+  Object.keys(tn).filter(id=>!pair.has(id)&&!STD.includes(id)).forEach(id=>parts.push(`${coefOf(TT,id)} ${fh(id)} ${sd(id)} ergänzen.`));
+  if('H2O' in tn)parts.push(`${coefOf(TT,'H2O')} H₂O ${sd('H2O')} ${vb('H2O')} die O- und H-Atome aus.`);
+  html+=step('Ladung, O und H ausgleichen',`<span class="sm">${parts.join(' ')}</span>`);
+  html+=step('Gesamtgleichung',`<span class="eqx">${specHtml(t.total)}</span>`,'final');
+  if('H' in toNet(...P(t.total)).net)html+=step('Hinweis','<span class="sm">Mit Oxonium-Ionen statt H⁺ ist die Gleichung ebenso richtig: Für jedes H⁺ wird H₃O⁺ geschrieben und rechts ein zusätzliches H₂O ergänzt.</span>');
+  if(t.stoff.eq){html+=ok(w.stoff)?step('Stoffgleichung',`<span class="sm">${rt(t.stoff.intro)}</span><span class="eqx">${specHtml(t.stoff.eq)}</span>`,'final'):step('Stoffgleichung','<span class="sm">erscheint nach Schritt 3</span>')}
+  $('wayBox').innerHTML='<div class="steps">'+html+'</div>';
+}
+
+/* ---------- Tabs & Dialoge ---------- */
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+b.dataset.tab));
+}));
+function modal(btn,bd,close){
+  $(btn).addEventListener('click',e=>{e.preventDefault();$(bd).classList.add('open')});
+  $(close).addEventListener('click',()=>$(bd).classList.remove('open'));
+  $(bd).addEventListener('click',e=>{if(e.target===$(bd))$(bd).classList.remove('open')});
+}
+modal('btnGuide','guideBackdrop','closeGuide');
+modal('btnChangelog','changelogBackdrop','closeChangelog');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open'))});
+
+fillSelect();updateReadouts();newTask();
+})();
+</script>
+</body>
+</html>
